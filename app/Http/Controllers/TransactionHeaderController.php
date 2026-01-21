@@ -12,36 +12,48 @@ class TransactionHeaderController extends Controller
 {
     public function index(Request $request)
     {
-        $query = TransactionHeader::with('brand')->where('is_active', '1')->orderBy('invoice_date', 'desc');
-        
-        // Search by text (customer_name, chassis, invoice_date, invoice_no, wip_no, registration_no)
-        // Using 'search%' pattern to utilize B-tree index efficiently
-        if ($request->has('search') && $request->search != '') {
-            $search = $request->search;
-            $query->where(function($q) use ($search) {
-                $q->where('customer_name', 'like', $search . '%')
-                  ->orWhere('chassis', 'like', $search . '%')
-                  ->orWhere('invoice_no', 'like', $search . '%')
-                  ->orWhere('wip_no', 'like', $search . '%')
-                  ->orWhere('registration_no', 'like', $search . '%')
-                  ->orWhereDate('invoice_date', '=', $search);
-            });
-        }
-        
-        // Filter by date range
-        if ($request->has('date_from') && $request->date_from != '') {
-            $query->whereDate('invoice_date', '>=', $request->date_from);
-        }
-        
-        if ($request->has('date_to') && $request->date_to != '') {
-            $query->whereDate('invoice_date', '<=', $request->date_to);
-        }
-        
-        // Pagination with per_page option
+        // Generate cache key based on user and search parameters
+        $userId = auth()->id();
+        $search = $request->get('search', '');
+        $dateFrom = $request->get('date_from', '');
+        $dateTo = $request->get('date_to', '');
         $perPage = $request->get('per_page', 10);
-        $perPage = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
+        $page = $request->get('page', 1);
         
-        $transactions = $query->paginate($perPage)->withQueryString();
+        $cacheKey = "header:{$userId}:{$search}:{$dateFrom}:{$dateTo}:{$perPage}:{$page}";
+        
+        // Try to get from cache (1 hour), if not found execute query and cache it
+        $transactions = cache()->remember($cacheKey, now()->addHour(), function () use ($request, $perPage) {
+            $query = TransactionHeader::with('brand')->where('is_active', '1')->orderBy('invoice_date', 'desc');
+            
+            // Search by text (customer_name, chassis, invoice_date, invoice_no, wip_no, registration_no)
+            // Using 'search%' pattern to utilize B-tree index efficiently
+            if ($request->has('search') && $request->search != '') {
+                $search = $request->search;
+                $query->where(function($q) use ($search) {
+                    $q->where('customer_name', 'like', $search . '%')
+                      ->orWhere('chassis', 'like', $search . '%')
+                      ->orWhere('invoice_no', 'like', $search . '%')
+                      ->orWhere('wip_no', 'like', $search . '%')
+                      ->orWhere('registration_no', 'like', $search . '%')
+                      ->orWhereDate('invoice_date', '=', $search);
+                });
+            }
+            
+            // Filter by date range
+            if ($request->has('date_from') && $request->date_from != '') {
+                $query->whereDate('invoice_date', '>=', $request->date_from);
+            }
+            
+            if ($request->has('date_to') && $request->date_to != '') {
+                $query->whereDate('invoice_date', '<=', $request->date_to);
+            }
+            
+            // Pagination with per_page option
+            $perPageValue = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
+            
+            return $query->paginate($perPageValue)->withQueryString();
+        });
         
         return view('transactions.index', compact('transactions'));
     }
@@ -96,10 +108,16 @@ class TransactionHeaderController extends Controller
                     ];
                 }
                 
+                // Clear cache after import (even with errors, some data might be imported)
+                $this->clearTransactionCache();
+                
                 return redirect()->route('transactions.header.import')
                     ->with('import_errors', $errors)
                     ->with('warning', 'Import completed with ' . count($errors) . ' error(s). Please check the details below.');
             }
+
+            // Clear cache after successful import
+            $this->clearTransactionCache();
 
             return redirect()->route('transactions.index')
                 ->with('success', 'Transaction headers imported successfully!');
@@ -113,6 +131,16 @@ class TransactionHeaderController extends Controller
             return redirect()->route('transactions.header.import')
                 ->with('error', 'Import failed: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Clear all cache after import
+     * Simple and effective - ensures data consistency
+     */
+    private function clearTransactionCache()
+    {
+        cache()->flush();
+        \Log::info('All cache cleared after import by user: ' . auth()->id());
     }
 
     private function parseSqlError($message)
