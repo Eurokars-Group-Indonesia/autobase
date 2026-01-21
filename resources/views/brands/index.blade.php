@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Roles Management')
+@section('title', 'Brands Management')
 
 @php
     $breadcrumbs = [
-        ['title' => 'Roles', 'url' => '#']
+        ['title' => 'Brands', 'url' => '#']
     ];
 @endphp
 
@@ -13,24 +13,24 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-shield-check"></i> Roles Management</span>
-                @if(auth()->user()->hasPermission('roles.create'))
-                    <a href="{{ route('roles.create') }}" class="btn btn-light btn-sm">
-                        <i class="bi bi-plus-circle"></i> Add Role
+                <span><i class="bi bi-tag"></i> Brands Management</span>
+                @if(auth()->user()->hasPermission('brands.create'))
+                    <a href="{{ route('brands.create') }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-plus-circle"></i> Add Brand
                     </a>
                 @endif
             </div>
             <div class="card-body">
                 <div class="row mb-3">
                     <div class="col-md-6 ms-auto">
-                        <form action="{{ route('roles.index') }}" method="GET">
+                        <form action="{{ route('brands.index') }}" method="GET">
                             <div class="input-group">
-                                <input type="text" class="form-control" name="search" placeholder="Search by code, name, description..." value="{{ request('search') }}">
+                                <input type="text" class="form-control" name="search" placeholder="Search by code, name, group, country..." value="{{ request('search') }}">
                                 <button class="btn btn-primary" type="submit">
                                     <i class="bi bi-search"></i> Search
                                 </button>
                                 @if(request('search'))
-                                    <a href="{{ route('roles.index') }}" class="btn btn-secondary">
+                                    <a href="{{ route('brands.index') }}" class="btn btn-secondary">
                                         <i class="bi bi-x-circle"></i> Clear
                                     </a>
                                 @endif
@@ -45,35 +45,33 @@
                                 <th>ID</th>
                                 <th>Code</th>
                                 <th>Name</th>
-                                <th>Description</th>
-                                <th>Permissions</th>
+                                <th>Brand Group</th>
+                                <th>Country Origin</th>
                                 <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($roles as $role)
+                            @forelse($brands as $brand)
                                 <tr>
-                                    <td>{{ $role->role_id }}</td>
-                                    <td><code>{{ $role->role_code }}</code></td>
-                                    <td>{{ $role->role_name }}</td>
-                                    <td>{{ $role->role_description }}</td>
+                                    <td>{{ $brand->brand_id }}</td>
+                                    <td><code>{{ $brand->brand_code }}</code></td>
+                                    <td>{{ $brand->brand_name }}</td>
+                                    <td>{{ $brand->brand_group ?? '-' }}</td>
+                                    <td>{{ $brand->country_origin ?? '-' }}</td>
                                     <td>
-                                        <span class="badge bg-info">{{ $role->permissions->count() }} permissions</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-{{ $role->is_active == '1' ? 'success' : 'danger' }}">
-                                            {{ $role->is_active == '1' ? 'Active' : 'Inactive' }}
+                                        <span class="badge bg-{{ $brand->is_active == '1' ? 'success' : 'danger' }}">
+                                            {{ $brand->is_active == '1' ? 'Active' : 'Inactive' }}
                                         </span>
                                     </td>
                                     <td>
-                                        @if(auth()->user()->hasPermission('roles.edit'))
-                                            <a href="{{ route('roles.edit', $role->unique_id) }}" class="btn btn-sm btn-warning">
+                                        @if(auth()->user()->hasPermission('brands.edit'))
+                                            <a href="{{ route('brands.edit', $brand->unique_id) }}" class="btn btn-sm btn-warning">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                         @endif
-                                        @if(auth()->user()->hasPermission('roles.delete'))
-                                            <form action="{{ route('roles.destroy', $role->unique_id) }}" method="POST" class="d-inline">
+                                        @if(auth()->user()->hasPermission('brands.delete'))
+                                            <form action="{{ route('brands.destroy', $brand->unique_id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
@@ -85,14 +83,14 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">No roles found</td>
+                                    <td colspan="7" class="text-center">No brands found</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
                 <div class="mt-3">
-                    {{ $roles->links() }}
+                    {{ $brands->links() }}
                 </div>
             </div>
         </div>

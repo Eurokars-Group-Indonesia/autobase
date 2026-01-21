@@ -22,7 +22,7 @@
             </div>
             <div class="card-body">
                 <div class="row mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-6 ms-auto">
                         <form action="{{ route('permissions.index') }}" method="GET">
                             <div class="input-group">
                                 <input type="text" class="form-control" name="search" placeholder="Search by code, name..." value="{{ request('search') }}">

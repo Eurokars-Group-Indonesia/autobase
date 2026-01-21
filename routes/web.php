@@ -7,6 +7,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\MenuController;
+use App\Http\Controllers\BrandController;
 
 // Guest Routes
 Route::middleware('guest')->group(function () {
@@ -86,5 +87,22 @@ Route::middleware('auth')->group(function () {
     });
     Route::middleware('permission:menus.delete')->group(function () {
         Route::delete('/menus/{menu}', [MenuController::class, 'destroy'])->name('menus.destroy');
+    });
+    
+    // Brand Management
+    Route::middleware('permission:brands.view')->group(function () {
+        Route::get('/brands', [BrandController::class, 'index'])->name('brands.index');
+    });
+    Route::middleware('permission:brands.create')->group(function () {
+        Route::get('/brands/create', [BrandController::class, 'create'])->name('brands.create');
+        Route::post('/brands', [BrandController::class, 'store'])->name('brands.store');
+    });
+    Route::middleware('permission:brands.edit')->group(function () {
+        Route::get('/brands/{brand}/edit', [BrandController::class, 'edit'])->name('brands.edit');
+        Route::put('/brands/{brand}', [BrandController::class, 'update'])->name('brands.update');
+        Route::patch('/brands/{brand}', [BrandController::class, 'update']);
+    });
+    Route::middleware('permission:brands.delete')->group(function () {
+        Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
     });
 });
