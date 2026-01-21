@@ -12,7 +12,20 @@ class UserController extends Controller
 {
     public function index()
     {
-        $users = User::with('roles')->where('is_active', '1')->paginate(10);
+        $query = User::with('roles')->where('is_active', '1');
+        
+        // Search functionality
+        if (request()->has('search') && request('search') != '') {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'like', $search . '%')
+                  ->orWhere('email', 'like', $search . '%')
+                  ->orWhere('full_name', 'like', $search . '%')
+                  ->orWhere('phone', 'like', $search . '%');
+            });
+        }
+        
+        $users = $query->paginate(10)->withQueryString();
         return view('users.index', compact('users'));
     }
 
@@ -85,6 +98,16 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        // Check if user has Admin role
+        if ($user->hasRole('ADMIN')) {
+            return redirect()->route('users.index')->with('error', 'Cannot delete user with Admin role.');
+        }
+        
+        // Prevent deleting yourself
+        if ($user->user_id === auth()->id()) {
+            return redirect()->route('users.index')->with('error', 'You cannot delete your own account.');
+        }
+        
         $user->update(['is_active' => '0', 'updated_by' => auth()->id()]);
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');
     }

@@ -12,7 +12,19 @@ class RoleController extends Controller
 {
     public function index()
     {
-        $roles = Role::where('is_active', '1')->paginate(10);
+        $query = Role::where('is_active', '1');
+        
+        // Search functionality
+        if (request()->has('search') && request('search') != '') {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->where('role_code', 'like', $search . '%')
+                  ->orWhere('role_name', 'like', $search . '%')
+                  ->orWhere('role_description', 'like', $search . '%');
+            });
+        }
+        
+        $roles = $query->paginate(10)->withQueryString();
         return view('roles.index', compact('roles'));
     }
 

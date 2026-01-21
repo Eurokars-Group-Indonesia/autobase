@@ -10,7 +10,19 @@ class MenuController extends Controller
 {
     public function index()
     {
-        $menus = Menu::with('parent')->where('is_active', '1')->orderBy('menu_order')->paginate(10);
+        $query = Menu::with('parent')->where('is_active', '1')->orderBy('menu_order');
+        
+        // Search functionality
+        if (request()->has('search') && request('search') != '') {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->where('menu_code', 'like', $search . '%')
+                  ->orWhere('menu_name', 'like', $search . '%')
+                  ->orWhere('menu_url', 'like', $search . '%');
+            });
+        }
+        
+        $menus = $query->paginate(10)->withQueryString();
         return view('menus.index', compact('menus'));
     }
 

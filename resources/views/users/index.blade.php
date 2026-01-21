@@ -19,6 +19,23 @@
                 </a>
             </div>
             <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <form action="{{ route('users.index') }}" method="GET">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="search" placeholder="Search by name, email, phone..." value="{{ request('search') }}">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-search"></i> Search
+                                </button>
+                                @if(request('search'))
+                                    <a href="{{ route('users.index') }}" class="btn btn-secondary">
+                                        <i class="bi bi-x-circle"></i> Clear
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
@@ -55,13 +72,19 @@
                                         <a href="{{ route('users.edit', $user->user_id) }}" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form action="{{ route('users.destroy', $user->user_id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                        @if(!$user->hasRole('ADMIN') && $user->user_id !== auth()->id())
+                                            <form action="{{ route('users.destroy', $user->user_id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        @else
+                                            <button type="button" class="btn btn-sm btn-secondary" disabled title="Cannot delete Admin user or yourself">
                                                 <i class="bi bi-trash"></i>
                                             </button>
-                                        </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

@@ -10,7 +10,18 @@ class PermissionController extends Controller
 {
     public function index()
     {
-        $permissions = Permission::where('is_active', '1')->paginate(10);
+        $query = Permission::where('is_active', '1');
+        
+        // Search functionality
+        if (request()->has('search') && request('search') != '') {
+            $search = request('search');
+            $query->where(function($q) use ($search) {
+                $q->where('permission_code', 'like', $search . '%')
+                  ->orWhere('permission_name', 'like', $search . '%');
+            });
+        }
+        
+        $permissions = $query->paginate(10)->withQueryString();
         return view('permissions.index', compact('permissions'));
     }
 
