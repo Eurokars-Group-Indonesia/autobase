@@ -1,0 +1,97 @@
+@extends('layouts.app')
+
+@section('title', 'Dealers Management')
+
+@php
+    $breadcrumbs = [
+        ['title' => 'Dealers', 'url' => '#']
+    ];
+@endphp
+
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-shop"></i> Dealers Management</span>
+                @if(auth()->user()->hasPermission('dealers.create'))
+                    <a href="{{ route('dealers.create') }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-plus-circle"></i> Add Dealer
+                    </a>
+                @endif
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6 ms-auto">
+                        <form action="{{ route('dealers.index') }}" method="GET">
+                            <div class="input-group">
+                                <input type="text" class="form-control" name="search" placeholder="Search by code, name, city..." value="{{ request('search') }}">
+                                <button class="btn btn-primary" type="submit">
+                                    <i class="bi bi-search"></i> Search
+                                </button>
+                                @if(request('search'))
+                                    <a href="{{ route('dealers.index') }}" class="btn btn-secondary">
+                                        <i class="bi bi-x-circle"></i> Clear
+                                    </a>
+                                @endif
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>City</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($dealers as $dealer)
+                                <tr>
+                                    <td>{{ $dealer->dealer_id }}</td>
+                                    <td><code>{{ $dealer->dealer_code }}</code></td>
+                                    <td>{{ $dealer->dealer_name }}</td>
+                                    <td>{{ $dealer->city ?? '-' }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ $dealer->is_active == '1' ? 'success' : 'danger' }}">
+                                            {{ $dealer->is_active == '1' ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if(auth()->user()->hasPermission('dealers.edit'))
+                                            <a href="{{ route('dealers.edit', $dealer->unique_id) }}" class="btn btn-sm btn-warning">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('dealers.delete'))
+                                            <form action="{{ route('dealers.destroy', $dealer->unique_id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="text-center">No dealers found</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    {{ $dealers->links() }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection

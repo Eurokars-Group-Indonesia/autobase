@@ -8,6 +8,7 @@ use App\Http\Controllers\RoleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\BrandController;
+use App\Http\Controllers\DealerController;
 
 // Guest Routes
 Route::middleware('guest')->group(function () {
@@ -104,5 +105,22 @@ Route::middleware('auth')->group(function () {
     });
     Route::middleware('permission:brands.delete')->group(function () {
         Route::delete('/brands/{brand}', [BrandController::class, 'destroy'])->name('brands.destroy');
+    });
+    
+    // Dealer Management
+    Route::middleware('permission:dealers.view')->group(function () {
+        Route::get('/dealers', [DealerController::class, 'index'])->name('dealers.index');
+    });
+    Route::middleware('permission:dealers.create')->group(function () {
+        Route::get('/dealers/create', [DealerController::class, 'create'])->name('dealers.create');
+        Route::post('/dealers', [DealerController::class, 'store'])->name('dealers.store');
+    });
+    Route::middleware('permission:dealers.edit')->group(function () {
+        Route::get('/dealers/{dealer}/edit', [DealerController::class, 'edit'])->name('dealers.edit');
+        Route::put('/dealers/{dealer}', [DealerController::class, 'update'])->name('dealers.update');
+        Route::patch('/dealers/{dealer}', [DealerController::class, 'update']);
+    });
+    Route::middleware('permission:dealers.delete')->group(function () {
+        Route::delete('/dealers/{dealer}', [DealerController::class, 'destroy'])->name('dealers.destroy');
     });
 });

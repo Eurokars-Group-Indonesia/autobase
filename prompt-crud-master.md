@@ -1,30 +1,16 @@
- Buatkan CRUD (Model, Migration, Controller, Request, Middleware (jika ada), View) untuk module Brand dengan schema di bawah ini : 
+1. Buatkan CRUD (Model, Migration, Controller, Request, Middleware (jika ada), View) untuk module Dealer dengan schema di bawah ini : 
 
 
 
-jangan lup tambahkan role menu, role permission seperti modul lainnya
+Table ms_dealers {
 
+  dealer_id "bigint unsigned" [not null, pk, increment]
 
+  dealer_code varchar(50) [not null, unique]
 
-untuk di form add dan edit di masing2 field tambahan html maxlength (sesuai jumlah data pada schema di masing2 field), tambahkan juga validasi di Request
+  dealer_name varchar(150) [not null]
 
-
-
-tidak perlu ada pilihan status active / inactive karena sudah di kasih default
-
-
-
-Table ms_brand {
-
-  brand_id "bigint unsigned" [not null, pk, increment]
-
-  brand_code varchar(50) [not null, unique]
-
-  brand_name varchar(100) [not null]
-
-  brand_group varchar(100) [null]
-
-  country_origin varchar(100) [null]
+  city varchar(100) [null]
 
   created_by "bigint unsigned" [not null]
 
@@ -49,3 +35,13 @@ Table ms_brand {
   }
 
 }
+
+2. jangan lupa tambahkan role menu, role permission seperti modul lainnya
+
+3. untuk di form add dan edit di masing2 field tambahan html maxlength (sesuai jumlah data pada schema di masing2 field), tambahkan juga validasi di Request
+
+4. Untuk input field search dan button search letakkan di kanan dari table
+
+5. tidak perlu ada pilihan status active / inactive karena sudah di kasih default
+
+6. Jika Modul ini ada Relasi ke Model / Table lain gunakan Eager Loading
