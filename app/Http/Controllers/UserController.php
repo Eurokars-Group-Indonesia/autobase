@@ -77,6 +77,7 @@ class UserController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
+        $user->load('roles');
         $roles = Role::where('is_active', '1')->get();
         $userRoles = $user->roles->pluck('role_id')->toArray();
         return view('users.edit', compact('user', 'roles', 'userRoles'));

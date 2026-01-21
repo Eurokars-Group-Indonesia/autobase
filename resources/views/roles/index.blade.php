@@ -59,7 +59,7 @@
                                     <td>{{ $role->role_name }}</td>
                                     <td>{{ $role->role_description }}</td>
                                     <td>
-                                        <span class="badge bg-info">{{ $role->permissions->count() }} permissions</span>
+                                        <span class="badge bg-info">{{ $role->permissions_count }} permissions</span>
                                     </td>
                                     <td>
                                         <span class="badge bg-{{ $role->is_active == '1' ? 'success' : 'danger' }}">

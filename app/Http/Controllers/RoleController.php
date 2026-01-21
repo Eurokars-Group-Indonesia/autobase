@@ -12,7 +12,7 @@ class RoleController extends Controller
 {
     public function index()
     {
-        $query = Role::where('is_active', '1');
+        $query = Role::withCount('permissions')->where('is_active', '1');
         
         // Search functionality
         if (request()->has('search') && request('search') != '') {
@@ -94,6 +94,7 @@ class RoleController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
+        $role->load('permissions', 'menus');
         $permissions = Permission::where('is_active', '1')->get();
         $menus = Menu::where('is_active', '1')
             ->whereNull('parent_id')
