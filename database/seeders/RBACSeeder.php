@@ -14,6 +14,16 @@ class RBACSeeder extends Seeder
 {
     public function run(): void
     {
+        // Create Admin User first (without created_by)
+        $adminUser = User::create([
+            'name' => 'admin',
+            'email' => 'admin@example.com',
+            'full_name' => 'System Administrator',
+            'password' => Hash::make('password'),
+            'unique_id' => (string) Str::uuid(),
+            'is_active' => '1',
+        ]);
+
         // Create Permissions
         $permissions = [
             ['permission_code' => 'users.view', 'permission_name' => 'View Users'],
@@ -40,6 +50,7 @@ class RBACSeeder extends Seeder
                 'permission_code' => $permission['permission_code'],
                 'permission_name' => $permission['permission_name'],
                 'unique_id' => (string) Str::uuid(),
+                'created_by' => $adminUser->user_id,
                 'is_active' => '1',
             ]);
         }
@@ -53,6 +64,7 @@ class RBACSeeder extends Seeder
             'parent_id' => null,
             'menu_order' => 1,
             'unique_id' => (string) Str::uuid(),
+            'created_by' => $adminUser->user_id,
             'is_active' => '1',
         ]);
 
@@ -64,6 +76,7 @@ class RBACSeeder extends Seeder
             'parent_id' => $userManagement->menu_id,
             'menu_order' => 1,
             'unique_id' => (string) Str::uuid(),
+            'created_by' => $adminUser->user_id,
             'is_active' => '1',
         ]);
 
@@ -75,6 +88,7 @@ class RBACSeeder extends Seeder
             'parent_id' => $userManagement->menu_id,
             'menu_order' => 2,
             'unique_id' => (string) Str::uuid(),
+            'created_by' => $adminUser->user_id,
             'is_active' => '1',
         ]);
 
@@ -86,6 +100,7 @@ class RBACSeeder extends Seeder
             'parent_id' => $userManagement->menu_id,
             'menu_order' => 3,
             'unique_id' => (string) Str::uuid(),
+            'created_by' => $adminUser->user_id,
             'is_active' => '1',
         ]);
 
@@ -97,6 +112,7 @@ class RBACSeeder extends Seeder
             'parent_id' => $userManagement->menu_id,
             'menu_order' => 4,
             'unique_id' => (string) Str::uuid(),
+            'created_by' => $adminUser->user_id,
             'is_active' => '1',
         ]);
 
@@ -106,6 +122,7 @@ class RBACSeeder extends Seeder
             'role_name' => 'Administrator',
             'role_description' => 'Full system access',
             'unique_id' => (string) Str::uuid(),
+            'created_by' => $adminUser->user_id,
             'is_active' => '1',
         ]);
 
@@ -113,6 +130,7 @@ class RBACSeeder extends Seeder
         foreach ($createdPermissions as $permission) {
             $adminRole->permissions()->attach($permission->permission_id, [
                 'unique_id' => (string) Str::uuid(),
+                'created_by' => $adminUser->user_id,
                 'created_date' => now(),
                 'is_active' => '1',
             ]);
@@ -123,25 +141,17 @@ class RBACSeeder extends Seeder
         foreach ($allMenus as $menu) {
             $adminRole->menus()->attach($menu->menu_id, [
                 'unique_id' => (string) Str::uuid(),
+                'created_by' => $adminUser->user_id,
                 'created_date' => now(),
                 'is_active' => '1',
             ]);
         }
 
-        // Create Admin User
-        $adminUser = User::create([
-            'name' => 'admin',
-            'email' => 'admin@example.com',
-            'full_name' => 'System Administrator',
-            'password' => Hash::make('password'),
-            'unique_id' => (string) Str::uuid(),
-            'is_active' => '1',
-        ]);
-
         // Assign admin role to admin user
         $adminUser->roles()->attach($adminRole->role_id, [
             'unique_id' => (string) Str::uuid(),
             'assigned_date' => now(),
+            'created_by' => $adminUser->user_id,
             'created_date' => now(),
             'is_active' => '1',
         ]);
