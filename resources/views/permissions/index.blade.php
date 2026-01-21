@@ -1,0 +1,72 @@
+@extends('layouts.app')
+
+@section('title', 'Permissions Management')
+
+@php
+    $breadcrumbs = [
+        ['title' => 'Permissions', 'url' => '#']
+    ];
+@endphp
+
+@section('content')
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="bi bi-key"></i> Permissions Management</span>
+                <a href="{{ route('permissions.create') }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-plus-circle"></i> Add Permission
+                </a>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($permissions as $permission)
+                                <tr>
+                                    <td>{{ $permission->permission_id }}</td>
+                                    <td><code>{{ $permission->permission_code }}</code></td>
+                                    <td>{{ $permission->permission_name }}</td>
+                                    <td>
+                                        <span class="badge bg-{{ $permission->is_active == '1' ? 'success' : 'danger' }}">
+                                            {{ $permission->is_active == '1' ? 'Active' : 'Inactive' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ route('permissions.edit', $permission->permission_id) }}" class="btn btn-sm btn-warning">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form action="{{ route('permissions.destroy', $permission->permission_id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="text-center">No permissions found</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="mt-3">
+                    {{ $permissions->links() }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
