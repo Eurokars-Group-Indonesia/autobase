@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UserRequest extends FormRequest
 {
@@ -13,7 +14,7 @@ class UserRequest extends FormRequest
 
     public function rules(): array
     {
-        $userId = $this->route('user') ? $this->route('user')->user_id : null;
+        $user = $this->route('user');
         
         $rules = [
             'name' => 'required|string|max:150',
@@ -28,9 +29,14 @@ class UserRequest extends FormRequest
             $rules['is_active'] = 'nullable|in:0,1';
         }
 
-        // Email validation - using user_id for database check
-        if ($userId) {
-            $rules['email'] = 'required|email|max:150|unique:ms_users,email,' . $userId . ',user_id';
+        // Email validation - using unique_id for database check
+        if ($user) {
+            $rules['email'] = [
+                'required',
+                'email',
+                'max:150',
+                Rule::unique('ms_users', 'email')->ignore($user->user_id, 'user_id')
+            ];
         } else {
             $rules['email'] = 'required|email|max:150|unique:ms_users,email';
         }

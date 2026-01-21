@@ -14,9 +14,11 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-shield-check"></i> Roles Management</span>
-                <a href="{{ route('roles.create') }}" class="btn btn-light btn-sm">
-                    <i class="bi bi-plus-circle"></i> Add Role
-                </a>
+                @if(auth()->user()->hasPermission('roles.create'))
+                    <a href="{{ route('roles.create') }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-plus-circle"></i> Add Role
+                    </a>
+                @endif
             </div>
             <div class="card-body">
                 <div class="row mb-3">
@@ -65,16 +67,20 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('roles.edit', $role->unique_id) }}" class="btn btn-sm btn-warning">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        <form action="{{ route('roles.destroy', $role->unique_id) }}" method="POST" class="d-inline">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
-                                        </form>
+                                        @if(auth()->user()->hasPermission('roles.edit'))
+                                            <a href="{{ route('roles.edit', $role->unique_id) }}" class="btn btn-sm btn-warning">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('roles.delete'))
+                                            <form action="{{ route('roles.destroy', $role->unique_id) }}" method="POST" class="d-inline">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                        @endif
                                     </td>
                                 </tr>
                             @empty

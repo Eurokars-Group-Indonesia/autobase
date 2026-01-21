@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PermissionRequest extends FormRequest
 {
@@ -13,15 +14,20 @@ class PermissionRequest extends FormRequest
 
     public function rules(): array
     {
-        $permissionId = $this->route('permission') ? $this->route('permission')->permission_id : null;
+        $permission = $this->route('permission');
         
         $rules = [
             'permission_name' => 'required|string|max:150',
         ];
 
         // permission_code validation
-        if ($permissionId) {
-            $rules['permission_code'] = 'required|string|max:100|unique:ms_permissions,permission_code,' . $permissionId . ',permission_id';
+        if ($permission) {
+            $rules['permission_code'] = [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('ms_permissions', 'permission_code')->ignore($permission->permission_id, 'permission_id')
+            ];
         } else {
             $rules['permission_code'] = 'required|string|max:100|unique:ms_permissions,permission_code';
         }

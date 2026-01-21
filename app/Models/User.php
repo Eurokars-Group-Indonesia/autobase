@@ -87,10 +87,12 @@ class User extends Authenticatable
 
     public function hasPermission($permissionCode)
     {
+        // Cek apakah user memiliki role yang memiliki permission ini
         return $this->roles()
             ->whereHas('permissions', function ($query) use ($permissionCode) {
                 $query->where('ms_permissions.permission_code', $permissionCode)
-                    ->where('ms_permissions.is_active', '1');
+                    ->where('ms_permissions.is_active', '1')
+                    ->where('ms_role_permissions.is_active', '1'); // Gunakan nama tabel pivot langsung
             })
             ->exists();
     }

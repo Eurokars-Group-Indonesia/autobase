@@ -30,6 +30,11 @@ class RoleController extends Controller
 
     public function create()
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('roles.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $permissions = Permission::where('is_active', '1')->get();
         $menus = Menu::where('is_active', '1')
             ->whereNull('parent_id')
@@ -43,6 +48,11 @@ class RoleController extends Controller
 
     public function store(RoleRequest $request)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('roles.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $data = $request->validated();
         $data['unique_id'] = (string) Str::uuid();
         $data['created_by'] = auth()->id();
@@ -79,6 +89,11 @@ class RoleController extends Controller
 
     public function edit(Role $role)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('roles.edit')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $permissions = Permission::where('is_active', '1')->get();
         $menus = Menu::where('is_active', '1')
             ->whereNull('parent_id')
@@ -95,6 +110,11 @@ class RoleController extends Controller
 
     public function update(RoleRequest $request, Role $role)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('roles.edit')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $data = $request->validated();
         $data['updated_by'] = auth()->id();
         $role->update($data);
@@ -130,6 +150,11 @@ class RoleController extends Controller
 
     public function destroy(Role $role)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('roles.delete')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $role->update(['is_active' => '0', 'updated_by' => auth()->id()]);
         return redirect()->route('roles.index')->with('success', 'Role deleted successfully.');
     }

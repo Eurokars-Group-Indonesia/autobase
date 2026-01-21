@@ -17,7 +17,7 @@
                 <i class="bi bi-pencil"></i> Edit Permission
             </div>
             <div class="card-body">
-                <form action="{{ route('permissions.update', $permission->permission_id) }}" method="POST">
+                <form action="{{ route('permissions.update', $permission->unique_id) }}" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="mb-3">

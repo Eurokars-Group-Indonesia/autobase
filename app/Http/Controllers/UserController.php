@@ -31,12 +31,22 @@ class UserController extends Controller
 
     public function create()
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('users.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $roles = Role::where('is_active', '1')->get();
         return view('users.create', compact('roles'));
     }
 
     public function store(UserRequest $request)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('users.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $data = $request->validated();
         $data['password'] = Hash::make($data['password']);
         $data['unique_id'] = (string) Str::uuid();
@@ -62,6 +72,11 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('users.edit')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $roles = Role::where('is_active', '1')->get();
         $userRoles = $user->roles->pluck('role_id')->toArray();
         return view('users.edit', compact('user', 'roles', 'userRoles'));
@@ -69,6 +84,11 @@ class UserController extends Controller
 
     public function update(UserRequest $request, User $user)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('users.edit')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $data = $request->validated();
         
         if ($request->filled('password')) {
@@ -99,6 +119,11 @@ class UserController extends Controller
 
     public function destroy(User $user)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('users.delete')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         // Check if user has Admin role
         if ($user->hasRole('ADMIN')) {
             return redirect()->route('users.index')->with('error', 'Cannot delete user with Admin role.');

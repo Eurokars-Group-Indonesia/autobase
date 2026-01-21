@@ -17,7 +17,7 @@
                 <i class="bi bi-pencil"></i> Edit Role
             </div>
             <div class="card-body">
-                <form action="{{ route('roles.update', $role->role_id) }}" method="POST">
+                <form action="{{ route('roles.update', $role->unique_id) }}" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="row">

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class MenuRequest extends FormRequest
 {
@@ -13,7 +14,7 @@ class MenuRequest extends FormRequest
 
     public function rules(): array
     {
-        $menuId = $this->route('menu') ? $this->route('menu')->menu_id : null;
+        $menu = $this->route('menu');
         
         $rules = [
             'menu_name' => 'required|string|max:100',
@@ -24,8 +25,13 @@ class MenuRequest extends FormRequest
         ];
 
         // menu_code validation
-        if ($menuId) {
-            $rules['menu_code'] = 'required|string|max:50|unique:ms_menus,menu_code,' . $menuId . ',menu_id';
+        if ($menu) {
+            $rules['menu_code'] = [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('ms_menus', 'menu_code')->ignore($menu->menu_id, 'menu_id')
+            ];
         } else {
             $rules['menu_code'] = 'required|string|max:50|unique:ms_menus,menu_code';
         }

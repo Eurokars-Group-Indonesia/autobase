@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RoleRequest extends FormRequest
 {
@@ -13,7 +14,7 @@ class RoleRequest extends FormRequest
 
     public function rules(): array
     {
-        $roleId = $this->route('role') ? $this->route('role')->role_id : null;
+        $role = $this->route('role');
         
         $rules = [
             'role_name' => 'required|string|max:50',
@@ -25,8 +26,13 @@ class RoleRequest extends FormRequest
         ];
 
         // role_code validation
-        if ($roleId) {
-            $rules['role_code'] = 'required|string|max:10|unique:ms_role,role_code,' . $roleId . ',role_id';
+        if ($role) {
+            $rules['role_code'] = [
+                'required',
+                'string',
+                'max:10',
+                Rule::unique('ms_role', 'role_code')->ignore($role->role_id, 'role_id')
+            ];
         } else {
             $rules['role_code'] = 'required|string|max:10|unique:ms_role,role_code';
         }

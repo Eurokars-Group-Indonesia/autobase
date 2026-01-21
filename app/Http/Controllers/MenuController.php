@@ -28,12 +28,22 @@ class MenuController extends Controller
 
     public function create()
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('menus.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $parentMenus = Menu::where('is_active', '1')->whereNull('parent_id')->orderBy('menu_order')->get();
         return view('menus.create', compact('parentMenus'));
     }
 
     public function store(MenuRequest $request)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('menus.create')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $data = $request->validated();
         $data['unique_id'] = (string) Str::uuid();
         $data['created_by'] = auth()->id();
@@ -46,6 +56,11 @@ class MenuController extends Controller
 
     public function edit(Menu $menu)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('menus.edit')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $parentMenus = Menu::where('is_active', '1')
             ->whereNull('parent_id')
             ->where('menu_id', '!=', $menu->menu_id)
@@ -56,6 +71,11 @@ class MenuController extends Controller
 
     public function update(MenuRequest $request, Menu $menu)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('menus.edit')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $data = $request->validated();
         $data['updated_by'] = auth()->id();
         $menu->update($data);
@@ -65,6 +85,11 @@ class MenuController extends Controller
 
     public function destroy(Menu $menu)
     {
+        // Double check permission
+        if (!auth()->user()->hasPermission('menus.delete')) {
+            abort(403, 'Unauthorized action.');
+        }
+        
         $menu->update(['is_active' => '0', 'updated_by' => auth()->id()]);
         return redirect()->route('menus.index')->with('success', 'Menu deleted successfully.');
     }

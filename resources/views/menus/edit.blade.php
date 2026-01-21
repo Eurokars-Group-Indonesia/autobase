@@ -17,7 +17,7 @@
                 <i class="bi bi-pencil"></i> Edit Menu
             </div>
             <div class="card-body">
-                <form action="{{ route('menus.update', $menu->menu_id) }}" method="POST">
+                <form action="{{ route('menus.update', $menu->unique_id) }}" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="row">

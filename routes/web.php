@@ -21,14 +21,70 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // User Management
-    Route::resource('users', UserController::class);
+    Route::middleware('permission:users.view')->group(function () {
+        Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    });
+    Route::middleware('permission:users.create')->group(function () {
+        Route::get('/users/create', [UserController::class, 'create'])->name('users.create');
+        Route::post('/users', [UserController::class, 'store'])->name('users.store');
+    });
+    Route::middleware('permission:users.edit')->group(function () {
+        Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+        Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+        Route::patch('/users/{user}', [UserController::class, 'update']);
+    });
+    Route::middleware('permission:users.delete')->group(function () {
+        Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
+    });
     
     // Role Management
-    Route::resource('roles', RoleController::class);
+    Route::middleware('permission:roles.view')->group(function () {
+        Route::get('/roles', [RoleController::class, 'index'])->name('roles.index');
+    });
+    Route::middleware('permission:roles.create')->group(function () {
+        Route::get('/roles/create', [RoleController::class, 'create'])->name('roles.create');
+        Route::post('/roles', [RoleController::class, 'store'])->name('roles.store');
+    });
+    Route::middleware('permission:roles.edit')->group(function () {
+        Route::get('/roles/{role}/edit', [RoleController::class, 'edit'])->name('roles.edit');
+        Route::put('/roles/{role}', [RoleController::class, 'update'])->name('roles.update');
+        Route::patch('/roles/{role}', [RoleController::class, 'update']);
+    });
+    Route::middleware('permission:roles.delete')->group(function () {
+        Route::delete('/roles/{role}', [RoleController::class, 'destroy'])->name('roles.destroy');
+    });
     
     // Permission Management
-    Route::resource('permissions', PermissionController::class);
+    Route::middleware('permission:permissions.view')->group(function () {
+        Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.index');
+    });
+    Route::middleware('permission:permissions.create')->group(function () {
+        Route::get('/permissions/create', [PermissionController::class, 'create'])->name('permissions.create');
+        Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
+    });
+    Route::middleware('permission:permissions.edit')->group(function () {
+        Route::get('/permissions/{permission}/edit', [PermissionController::class, 'edit'])->name('permissions.edit');
+        Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->name('permissions.update');
+        Route::patch('/permissions/{permission}', [PermissionController::class, 'update']);
+    });
+    Route::middleware('permission:permissions.delete')->group(function () {
+        Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
+    });
     
     // Menu Management
-    Route::resource('menus', MenuController::class);
+    Route::middleware('permission:menus.view')->group(function () {
+        Route::get('/menus', [MenuController::class, 'index'])->name('menus.index');
+    });
+    Route::middleware('permission:menus.create')->group(function () {
+        Route::get('/menus/create', [MenuController::class, 'create'])->name('menus.create');
+        Route::post('/menus', [MenuController::class, 'store'])->name('menus.store');
+    });
+    Route::middleware('permission:menus.edit')->group(function () {
+        Route::get('/menus/{menu}/edit', [MenuController::class, 'edit'])->name('menus.edit');
+        Route::put('/menus/{menu}', [MenuController::class, 'update'])->name('menus.update');
+        Route::patch('/menus/{menu}', [MenuController::class, 'update']);
+    });
+    Route::middleware('permission:menus.delete')->group(function () {
+        Route::delete('/menus/{menu}', [MenuController::class, 'destroy'])->name('menus.destroy');
+    });
 });

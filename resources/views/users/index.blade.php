@@ -14,9 +14,11 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-people"></i> Users Management</span>
-                <a href="{{ route('users.create') }}" class="btn btn-light btn-sm">
-                    <i class="bi bi-plus-circle"></i> Add User
-                </a>
+                @if(auth()->user()->hasPermission('users.create'))
+                    <a href="{{ route('users.create') }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-plus-circle"></i> Add User
+                    </a>
+                @endif
             </div>
             <div class="card-body">
                 <div class="row mb-3">
@@ -69,21 +71,25 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('users.edit', $user->unique_id) }}" class="btn btn-sm btn-warning">
-                                            <i class="bi bi-pencil"></i>
-                                        </a>
-                                        @if(!$user->hasRole('ADMIN') && $user->user_id !== auth()->id())
-                                            <form action="{{ route('users.destroy', $user->unique_id) }}" method="POST" class="d-inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                        @if(auth()->user()->hasPermission('users.edit'))
+                                            <a href="{{ route('users.edit', $user->unique_id) }}" class="btn btn-sm btn-warning">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        @endif
+                                        @if(auth()->user()->hasPermission('users.delete'))
+                                            @if(!$user->hasRole('ADMIN') && $user->user_id !== auth()->id())
+                                                <form action="{{ route('users.destroy', $user->unique_id) }}" method="POST" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            @else
+                                                <button type="button" class="btn btn-sm btn-secondary" disabled title="Cannot delete Admin user or yourself">
                                                     <i class="bi bi-trash"></i>
                                                 </button>
-                                            </form>
-                                        @else
-                                            <button type="button" class="btn btn-sm btn-secondary" disabled title="Cannot delete Admin user or yourself">
-                                                <i class="bi bi-trash"></i>
-                                            </button>
+                                            @endif
                                         @endif
                                     </td>
                                 </tr>

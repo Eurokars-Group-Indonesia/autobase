@@ -17,7 +17,7 @@
                 <i class="bi bi-pencil"></i> Edit User
             </div>
             <div class="card-body">
-                <form action="{{ route('users.update', $user->user_id) }}" method="POST">
+                <form action="{{ route('users.update', $user->unique_id) }}" method="POST">
                     @csrf
                     @method('PUT')
                     <div class="row">
