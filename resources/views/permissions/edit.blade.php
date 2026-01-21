@@ -23,7 +23,7 @@
                     <div class="mb-3">
                         <label class="form-label">Permission Code <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('permission_code') is-invalid @enderror" 
-                               name="permission_code" value="{{ old('permission_code', $permission->permission_code) }}" required>
+                               name="permission_code" value="{{ old('permission_code', $permission->permission_code) }}" required maxlength="100">
                         @error('permission_code')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -32,7 +32,7 @@
                     <div class="mb-3">
                         <label class="form-label">Permission Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('permission_name') is-invalid @enderror" 
-                               name="permission_name" value="{{ old('permission_name', $permission->permission_name) }}" required>
+                               name="permission_name" value="{{ old('permission_name', $permission->permission_name) }}" required maxlength="150">
                         @error('permission_name')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror

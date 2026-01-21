@@ -39,6 +39,16 @@ class Permission extends Model
 
     public function roles()
     {
-        return $this->belongsToMany(Role::class, 'ms_role_permissions', 'permission_id', 'role_id');
+        return $this->belongsToMany(Role::class, 'ms_role_permissions', 'permission_id', 'role_id')
+            ->wherePivot('is_active', '1')
+            ->where('ms_role.is_active', '1');
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'unique_id';
     }
 }

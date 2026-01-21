@@ -59,10 +59,10 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('permissions.edit', $permission->permission_id) }}" class="btn btn-sm btn-warning">
+                                        <a href="{{ route('permissions.edit', $permission->unique_id) }}" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form action="{{ route('permissions.destroy', $permission->permission_id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('permissions.destroy', $permission->unique_id) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">

@@ -23,7 +23,7 @@
                         <label class="form-label">Permission Code <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('permission_code') is-invalid @enderror" 
                                name="permission_code" value="{{ old('permission_code') }}" required 
-                               placeholder="e.g., users.create">
+                               placeholder="e.g., users.create" maxlength="100">
                         @error('permission_code')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
@@ -33,19 +33,8 @@
                         <label class="form-label">Permission Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control @error('permission_name') is-invalid @enderror" 
                                name="permission_name" value="{{ old('permission_name') }}" required
-                               placeholder="e.g., Create Users">
+                               placeholder="e.g., Create Users" maxlength="150">
                         @error('permission_name')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select class="form-select @error('is_active') is-invalid @enderror" name="is_active" required>
-                            <option value="1" {{ old('is_active') == '1' ? 'selected' : '' }}>Active</option>
-                            <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Inactive</option>
-                        </select>
-                        @error('is_active')
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>

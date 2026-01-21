@@ -37,6 +37,7 @@ class MenuController extends Controller
         $data = $request->validated();
         $data['unique_id'] = (string) Str::uuid();
         $data['created_by'] = auth()->id();
+        $data['is_active'] = '1'; // Default active
 
         Menu::create($data);
 

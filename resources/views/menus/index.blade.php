@@ -69,10 +69,10 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('menus.edit', $menu->menu_id) }}" class="btn btn-sm btn-warning">
+                                        <a href="{{ route('menus.edit', $menu->unique_id) }}" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form action="{{ route('menus.destroy', $menu->menu_id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('menus.destroy', $menu->unique_id) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">

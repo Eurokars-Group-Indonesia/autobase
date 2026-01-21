@@ -24,7 +24,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Menu Code <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('menu_code') is-invalid @enderror" 
-                                   name="menu_code" value="{{ old('menu_code', $menu->menu_code) }}" required>
+                                   name="menu_code" value="{{ old('menu_code', $menu->menu_code) }}" required maxlength="50">
                             @error('menu_code')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -32,7 +32,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Menu Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('menu_name') is-invalid @enderror" 
-                                   name="menu_name" value="{{ old('menu_name', $menu->menu_name) }}" required>
+                                   name="menu_name" value="{{ old('menu_name', $menu->menu_name) }}" required maxlength="100">
                             @error('menu_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -43,7 +43,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Menu URL</label>
                             <input type="text" class="form-control @error('menu_url') is-invalid @enderror" 
-                                   name="menu_url" value="{{ old('menu_url', $menu->menu_url) }}">
+                                   name="menu_url" value="{{ old('menu_url', $menu->menu_url) }}" maxlength="255">
                             @error('menu_url')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -51,7 +51,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Menu Icon</label>
                             <input type="text" class="form-control @error('menu_icon') is-invalid @enderror" 
-                                   name="menu_icon" value="{{ old('menu_icon', $menu->menu_icon) }}">
+                                   name="menu_icon" value="{{ old('menu_icon', $menu->menu_icon) }}" maxlength="50">
                             @error('menu_icon')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror

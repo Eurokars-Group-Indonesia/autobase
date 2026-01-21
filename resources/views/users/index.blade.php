@@ -69,11 +69,11 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('users.edit', $user->user_id) }}" class="btn btn-sm btn-warning">
+                                        <a href="{{ route('users.edit', $user->unique_id) }}" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil"></i>
                                         </a>
                                         @if(!$user->hasRole('ADMIN') && $user->user_id !== auth()->id())
-                                            <form action="{{ route('users.destroy', $user->user_id) }}" method="POST" class="d-inline">
+                                            <form action="{{ route('users.destroy', $user->unique_id) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">

@@ -41,12 +41,15 @@ class Role extends Model
     public function permissions()
     {
         return $this->belongsToMany(Permission::class, 'ms_role_permissions', 'role_id', 'permission_id')
-            ->wherePivot('is_active', '1');
+            ->wherePivot('is_active', '1')
+            ->where('ms_permissions.is_active', '1');
     }
 
     public function users()
     {
-        return $this->belongsToMany(User::class, 'ms_user_roles', 'role_id', 'user_id');
+        return $this->belongsToMany(User::class, 'ms_user_roles', 'role_id', 'user_id')
+            ->wherePivot('is_active', '1')
+            ->where('ms_users.is_active', '1');
     }
 
     public function menus()
@@ -55,5 +58,13 @@ class Role extends Model
             ->wherePivot('is_active', '1')
             ->where('ms_menus.is_active', '1')
             ->orderBy('menu_order');
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'unique_id';
     }
 }

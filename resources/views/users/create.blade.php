@@ -23,7 +23,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('name') is-invalid @enderror" 
-                                   name="name" value="{{ old('name') }}" required>
+                                   name="name" value="{{ old('name') }}" required maxlength="150">
                             @error('name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -31,7 +31,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Full Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('full_name') is-invalid @enderror" 
-                                   name="full_name" value="{{ old('full_name') }}" required>
+                                   name="full_name" value="{{ old('full_name') }}" required maxlength="150">
                             @error('full_name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -40,9 +40,9 @@
 
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Email</label>
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
                             <input type="email" class="form-control @error('email') is-invalid @enderror" 
-                                   name="email" value="{{ old('email') }}">
+                                   name="email" value="{{ old('email') }}" required maxlength="150">
                             @error('email')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -50,7 +50,7 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Phone</label>
                             <input type="text" class="form-control @error('phone') is-invalid @enderror" 
-                                   name="phone" value="{{ old('phone') }}">
+                                   name="phone" value="{{ old('phone') }}" maxlength="20">
                             @error('phone')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -61,14 +61,14 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Password <span class="text-danger">*</span></label>
                             <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                   name="password" required>
+                                   name="password" required maxlength="255">
                             @error('password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" name="password_confirmation" required>
+                            <input type="password" class="form-control" name="password_confirmation" required maxlength="255">
                         </div>
                     </div>
 
@@ -87,17 +87,6 @@
                                 </div>
                             @endforeach
                         </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select class="form-select @error('is_active') is-invalid @enderror" name="is_active" required>
-                            <option value="1" {{ old('is_active') == '1' ? 'selected' : '' }}>Active</option>
-                            <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Inactive</option>
-                        </select>
-                        @error('is_active')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
                     </div>
 
                     <div class="d-flex justify-content-between">

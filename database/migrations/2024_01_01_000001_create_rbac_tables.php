@@ -18,7 +18,7 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamp('updated_date')->nullable();
             $table->char('unique_id', 36)->unique();
-            $table->enum('is_active', ['0', '1'])->default('1');
+            $table->enum('is_active', ['0', '1'])->default('1')->nullable();
         });
 
         // Table ms_role
@@ -32,7 +32,7 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->dateTime('updated_date')->nullable();
             $table->char('unique_id', 36)->unique();
-            $table->enum('is_active', ['0', '1'])->default('1');
+            $table->enum('is_active', ['0', '1'])->default('1')->nullable();
 
             $table->index('role_code');
         });
@@ -46,7 +46,7 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamp('updated_date')->nullable();
             $table->char('unique_id', 36)->unique();
-            $table->enum('is_active', ['0', '1'])->default('1');
+            $table->enum('is_active', ['0', '1'])->default('1')->nullable();
 
             $table->primary(['role_id', 'permission_id']);
             $table->foreign('role_id')->references('role_id')->on('ms_role')
@@ -66,7 +66,7 @@ return new class extends Migration
             $table->unsignedBigInteger('updated_by')->nullable();
             $table->timestamp('updated_date')->nullable();
             $table->char('unique_id', 36)->unique();
-            $table->enum('is_active', ['0', '1'])->default('1');
+            $table->enum('is_active', ['0', '1'])->default('1')->nullable();
 
             $table->index('user_id');
             $table->index('role_id');

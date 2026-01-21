@@ -65,10 +65,10 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <a href="{{ route('roles.edit', $role->role_id) }}" class="btn btn-sm btn-warning">
+                                        <a href="{{ route('roles.edit', $role->unique_id) }}" class="btn btn-sm btn-warning">
                                             <i class="bi bi-pencil"></i>
                                         </a>
-                                        <form action="{{ route('roles.destroy', $role->role_id) }}" method="POST" class="d-inline">
+                                        <form action="{{ route('roles.destroy', $role->unique_id) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">

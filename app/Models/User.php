@@ -81,6 +81,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class, 'ms_user_roles', 'user_id', 'role_id')
             ->wherePivot('is_active', '1')
+            ->where('ms_role.is_active', '1')
             ->withPivot('assigned_date', 'created_by', 'created_date', 'updated_by', 'updated_date', 'unique_id');
     }
 
@@ -128,5 +129,13 @@ class User extends Authenticatable
                 $model->unique_id = (string) \Illuminate\Support\Str::uuid();
             }
         });
+    }
+
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName()
+    {
+        return 'unique_id';
     }
 }

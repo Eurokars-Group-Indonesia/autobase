@@ -31,7 +31,13 @@ class RoleController extends Controller
     public function create()
     {
         $permissions = Permission::where('is_active', '1')->get();
-        $menus = Menu::where('is_active', '1')->whereNull('parent_id')->with('children')->orderBy('menu_order')->get();
+        $menus = Menu::where('is_active', '1')
+            ->whereNull('parent_id')
+            ->with(['children' => function($query) {
+                $query->where('is_active', '1');
+            }])
+            ->orderBy('menu_order')
+            ->get();
         return view('roles.create', compact('permissions', 'menus'));
     }
 
@@ -40,6 +46,7 @@ class RoleController extends Controller
         $data = $request->validated();
         $data['unique_id'] = (string) Str::uuid();
         $data['created_by'] = auth()->id();
+        $data['is_active'] = '1'; // Default active
 
         $role = Role::create($data);
 
@@ -73,7 +80,13 @@ class RoleController extends Controller
     public function edit(Role $role)
     {
         $permissions = Permission::where('is_active', '1')->get();
-        $menus = Menu::where('is_active', '1')->whereNull('parent_id')->with('children')->orderBy('menu_order')->get();
+        $menus = Menu::where('is_active', '1')
+            ->whereNull('parent_id')
+            ->with(['children' => function($query) {
+                $query->where('is_active', '1');
+            }])
+            ->orderBy('menu_order')
+            ->get();
         $rolePermissions = $role->permissions->pluck('permission_id')->toArray();
         $roleMenus = $role->menus->pluck('menu_id')->toArray();
         

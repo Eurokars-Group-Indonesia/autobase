@@ -13,23 +13,45 @@ class UserRequest extends FormRequest
 
     public function rules(): array
     {
-        $userId = $this->route('user');
+        $userId = $this->route('user') ? $this->route('user')->user_id : null;
+        
         $rules = [
             'name' => 'required|string|max:150',
-            'email' => 'nullable|email|max:150|unique:ms_users,email,' . $userId . ',user_id',
             'full_name' => 'required|string|max:150',
             'phone' => 'nullable|string|max:20',
-            'is_active' => 'required|in:0,1',
             'roles' => 'nullable|array',
             'roles.*' => 'exists:ms_role,role_id',
         ];
 
-        if ($this->isMethod('post')) {
-            $rules['password'] = 'required|string|min:8|confirmed';
+        // is_active only for update
+        if ($this->isMethod('put') || $this->isMethod('patch')) {
+            $rules['is_active'] = 'nullable|in:0,1';
+        }
+
+        // Email validation - using user_id for database check
+        if ($userId) {
+            $rules['email'] = 'required|email|max:150|unique:ms_users,email,' . $userId . ',user_id';
         } else {
-            $rules['password'] = 'nullable|string|min:8|confirmed';
+            $rules['email'] = 'required|email|max:150|unique:ms_users,email';
+        }
+
+        // Password validation
+        if ($this->isMethod('post')) {
+            $rules['password'] = 'required|string|min:8|max:255|confirmed';
+        } else {
+            $rules['password'] = 'nullable|string|min:8|max:255|confirmed';
         }
 
         return $rules;
+    }
+
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'email.unique' => 'Email sudah terdaftar. Silakan gunakan email lain.',
+            'email.max' => 'Email maksimal 150 karakter.',
+        ];
     }
 }

@@ -41,6 +41,7 @@ class UserController extends Controller
         $data['password'] = Hash::make($data['password']);
         $data['unique_id'] = (string) Str::uuid();
         $data['created_by'] = auth()->id();
+        $data['is_active'] = '1'; // Default active
 
         $user = User::create($data);
 

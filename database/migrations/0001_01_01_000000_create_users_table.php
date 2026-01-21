@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('dealer_id')->nullable();
             $table->unsignedBigInteger('brand_id')->nullable();
             $table->string('name', 150);
-            $table->string('email', 150)->nullable()->unique();
+            $table->string('email', 150)->unique()->nullable(false);
             $table->string('full_name', 150);
             $table->string('password', 255);
             $table->string('phone', 20)->nullable();
@@ -27,7 +27,7 @@ return new class extends Migration
             $table->timestamp('updated_date')->nullable();
             $table->dateTime('last_login')->nullable();
             $table->char('unique_id', 36)->unique();
-            $table->enum('is_active', ['0', '1'])->default('1');
+            $table->enum('is_active', ['0', '1'])->default('1')->nullable();
 
             // Indexes
             $table->index('dealer_id');
