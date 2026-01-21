@@ -9,6 +9,7 @@ use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\DealerController;
+use App\Http\Controllers\TransactionHeaderController;
 
 // Guest Routes
 Route::middleware('guest')->group(function () {
@@ -122,5 +123,15 @@ Route::middleware('auth')->group(function () {
     });
     Route::middleware('permission:dealers.delete')->group(function () {
         Route::delete('/dealers/{dealer}', [DealerController::class, 'destroy'])->name('dealers.destroy');
+    });
+    
+    // Transaction Headers
+    Route::middleware('permission:transactions.view')->group(function () {
+        Route::get('/transactions', [TransactionHeaderController::class, 'index'])->name('transactions.index');
+    });
+    Route::middleware('permission:transactions.header.import')->group(function () {
+        Route::get('/transactions/import', [TransactionHeaderController::class, 'showImport'])->name('transactions.header.import');
+        Route::post('/transactions/import', [TransactionHeaderController::class, 'import'])->name('transactions.header.import.process');
+        Route::get('/transactions/import/template', [TransactionHeaderController::class, 'downloadTemplate'])->name('transactions.header.import.template');
     });
 });
