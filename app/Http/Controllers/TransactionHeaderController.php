@@ -14,16 +14,17 @@ class TransactionHeaderController extends Controller
     {
         $query = TransactionHeader::with('brand')->where('is_active', '1')->orderBy('invoice_date', 'desc');
         
-        // Search by text (invoice_no, wip_no, customer_name, chassis, registration_no)
+        // Search by text (customer_name, chassis, invoice_date, invoice_no, wip_no, registration_no)
         // Using 'search%' pattern to utilize B-tree index efficiently
         if ($request->has('search') && $request->search != '') {
             $search = $request->search;
             $query->where(function($q) use ($search) {
-                $q->where('invoice_no', 'like', $search . '%')
-                  ->orWhere('wip_no', 'like', $search . '%')
-                  ->orWhere('customer_name', 'like', $search . '%')
+                $q->where('customer_name', 'like', $search . '%')
                   ->orWhere('chassis', 'like', $search . '%')
-                  ->orWhere('registration_no', 'like', $search . '%');
+                  ->orWhere('invoice_no', 'like', $search . '%')
+                  ->orWhere('wip_no', 'like', $search . '%')
+                  ->orWhere('registration_no', 'like', $search . '%')
+                  ->orWhereDate('invoice_date', '=', $search);
             });
         }
         
@@ -36,7 +37,11 @@ class TransactionHeaderController extends Controller
             $query->whereDate('invoice_date', '<=', $request->date_to);
         }
         
-        $transactions = $query->paginate(10)->withQueryString();
+        // Pagination with per_page option
+        $perPage = $request->get('per_page', 10);
+        $perPage = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
+        
+        $transactions = $query->paginate($perPage)->withQueryString();
         
         return view('transactions.index', compact('transactions'));
     }

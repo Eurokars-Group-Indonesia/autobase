@@ -37,7 +37,7 @@
                         <div class="col-md-4">
                             <label class="form-label">Search</label>
                             <input type="text" class="form-control" name="search" 
-                                   placeholder="Invoice No, WIP No, Customer, Chassis, Reg No..." 
+                                   placeholder="Customer, Chassis, Invoice No, WIP No, Reg No, Date..." 
                                    value="{{ request('search') }}">
                         </div>
                         <div class="col-md-3">
