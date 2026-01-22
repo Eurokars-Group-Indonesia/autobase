@@ -38,6 +38,7 @@ class TransactionBodyImportPermissionSeeder extends Seeder
             'permission_id' => $permission->permission_id,
             'created_by' => 1,
             'created_date' => now(),
+            'unique_id' => (string) Str::uuid(),
         ]);
 
         echo "Permission assigned to Super Admin role successfully!\n";
