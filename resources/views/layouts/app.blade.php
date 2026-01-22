@@ -153,8 +153,8 @@
             }
             
             .theme-toggle {
-                background: #0d6efd;
-                color: white;
+                background: #0d6efd !important;
+                color: white !important;
                 margin-bottom: 0.5rem;
                 width: 100%;
                 height: 45px;
@@ -162,18 +162,26 @@
                 justify-content: center;
                 align-items: center;
                 font-size: 1.2rem;
+                border-radius: 5px;
             }
             
-            .theme-toggle:hover {
-                background: #0b5ed7;
+            .theme-toggle:hover,
+            .theme-toggle:focus,
+            .theme-toggle:active {
+                background: #0b5ed7 !important;
+                color: white !important;
             }
             
             [data-theme="dark"] .theme-toggle {
-                background: #495057;
+                background: #495057 !important;
+                color: white !important;
             }
             
-            [data-theme="dark"] .theme-toggle:hover {
-                background: #5a6268;
+            [data-theme="dark"] .theme-toggle:hover,
+            [data-theme="dark"] .theme-toggle:focus,
+            [data-theme="dark"] .theme-toggle:active {
+                background: #5a6268 !important;
+                color: white !important;
             }
             
             .user-avatar {
@@ -295,7 +303,7 @@
             width: 38px;
         }
         .theme-toggle:hover {
-            background: rgba(255,255,255,0.2);
+            background: #0d6efd;
         }
         .theme-toggle i {
             font-size: 1.1rem;
