@@ -63,18 +63,115 @@ sudo supervisorctl start laravel-worker:*
 ```
 
 5. **Run as background service** (Windows):
+
+**Option A: Using NSSM (Recommended)**
+
+NSSM (Non-Sucking Service Manager) adalah tool terbaik untuk menjalankan queue worker sebagai Windows Service.
+
 ```bash
-# Using NSSM (Non-Sucking Service Manager)
-# Download from: https://nssm.cc/download
+# 1. Download NSSM
+# Download dari: https://nssm.cc/download
+# Extract ke folder, misalnya: C:\nssm
 
-# Install as service
-nssm install LaravelQueue "C:\laragon\bin\php\php-8.x.x\php.exe" "C:\laragon\www\service_history\artisan queue:work --sleep=3 --tries=3"
+# 2. Buka Command Prompt as Administrator
 
-# Start service
+# 3. Install service
+C:\nssm\win64\nssm.exe install LaravelQueue
+
+# 4. NSSM GUI akan terbuka, isi:
+# Path: C:\laragon\bin\php\php-8.2.x\php.exe
+# Startup directory: C:\laragon\www\service_history
+# Arguments: artisan queue:work --sleep=3 --tries=3 --max-time=3600
+
+# 5. Tab "Details" (optional):
+# Display name: Laravel Queue Worker
+# Description: Laravel Queue Worker for Service History
+
+# 6. Tab "I/O" (optional):
+# Output (stdout): C:\laragon\www\service_history\storage\logs\queue-worker.log
+# Error (stderr): C:\laragon\www\service_history\storage\logs\queue-worker-error.log
+
+# 7. Klik "Install service"
+
+# 8. Start service
 nssm start LaravelQueue
 
-# Check status
+# 9. Check status
 nssm status LaravelQueue
+
+# 10. Stop service (jika perlu)
+nssm stop LaravelQueue
+
+# 11. Restart service (setelah deploy)
+nssm restart LaravelQueue
+
+# 12. Remove service (jika perlu uninstall)
+nssm remove LaravelQueue confirm
+```
+
+**Option B: Using Task Scheduler**
+
+Menggunakan Windows Task Scheduler untuk auto-start queue worker saat boot.
+
+```bash
+# 1. Buat batch file: C:\laragon\www\service_history\start-queue.bat
+@echo off
+cd C:\laragon\www\service_history
+C:\laragon\bin\php\php-8.2.x\php.exe artisan queue:work --sleep=3 --tries=3
+
+# 2. Buka Task Scheduler (taskschd.msc)
+
+# 3. Create Basic Task
+# Name: Laravel Queue Worker
+# Description: Run Laravel queue worker for Service History
+
+# 4. Trigger: When the computer starts
+
+# 5. Action: Start a program
+# Program/script: C:\laragon\www\service_history\start-queue.bat
+
+# 6. Settings:
+# ✓ Allow task to be run on demand
+# ✓ Run task as soon as possible after a scheduled start is missed
+# ✓ If the task fails, restart every: 1 minute
+# ✓ Attempt to restart up to: 3 times
+
+# 7. Finish
+```
+
+**Option C: Using Laragon Auto-Start (Development Only)**
+
+Untuk development di Laragon, bisa menggunakan auto-start script.
+
+```bash
+# 1. Buat file: C:\laragon\www\service_history\queue-worker.bat
+@echo off
+:loop
+php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+timeout /t 5
+goto loop
+
+# 2. Buat shortcut dari queue-worker.bat
+
+# 3. Copy shortcut ke:
+# C:\Users\[YourUsername]\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup
+
+# 4. Queue worker akan auto-start saat Windows boot
+```
+
+**Option D: Manual Start (Development)**
+
+Untuk development, cukup jalankan manual di terminal:
+
+```bash
+# Buka terminal di folder project
+cd C:\laragon\www\service_history
+
+# Jalankan queue worker
+php artisan queue:work
+
+# Atau dengan parameter
+php artisan queue:work --sleep=3 --tries=3
 ```
 
 #### Option 2: Redis Queue (Recommended for Production)
@@ -222,7 +319,343 @@ php artisan horizon
 # Access dashboard at: http://your-app.test/horizon
 ```
 
-## Troubleshooting
+## Windows-Specific Setup
+
+### Prerequisites
+
+1. **PHP CLI** harus bisa diakses dari command line
+2. **Composer** sudah terinstall
+3. **Database** sudah running (MySQL/MariaDB)
+
+### Quick Start for Development (Windows)
+
+```bash
+# 1. Buka Command Prompt atau PowerShell
+cd C:\laragon\www\service_history
+
+# 2. Set queue connection ke sync untuk development
+# Edit .env:
+QUEUE_CONNECTION=sync
+
+# 3. Tidak perlu queue worker, job langsung dijalankan
+```
+
+### Production Setup (Windows)
+
+#### Method 1: NSSM (Recommended)
+
+**Step 1: Download NSSM**
+- Download dari: https://nssm.cc/download
+- Extract ke folder, contoh: `C:\nssm`
+- Pilih `win64` untuk Windows 64-bit atau `win32` untuk 32-bit
+
+**Step 2: Install Service**
+```bash
+# Buka Command Prompt as Administrator
+cd C:\nssm\win64
+
+# Install service dengan GUI
+nssm.exe install LaravelQueue
+```
+
+**Step 3: Configure Service (NSSM GUI)**
+- **Path**: `C:\laragon\bin\php\php-8.2.x\php.exe` (sesuaikan versi PHP)
+- **Startup directory**: `C:\laragon\www\service_history`
+- **Arguments**: `artisan queue:work --sleep=3 --tries=3 --max-time=3600`
+
+**Tab Details:**
+- **Display name**: Laravel Queue Worker
+- **Description**: Laravel Queue Worker for Service History Application
+
+**Tab I/O (Logging):**
+- **Output (stdout)**: `C:\laragon\www\service_history\storage\logs\queue-worker.log`
+- **Error (stderr)**: `C:\laragon\www\service_history\storage\logs\queue-worker-error.log`
+
+**Tab Rotation (Optional):**
+- **Rotate files**: Yes
+- **Restrict rotation to files bigger than**: 1048576 bytes (1MB)
+
+**Step 4: Manage Service**
+```bash
+# Start service
+nssm start LaravelQueue
+
+# Stop service
+nssm stop LaravelQueue
+
+# Restart service (after code deploy)
+nssm restart LaravelQueue
+
+# Check status
+nssm status LaravelQueue
+
+# View service details
+nssm status LaravelQueue
+
+# Remove service (if needed)
+nssm remove LaravelQueue confirm
+```
+
+**Step 5: Verify Service**
+```bash
+# Check Windows Services
+services.msc
+
+# Look for "Laravel Queue Worker"
+# Status should be "Running"
+# Startup Type should be "Automatic"
+```
+
+#### Method 2: Task Scheduler
+
+**Step 1: Create Batch File**
+
+Create file: `C:\laragon\www\service_history\start-queue.bat`
+```batch
+@echo off
+cd /d C:\laragon\www\service_history
+C:\laragon\bin\php\php-8.2.x\php.exe artisan queue:work --sleep=3 --tries=3 --max-time=3600
+```
+
+**Step 2: Create Scheduled Task**
+```bash
+# Open Task Scheduler
+Win + R → taskschd.msc → Enter
+
+# Create Task (not Basic Task)
+# General Tab:
+Name: Laravel Queue Worker
+Description: Run Laravel queue worker for Service History
+Security options:
+  ☑ Run whether user is logged on or not
+  ☑ Run with highest privileges
+Configure for: Windows 10/11
+
+# Triggers Tab:
+New Trigger:
+  Begin the task: At startup
+  Delay task for: 30 seconds
+  ☑ Enabled
+
+# Actions Tab:
+New Action:
+  Action: Start a program
+  Program/script: C:\laragon\www\service_history\start-queue.bat
+  Start in: C:\laragon\www\service_history
+
+# Conditions Tab:
+☐ Start the task only if the computer is on AC power
+☑ Wake the computer to run this task
+
+# Settings Tab:
+☑ Allow task to be run on demand
+☑ Run task as soon as possible after a scheduled start is missed
+☑ If the task fails, restart every: 1 minute
+☑ Attempt to restart up to: 3 times
+☑ Stop the task if it runs longer than: 0 (disabled)
+If the running task does not end when requested, force it to stop: Yes
+```
+
+**Step 3: Test Task**
+```bash
+# Right-click task → Run
+# Check if queue worker is running in Task Manager
+```
+
+#### Method 3: Startup Folder (Simple)
+
+**Step 1: Create Batch File**
+
+Create file: `C:\laragon\www\service_history\queue-worker.bat`
+```batch
+@echo off
+title Laravel Queue Worker
+cd /d C:\laragon\www\service_history
+
+:loop
+C:\laragon\bin\php\php-8.2.x\php.exe artisan queue:work --sleep=3 --tries=3 --max-time=3600
+echo Queue worker stopped. Restarting in 5 seconds...
+timeout /t 5
+goto loop
+```
+
+**Step 2: Create Shortcut**
+```bash
+# Right-click queue-worker.bat → Create shortcut
+# Copy shortcut to Startup folder:
+Win + R → shell:startup → Enter
+# Paste shortcut here
+```
+
+**Step 3: Auto-start on Boot**
+- Queue worker akan otomatis start saat Windows boot
+- Window akan muncul (bisa diminimize)
+
+### Troubleshooting Windows
+
+#### Queue Worker Not Starting
+
+**Check PHP Path:**
+```bash
+# Test PHP CLI
+php -v
+
+# If not found, add to PATH:
+# System Properties → Environment Variables → Path
+# Add: C:\laragon\bin\php\php-8.2.x
+```
+
+**Check Permissions:**
+```bash
+# Run Command Prompt as Administrator
+# Try starting queue worker manually
+cd C:\laragon\www\service_history
+php artisan queue:work
+```
+
+**Check Logs:**
+```bash
+# View Laravel logs
+type storage\logs\laravel.log
+
+# View queue worker logs (if using NSSM)
+type storage\logs\queue-worker.log
+type storage\logs\queue-worker-error.log
+```
+
+#### Service Stops Unexpectedly
+
+**Using NSSM:**
+```bash
+# Check service status
+nssm status LaravelQueue
+
+# View service logs
+type storage\logs\queue-worker-error.log
+
+# Restart service
+nssm restart LaravelQueue
+```
+
+**Using Task Scheduler:**
+```bash
+# Open Task Scheduler
+# Check task history
+# Right-click task → Properties → History tab
+```
+
+#### After Code Deploy
+
+**Always restart queue worker after deploy:**
+
+**NSSM:**
+```bash
+nssm restart LaravelQueue
+```
+
+**Task Scheduler:**
+```bash
+# Stop task
+schtasks /end /tn "Laravel Queue Worker"
+
+# Start task
+schtasks /run /tn "Laravel Queue Worker"
+```
+
+**Manual:**
+```bash
+# Find PHP process
+tasklist | findstr php
+
+# Kill process
+taskkill /F /PID [process_id]
+
+# Start again
+php artisan queue:work
+```
+
+### Windows Service Management Commands
+
+```bash
+# Using NSSM
+nssm start LaravelQueue      # Start service
+nssm stop LaravelQueue       # Stop service
+nssm restart LaravelQueue    # Restart service
+nssm status LaravelQueue     # Check status
+nssm edit LaravelQueue       # Edit configuration
+nssm remove LaravelQueue     # Remove service
+
+# Using sc (Windows built-in)
+sc start LaravelQueue        # Start service
+sc stop LaravelQueue         # Stop service
+sc query LaravelQueue        # Check status
+sc delete LaravelQueue       # Delete service
+
+# Using net
+net start LaravelQueue       # Start service
+net stop LaravelQueue        # Stop service
+
+# Using PowerShell
+Start-Service LaravelQueue   # Start service
+Stop-Service LaravelQueue    # Stop service
+Restart-Service LaravelQueue # Restart service
+Get-Service LaravelQueue     # Check status
+```
+
+### Monitoring Queue on Windows
+
+**Check if Queue Worker is Running:**
+```bash
+# Using Task Manager
+Ctrl + Shift + Esc → Details tab → Look for php.exe
+
+# Using Command Prompt
+tasklist | findstr php
+
+# Using PowerShell
+Get-Process php
+```
+
+**View Queue Logs:**
+```bash
+# Real-time log viewing (PowerShell)
+Get-Content storage\logs\laravel.log -Wait -Tail 50
+
+# Or use a log viewer tool like:
+# - Notepad++
+# - Visual Studio Code
+# - BareTail
+```
+
+### Recommended Setup for Windows Production
+
+1. **Use NSSM** untuk service management (paling reliable)
+2. **Set QUEUE_CONNECTION=database** atau **redis** di .env
+3. **Configure logging** di NSSM untuk troubleshooting
+4. **Set auto-restart** di NSSM settings
+5. **Monitor logs** regularly
+6. **Restart service** setelah setiap deploy
+
+### Development vs Production
+
+**Development (Laragon/XAMPP):**
+```env
+QUEUE_CONNECTION=sync
+```
+- Tidak perlu queue worker
+- Job langsung dijalankan
+- Mudah untuk debugging
+
+**Production (Windows Server):**
+```env
+QUEUE_CONNECTION=database
+# atau
+QUEUE_CONNECTION=redis
+```
+- Gunakan NSSM untuk service
+- Set auto-restart
+- Monitor logs
+- Restart after deploy
 
 ### Jobs Not Processing
 
