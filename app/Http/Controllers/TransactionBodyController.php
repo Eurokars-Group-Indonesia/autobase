@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TransactionBody;
 use App\Imports\TransactionBodyImport;
-use App\Models\SearchHistory;
+use App\Jobs\LogSearchHistory;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -59,17 +59,16 @@ class TransactionBodyController extends Controller
         $endTime = microtime(true);
         $executionTime = ($endTime - $startTime) * 1000; // Convert to milliseconds
         
-        // Log search history if there's a search query or date filter
+        // Log search history asynchronously if there's a search query or date filter
         if ($request->has('search') || $request->has('date_from') || $request->has('date_to')) {
-            SearchHistory::create([
-                'user_id' => $userId,
-                'search' => $request->get('search'),
-                'date_from' => $request->get('date_from'),
-                'date_to' => $request->get('date_to'),
-                'executed_date' => now(),
-                'execution_time' => round($executionTime, 2),
-                'transaction_type' => 'B',
-            ]);
+            LogSearchHistory::dispatch(
+                $userId,
+                $request->get('search'),
+                $request->get('date_from'),
+                $request->get('date_to'),
+                $executionTime,
+                'B'
+            );
         }
         
         return view('transaction-body.index', compact('transactions'));

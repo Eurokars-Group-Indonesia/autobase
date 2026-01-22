@@ -39,7 +39,16 @@ Fitur untuk mencatat dan memonitor history search dari user beserta execution ti
   - Method `getTransactionTypeLabel()` untuk display label
   - Cast untuk date dan decimal fields
 
-### 3. Controller
+### 3. Job (Async Logging)
+- **File**: `app/Jobs/LogSearchHistory.php`
+- **Type**: Queued Job (Async)
+- **Purpose**: Log search history tanpa blocking response
+- **Features**:
+  - Implements `ShouldQueue` untuk async execution
+  - Error handling dengan logging
+  - Tidak mengganggu response time search
+
+### 4. Controller
 - **File**: `app/Http/Controllers/SearchHistoryController.php`
 - **Method**: `index()` - Display search history dengan filter
 - **Filters**:
@@ -48,31 +57,31 @@ Fitur untuk mencatat dan memonitor history search dari user beserta execution ti
   - Date Range (executed_date)
   - Pagination
 
-### 4. View
+### 5. View
 - **File**: `resources/views/search-history/index.blade.php`
 - **Features**:
   - Datatable dengan filter
   - Color-coded execution time badges:
-    - Green: < 100ms (Fast)
-    - Yellow: 100-500ms (Medium)
-    - Red: > 500ms (Slow)
+    - Green: < 500ms (Fast)
+    - Yellow: 500ms - 1500ms (Medium)
+    - Red: > 1500ms (Slow)
   - Transaction type badges
   - Date range picker
   - User filter dropdown
 
-### 5. Routes
+### 6. Routes
 - **File**: `routes/web.php`
 - **Route**: `GET /search-history`
 - **Middleware**: `permission:search-history.view`
 - **Name**: `search-history.index`
 
-### 6. Permission Seeder
+### 7. Permission Seeder
 - **File**: `database/seeders/SearchHistoryPermissionSeeder.php`
 - **Permission Code**: `search-history.view`
 - **Permission Name**: View Search History
 - **Assigned to**: Administrator role
 
-### 7. Menu Seeder
+### 8. Menu Seeder
 - **File**: `database/seeders/SearchHistoryMenuSeeder.php`
 - **Menu Code**: `search-history`
 - **Menu Name**: Search History
@@ -86,16 +95,18 @@ Fitur untuk mencatat dan memonitor history search dari user beserta execution ti
 - **Modified**: `index()` method
 - **Changes**:
   - Added timing measurement using `microtime(true)`
-  - Log search history when user performs search or date filter
+  - Dispatch async job `LogSearchHistory::dispatch()` when user performs search
   - Transaction type: 'H' (Header)
+  - **Non-blocking**: Job runs in background, tidak mengganggu response time
 
 ### Transaction Body Controller
 - **File**: `app/Http/Controllers/TransactionBodyController.php`
 - **Modified**: `index()` method
 - **Changes**:
   - Added timing measurement using `microtime(true)`
-  - Log search history when user performs search or date filter
+  - Dispatch async job `LogSearchHistory::dispatch()` when user performs search
   - Transaction type: 'B' (Body)
+  - **Non-blocking**: Job runs in background, tidak mengganggu response time
 
 ## How It Works
 
@@ -107,13 +118,53 @@ Fitur untuk mencatat dan memonitor history search dari user beserta execution ti
    $endTime = microtime(true);
    $executionTime = ($endTime - $startTime) * 1000; // Convert to ms
    ```
-3. **System logs to hs_search table**:
+3. **System dispatches async job** (non-blocking):
+   ```php
+   LogSearchHistory::dispatch(
+       $userId,
+       $search,
+       $dateFrom,
+       $dateTo,
+       $executionTime,
+       $transactionType
+   );
+   ```
+4. **Job runs in background** and logs to hs_search table:
    - User ID
    - Search query
    - Date filters (if any)
    - Execution time
    - Transaction type (H or B)
-4. **Administrator can view** all search history with filters
+5. **Administrator can view** all search history with filters
+
+### Queue Processing
+
+**Development (Sync Queue):**
+```bash
+# In .env
+QUEUE_CONNECTION=sync
+```
+Job akan dijalankan secara synchronous (langsung), cocok untuk development.
+
+**Production (Database Queue):**
+```bash
+# In .env
+QUEUE_CONNECTION=database
+
+# Run queue worker
+php artisan queue:work
+```
+Job akan dijalankan secara asynchronous oleh queue worker, tidak blocking response.
+
+**Alternative (Redis Queue - Recommended for Production):**
+```bash
+# In .env
+QUEUE_CONNECTION=redis
+
+# Run queue worker
+php artisan queue:work redis
+```
+Lebih cepat dan reliable untuk production.
 
 ## Access Control
 
@@ -142,9 +193,9 @@ Fitur untuk mencatat dan memonitor history search dari user beserta execution ti
    - Execution Time (color-coded badge)
 
 3. **Performance Indicators**:
-   - 🟢 Green badge: < 100ms (Fast)
-   - 🟡 Yellow badge: 100-500ms (Medium)
-   - 🔴 Red badge: > 500ms (Slow)
+   - 🟢 Green badge: < 500ms (Fast)
+   - 🟡 Yellow badge: 500ms - 1500ms (Medium)
+   - 🔴 Red badge: > 1500ms (Slow)
 
 ## Usage Example
 
@@ -170,6 +221,8 @@ Fitur untuk mencatat dan memonitor history search dari user beserta execution ti
 3. **Query Patterns**: Understand common search patterns
 4. **Optimization**: Identify queries that need optimization
 5. **Audit Trail**: Keep record of all search activities
+6. **Non-blocking**: Async logging tidak mengganggu response time search
+7. **Scalable**: Queue system dapat di-scale sesuai kebutuhan
 
 ## Notes
 
@@ -177,3 +230,6 @@ Fitur untuk mencatat dan memonitor history search dari user beserta execution ti
 - Execution time includes cache lookup time
 - Foreign key cascade delete: When user is deleted, their search history is also deleted
 - No automatic cleanup - Administrator should manually clean old records if needed
+- **Async logging**: Menggunakan Laravel Queue untuk non-blocking insert
+- **Error handling**: Jika logging gagal, tidak akan mempengaruhi search result
+- **Queue worker**: Perlu dijalankan di production untuk process async jobs
