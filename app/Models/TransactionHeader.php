@@ -51,7 +51,7 @@ class TransactionHeader extends Model
     protected $casts = [
         'invoice_date' => 'date',
         'registration_date' => 'date',
-        'created_at' => 'datetime',
+        'created_date' => 'datetime',
         'updated_date' => 'datetime',
         'is_active' => 'string',
         'exchange_rate' => 'decimal:2',
