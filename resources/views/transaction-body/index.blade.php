@@ -104,6 +104,7 @@
                                 <th style="min-width: 120px;">Invoice No</th>
                                 <th style="min-width: 120px;">WIP No</th>
                                 <th style="min-width: 250px;">Description</th>
+                                <th style="min-width: 100px;">Date Decard</th>
                                 <th style="min-width: 80px;">Qty</th>
                                 <th style="min-width: 80px;">Unit</th>
                                 <th style="min-width: 120px;">Selling Price</th>
@@ -120,6 +121,7 @@
                                     <td><code>{{ $transaction->invoice_no }}</code></td>
                                     <td><code>{{ $transaction->wip_no }}</code></td>
                                     <td>{{ $transaction->description ?? '-' }}</td>
+                                    <td>{{ $transaction->date_decard ? $transaction->date_decard->format('d M Y') : '-' }}</td>
                                     <td class="text-end">{{ number_format($transaction->qty, 2) }}</td>
                                     <td>{{ $transaction->unit }}</td>
                                     <td class="text-end">{{ number_format($transaction->selling_price, 2) }}</td>
