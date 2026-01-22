@@ -167,6 +167,9 @@ class TransactionBodyController extends Controller
             return redirect()->route('transaction-body.index')
                 ->with('success', "Transaction bodies imported successfully! {$successCount} records imported.");
         } catch (\Illuminate\Database\QueryException $e) {
+            // Clear cache on error
+            $this->clearTransactionBodyCache();
+            
             // Handle SQL errors with detailed messages
             $errorDetails = $this->parseSqlErrorDetailed($e, $import);
             
@@ -179,6 +182,9 @@ class TransactionBodyController extends Controller
             return redirect()->route('transaction-body.import')
                 ->with('sql_error', $errorDetails);
         } catch (\Exception $e) {
+            // Clear cache on error
+            $this->clearTransactionBodyCache();
+            
             \Log::error('Import Error: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
             
