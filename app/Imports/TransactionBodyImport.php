@@ -110,12 +110,13 @@ class TransactionBodyImport implements
             $dateDecard = $this->parseDate($row['datedecard'] ?? null);
 
             // Validate required numeric fields
+            // InvNo boleh 0, tapi tidak boleh null atau empty string
             if ($invoiceNo === null || $invoiceNo === '') {
                 $this->errors[] = [
                     'row' => $this->currentRow,
                     'field' => 'InvNo',
                     'value' => $row['invno'] ?? 'empty',
-                    'error' => 'Invoice Number must be a valid number'
+                    'error' => 'Invoice Number must be a valid number (0 is allowed)'
                 ];
                 return null;
             }

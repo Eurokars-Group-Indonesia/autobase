@@ -107,12 +107,13 @@ class TransactionHeaderImport implements
                 ];
             }
 
+            // InvNo boleh 0, tapi tidak boleh null atau empty string
             if ($invoiceNo === null || $invoiceNo === '') {
                 $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'InvNo',
                     'value' => $row['invno'] ?? 'empty',
-                    'error' => 'Invoice Number is required and must be a valid integer number (e.g., 1, 123). Text values like "INV000001" are not allowed.'
+                    'error' => 'Invoice Number is required and must be a valid integer number (0 is allowed, e.g., 0, 1, 123). Text values like "INV000001" are not allowed.'
                 ];
             }
 
