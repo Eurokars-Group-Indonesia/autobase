@@ -188,15 +188,15 @@
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 50px;" class="text-center">No</th>
-                                    <th>Part No</th>
-                                    <th>Description</th>
+                                    <th class="text-center">Part No</th>
+                                    <th class="text-center">Description</th>
                                     <th class="text-end">Qty</th>
                                     <th class="text-end">Selling Price</th>
                                     <th class="text-end">Discount %</th>
                                     <th class="text-end">Extended Price</th>
-                                    <th>VAT</th>
-                                    <th>Analysis Code</th>
-                                    <th>Parts/Labour</th>
+                                    <th class="text-center">VAT</th>
+                                    <th class="text-center">Analysis Code</th>
+                                    <th class="text-center">Parts/Labour</th>
                                 </tr>
                             </thead>
                             <tbody id="detailsTableBody">
