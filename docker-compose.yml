@@ -34,30 +34,16 @@ services:
       - DB_DATABASE=${DB_DATABASE:-service_history}
       - DB_USERNAME=${DB_USERNAME:-laravel}
       - DB_PASSWORD=${DB_PASSWORD:-secret}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_HOST=${REDIS_HOST:-host.docker.internal}
+      - REDIS_PORT=${REDIS_PORT:-6379}
       - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
       - SEED_DATABASE=${SEED_DATABASE:-false}
       - SKIP_DB_SETUP=${SKIP_DB_SETUP:-false}
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    depends_on:
-      redis:
-        condition: service_started
     networks:
       - laravel
       - percona-net
-
-  # Redis for Queue and Cache
-  redis:
-    image: redis:alpine
-    container_name: laravel_redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - laravel
 
   # Queue Worker (separate service)
   queue:
@@ -76,15 +62,12 @@ services:
       - DB_DATABASE=${DB_DATABASE:-service_history}
       - DB_USERNAME=${DB_USERNAME:-laravel}
       - DB_PASSWORD=${DB_PASSWORD:-secret}
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
+      - REDIS_HOST=${REDIS_HOST:-host.docker.internal}
+      - REDIS_PORT=${REDIS_PORT:-6379}
       - QUEUE_CONNECTION=${QUEUE_CONNECTION:-database}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     entrypoint: ["/usr/local/bin/queue-entrypoint.sh"]
-    depends_on:
-      redis:
-        condition: service_started
     restart: unless-stopped
     networks:
       - laravel
@@ -96,7 +79,3 @@ networks:
   percona-net:
     external: true
     name: percona_percona-net
-
-volumes:
-  redis_data:
-    driver: local
