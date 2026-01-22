@@ -5,10 +5,13 @@ echo "Laravel Docker Entrypoint"
 echo "========================================="
 echo ""
 
+# Fix git ownership issue
+git config --global --add safe.directory /var/www/html 2>/dev/null || true
+
 # Install dependencies if vendor directory doesn't exist
 if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
     echo "Installing Composer dependencies..."
-    composer install --no-interaction --prefer-dist --optimize-autoloader
+    composer install --no-interaction --prefer-dist --optimize-autoloader --no-dev
     echo "✓ Composer dependencies installed!"
     echo ""
 fi
