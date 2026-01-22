@@ -5,6 +5,29 @@ echo "Laravel Docker Entrypoint"
 echo "========================================="
 echo ""
 
+# Install dependencies if vendor directory doesn't exist
+if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
+    echo "Installing Composer dependencies..."
+    composer install --no-interaction --prefer-dist --optimize-autoloader
+    echo "✓ Composer dependencies installed!"
+    echo ""
+fi
+
+# Install node dependencies and build assets if needed
+if [ ! -d "node_modules" ]; then
+    echo "Installing NPM dependencies..."
+    npm install
+    echo "✓ NPM dependencies installed!"
+    echo ""
+fi
+
+if [ ! -d "public/build" ]; then
+    echo "Building frontend assets..."
+    npm run build
+    echo "✓ Assets built successfully!"
+    echo ""
+fi
+
 # Check if we should skip database operations
 if [ "$SKIP_DB_SETUP" = "true" ]; then
     echo "SKIP_DB_SETUP=true, skipping database operations..."

@@ -23,10 +23,19 @@ RUN apk add --no-cache \
     zip \
     unzip \
     mysql-client \
-    supervisor
+    supervisor \
+    redis \
+    nodejs \
+    npm
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql zip gd pcntl opcache
+
+# Install Redis extension via PECL
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
+    && apk del .build-deps
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
