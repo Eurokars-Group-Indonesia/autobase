@@ -483,6 +483,28 @@
         .input-group .btn:not(:last-child) {
             border-radius: 0;
         }
+        
+        /* Prevent horizontal scroll on mobile */
+        @media (max-width: 767.98px) {
+            html, body {
+                overflow-x: hidden;
+                max-width: 100vw;
+            }
+            .container-fluid {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+            .main-content {
+                padding-left: 0;
+                padding-right: 0;
+            }
+            .card {
+                border-radius: 5px;
+            }
+            .breadcrumb {
+                border-radius: 5px;
+            }
+        }
     </style>
     @stack('styles')
 </head>
