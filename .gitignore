@@ -22,3 +22,12 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Docker
+.env.docker
+
+# SSL Certificates (NEVER commit private keys!)
+docker/nginx/ssl/*.crt
+docker/nginx/ssl/*.key
+docker/nginx/ssl/*.pem
+docker/nginx/ssl/*.pfx
