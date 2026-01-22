@@ -111,6 +111,17 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
                 return null;
             }
 
+            $invoiceNo = $this->parseNumeric($row['invno'] ?? null);
+            if ($invoiceNo === null || $invoiceNo === '') {
+                $this->errors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'InvNo',
+                    'value' => $row['invno'] ?? 'empty',
+                    'error' => 'InvNo must be a valid integer number (e.g., 1, 123). Text values like "INV000001" are not allowed.'
+                ];
+                return null;
+            }
+
             // Mileage boleh 0, tapi tidak boleh null atau empty string
             if ($mileage === null || $mileage === '') {
                 $this->errors[] = [
