@@ -9,11 +9,18 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
-class TransactionBodyImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmptyRows, SkipsOnFailure
+class TransactionBodyImport implements 
+    ToModel, 
+    WithHeadingRow, 
+    WithValidation, 
+    SkipsEmptyRows, 
+    SkipsOnFailure,
+    WithChunkReading
 {
     use SkipsFailures;
 
@@ -332,6 +339,7 @@ class TransactionBodyImport implements ToModel, WithHeadingRow, WithValidation, 
             } else {
                 // INSERT: Record not exists
                 $data['created_by'] = (string) Auth::id();
+                $data['unique_id'] = (string) \Illuminate\Support\Str::uuid();
                 $body = TransactionBody::create($data);
                 Log::info("Row {$this->currentRow} INSERTED", [
                     'body_id' => $body->body_id,
@@ -499,5 +507,14 @@ class TransactionBodyImport implements ToModel, WithHeadingRow, WithValidation, 
             Log::warning("Failed to parse date: {$date}", ['error' => $e->getMessage()]);
             return null;
         }
+    }
+
+    /**
+     * Chunk size for reading Excel file
+     * Process 1000 rows at a time for better memory management
+     */
+    public function chunkSize(): int
+    {
+        return 1000;
     }
 }
