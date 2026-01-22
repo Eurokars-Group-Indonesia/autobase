@@ -47,6 +47,8 @@
                                 <th>Email</th>
                                 <th>Full Name</th>
                                 <th>Phone</th>
+                                <th>Brand</th>
+                                <th>Dealer</th>
                                 <th>Roles</th>
                                 <th>Status</th>
                                 <th>Actions</th>
@@ -60,6 +62,8 @@
                                     <td>{{ $user->email }}</td>
                                     <td>{{ $user->full_name }}</td>
                                     <td>{{ $user->phone ?? '-' }}</td>
+                                    <td>{{ $user->brand->brand_name ?? '-' }}</td>
+                                    <td>{{ $user->dealer->dealer_name ?? '-' }}</td>
                                     <td>
                                         @foreach($user->roles as $role)
                                             <span class="badge bg-primary">{{ $role->role_name }}</span>
@@ -95,7 +99,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">No users found</td>
+                                    <td colspan="10" class="text-center">No users found</td>
                                 </tr>
                             @endforelse
                         </tbody>

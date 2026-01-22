@@ -12,7 +12,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $query = User::with('roles')->where('is_active', '1');
+        $query = User::with(['roles', 'brand', 'dealer'])->where('is_active', '1');
         
         // Search functionality
         if (request()->has('search') && request('search') != '') {
@@ -37,7 +37,9 @@ class UserController extends Controller
         }
         
         $roles = Role::where('is_active', '1')->get();
-        return view('users.create', compact('roles'));
+        $brands = \App\Models\Brand::where('is_active', '1')->orderBy('brand_name')->get();
+        $dealers = \App\Models\Dealer::where('is_active', '1')->orderBy('dealer_name')->get();
+        return view('users.create', compact('roles', 'brands', 'dealers'));
     }
 
     public function store(UserRequest $request)
@@ -79,8 +81,10 @@ class UserController extends Controller
         
         $user->load('roles');
         $roles = Role::where('is_active', '1')->get();
+        $brands = \App\Models\Brand::where('is_active', '1')->orderBy('brand_name')->get();
+        $dealers = \App\Models\Dealer::where('is_active', '1')->orderBy('dealer_name')->get();
         $userRoles = $user->roles->pluck('role_id')->toArray();
-        return view('users.edit', compact('user', 'roles', 'userRoles'));
+        return view('users.edit', compact('user', 'roles', 'brands', 'dealers', 'userRoles'));
     }
 
     public function update(UserRequest $request, User $user)
