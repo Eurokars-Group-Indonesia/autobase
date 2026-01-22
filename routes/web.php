@@ -11,6 +11,7 @@ use App\Http\Controllers\BrandController;
 use App\Http\Controllers\DealerController;
 use App\Http\Controllers\TransactionHeaderController;
 use App\Http\Controllers\TransactionBodyController;
+use App\Http\Controllers\SearchHistoryController;
 
 // Guest Routes
 Route::middleware('guest')->group(function () {
@@ -144,5 +145,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/transaction-body/import', [TransactionBodyController::class, 'showImport'])->name('transaction-body.import');
         Route::post('/transaction-body/import', [TransactionBodyController::class, 'import'])->name('transaction-body.import.process');
         Route::get('/transaction-body/import/template', [TransactionBodyController::class, 'downloadTemplate'])->name('transaction-body.import.template');
+    });
+    
+    // Search History
+    Route::middleware('permission:search-history.view')->group(function () {
+        Route::get('/search-history', [SearchHistoryController::class, 'index'])->name('search-history.index');
     });
 });
