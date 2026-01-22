@@ -129,7 +129,7 @@
                                     <td><code>{{ $transaction->invoice_no }}</code></td>
                                     <td><code>{{ $transaction->wip_no }}</code></td>
                                     <td>{{ $transaction->invoice_date->format('d M Y') }}</td>
-                                    <td>{{ $transaction->account ?? '-' }}</td>
+                                    <td>{{ $transaction->account_code ?? '-' }}</td>
                                     <td>{{ $transaction->customer_name ?? '-' }}</td>
                                     <td>{{ $transaction->registration_no ?? '-' }}</td>
                                     <td>{{ $transaction->chassis ?? '-' }}</td>
