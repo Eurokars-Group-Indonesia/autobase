@@ -9,13 +9,12 @@ class TransactionHeader extends Model
 {
     protected $table = 'tx_header';
     protected $primaryKey = 'header_id';
-    public $incrementing = false;
+    public $incrementing = true;
     protected $keyType = 'integer';
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_date';
 
     protected $fillable = [
-        'header_id',
         'brand_id',
         'invoice_no',
         'wip_no',

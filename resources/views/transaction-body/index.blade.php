@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Transaction Headers')
+@section('title', 'Transaction Body')
 
 @php
     $breadcrumbs = [
-        ['title' => 'Transactions', 'url' => '#']
+        ['title' => 'Transaction Body', 'url' => '#']
     ];
 @endphp
 
@@ -26,19 +26,14 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="bi bi-receipt"></i> Transaction Headers</span>
-                @if(auth()->user()->hasPermission('transactions.header.import'))
-                <a href="{{ route('transactions.header.import') }}" class="btn btn-light btn-sm">
-                    <i class="bi bi-upload"></i> Import Excel
-                </a>
-                @endif
+            <div class="card-header">
+                <span><i class="bi bi-list-ul"></i> Transaction Body</span>
             </div>
             <div class="card-body">
                 <!-- Search Form -->
-                <form action="{{ route('transactions.index') }}" method="GET" id="searchForm">
+                <form action="{{ route('transaction-body.index') }}" method="GET" id="searchForm">
                     <div class="row mb-3">
-                        <div class="col-md-1">
+                        <div class="col-md-2">
                             <label class="form-label">Per Page</label>
                             <select class="form-select" name="per_page" onchange="this.form.submit()">
                                 <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
@@ -47,10 +42,10 @@
                                 <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label class="form-label">Search</label>
                             <input type="text" class="form-control" name="search" 
-                                   placeholder="Customer, Chassis, Invoice No, WIP No, Reg No, Date..." 
+                                   placeholder="Part No, Invoice No, WIP No, Description..." 
                                    value="{{ request('search') }}">
                         </div>
                         <div class="col-md-2">
@@ -68,7 +63,7 @@
                                 <i class="bi bi-search"></i> Search
                             </button>
                             @if(request('search') || request('date_from') || request('date_to'))
-                                <a href="{{ route('transactions.index') }}" class="btn btn-secondary">
+                                <a href="{{ route('transaction-body.index') }}" class="btn btn-secondary">
                                     <i class="bi bi-x-circle"></i> Clear
                                 </a>
                             @endif
@@ -80,42 +75,45 @@
                     <table class="table table-hover table-sm table-nowrap">
                         <thead>
                             <tr>
+                                <th style="min-width: 120px;">Part No</th>
                                 <th style="min-width: 120px;">Invoice No</th>
                                 <th style="min-width: 120px;">WIP No</th>
-                                <th style="min-width: 120px;">Invoice Date</th>
-                                <th style="min-width: 150px;">Account</th>
-                                <th style="min-width: 200px;">Customer Name</th>
-                                <th style="min-width: 150px;">Registration No</th>
-                                <th style="min-width: 180px;">Chassis</th>
-                                <th style="min-width: 120px;">Document Type</th>
-                                <th style="min-width: 120px;">Brand</th>
-                                <th style="min-width: 130px;">Gross Value</th>
-                                <th style="min-width: 130px;">Net Value</th>
+                                <th style="min-width: 250px;">Description</th>
+                                <th style="min-width: 80px;">Qty</th>
+                                <th style="min-width: 80px;">Unit</th>
+                                <th style="min-width: 120px;">Selling Price</th>
+                                <th style="min-width: 100px;">Discount</th>
+                                <th style="min-width: 130px;">Extended Price</th>
+                                <th style="min-width: 100px;">Type</th>
+                                <th style="min-width: 100px;">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($transactions as $transaction)
                                 <tr>
+                                    <td><code>{{ $transaction->part_no }}</code></td>
                                     <td><code>{{ $transaction->invoice_no }}</code></td>
                                     <td><code>{{ $transaction->wip_no }}</code></td>
-                                    <td>{{ $transaction->invoice_date->format('d M Y') }}</td>
-                                    <td>{{ $transaction->account ?? '-' }}</td>
-                                    <td>{{ $transaction->customer_name ?? '-' }}</td>
-                                    <td>{{ $transaction->registration_no ?? '-' }}</td>
-                                    <td>{{ $transaction->chassis ?? '-' }}</td>
+                                    <td>{{ $transaction->description ?? '-' }}</td>
+                                    <td class="text-end">{{ number_format($transaction->qty, 2) }}</td>
+                                    <td>{{ $transaction->unit }}</td>
+                                    <td class="text-end">{{ number_format($transaction->selling_price, 2) }}</td>
+                                    <td class="text-end">{{ number_format($transaction->discount, 2) }}%</td>
+                                    <td class="text-end">{{ number_format($transaction->extended_price, 2) }}</td>
                                     <td>
-                                        <span class="badge bg-{{ $transaction->document_type === 'I' ? 'primary' : 'warning' }}">
-                                            {{ $transaction->getDocumentTypeLabel() }}
+                                        <span class="badge bg-{{ $transaction->part_or_labour === 'P' ? 'info' : 'warning' }}">
+                                            {{ $transaction->getPartOrLabourLabel() }}
                                         </span>
                                     </td>
-                                    <td>{{ $transaction->brand->brand_name ?? '-' }}</td>
-                                    <td class="text-end">{{ $transaction->currency_code }} {{ number_format($transaction->gross_value, 2) }}</td>
-                                    <td class="text-end">{{ $transaction->currency_code }} {{ number_format($transaction->net_value, 2) }}</td>
-                                   
+                                    <td>
+                                        <span class="badge bg-{{ $transaction->invoice_status === 'X' ? 'danger' : 'success' }}">
+                                            {{ $transaction->getInvoiceStatusLabel() }}
+                                        </span>
+                                    </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="text-center">No transactions found</td>
+                                    <td colspan="12" class="text-center">No transaction body found</td>
                                 </tr>
                             @endforelse
                         </tbody>

@@ -59,32 +59,31 @@
     }
     
     .error-item {
-        border-left: 3px solid #f59e0b;
+        border-left: 4px solid #dc3545;
         padding: 12px;
         margin-bottom: 10px;
-        background-color: #fffbeb;
+        background-color: #fff5f5;
         border-radius: 4px;
     }
     
     .error-row-number {
         font-weight: bold;
-        color: #d97706;
+        color: #dc3545;
         font-size: 14px;
+        margin-bottom: 8px;
     }
     
     .error-message {
-        color: #92400e;
+        color: #721c24;
         font-size: 13px;
-        margin-top: 4px;
+        line-height: 1.6;
     }
     
-    .error-values {
-        font-size: 12px;
-        color: #78716c;
-        margin-top: 6px;
-        padding: 8px;
-        background-color: #fef3c7;
+    .error-message code {
+        background-color: #f8d7da;
+        padding: 2px 6px;
         border-radius: 3px;
+        color: #721c24;
     }
 </style>
 @endpush
@@ -104,55 +103,65 @@
         </div>
     @endif
 
-    @if(session('error'))
+    @if(session('error') && !session('import_errors') && !session('sql_error'))
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ session('error') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
     @endif
 
-    @if(session('warning'))
-        <div class="alert alert-warning alert-dismissible fade show" role="alert">
-            <i class="bi bi-exclamation-circle-fill me-2"></i>{{ session('warning') }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    @if(session('sql_error'))
+        <div class="alert alert-danger" role="alert">
+            <h5 class="alert-heading">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>Import Errors ({{ count(session('sql_error')) }} error(s))
+            </h5>
+            <p class="mb-3">The following errors occurred during import:</p>
+            
+            <div class="error-list">
+                @foreach(session('sql_error') as $error)
+                    <div class="error-item">
+                        <div class="error-row-number">
+                            <i class="bi bi-arrow-right-circle-fill me-1"></i>
+                            @if($error['row'] === 'Unknown')
+                                Row: Unknown
+                            @else
+                                Excel Row {{ $error['row'] }}
+                            @endif
+                        </div>
+                        <div class="error-message">
+                            <strong>Field:</strong> {{ $error['field'] }}<br>
+                            <strong>Value:</strong> <code>{{ is_array($error['value']) ? json_encode($error['value']) : $error['value'] }}</code><br>
+                            <strong>Error:</strong> {{ $error['error'] }}
+                        </div>
+                    </div>
+                @endforeach
+            </div>
         </div>
     @endif
 
     @if(session('import_errors'))
-        <div class="alert alert-warning" role="alert">
+        <div class="alert alert-danger" role="alert">
             <h5 class="alert-heading">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>Import Errors Found
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>Import Errors ({{ count(session('import_errors')) }} error(s))
             </h5>
-            <p class="mb-3">The following rows could not be imported due to validation errors:</p>
+            @if(session('success_count'))
+                <p class="mb-2">
+                    <span class="badge bg-success">{{ session('success_count') }} records imported successfully</span>
+                </p>
+            @endif
+            <p class="mb-3">The following rows could not be imported:</p>
             
             <div class="error-list">
                 @foreach(session('import_errors') as $error)
                     <div class="error-item">
                         <div class="error-row-number">
-                            <i class="bi bi-arrow-right-circle-fill me-1"></i>Row {{ $error['row'] }}
+                            <i class="bi bi-arrow-right-circle-fill me-1"></i>Excel Row {{ $error['row'] }}
                         </div>
                         <div class="error-message">
-                            @foreach($error['errors'] as $errorMsg)
-                                <div><i class="bi bi-x-circle me-1"></i>{{ $errorMsg }}</div>
-                            @endforeach
+                            <strong>Field:</strong> {{ $error['field'] }}<br>
+                            <strong>Value:</strong> <code>{{ is_array($error['value']) ? json_encode($error['value']) : $error['value'] }}</code><br>
+                            <strong>Error:</strong> {{ $error['error'] }}
                         </div>
-                        @if(!empty($error['values']))
-                            <div class="error-values">
-                                <strong>Data:</strong>
-                                @php
-                                    $displayValues = array_filter($error['values'], function($value) {
-                                        return !is_null($value) && $value !== '';
-                                    });
-                                @endphp
-                                @if(count($displayValues) > 0)
-                                    @foreach($displayValues as $key => $value)
-                                        <span class="badge bg-secondary me-1">{{ $key }}: {{ $value }}</span>
-                                    @endforeach
-                                @else
-                                    <span class="text-muted">No data available</span>
-                                @endif
-                            </div>
-                        @endif
                     </div>
                 @endforeach
             </div>
@@ -267,7 +276,7 @@
 
                     <h6 class="mt-3">Notes</h6>
                     <ul class="small text-muted">
-                        <li>The import uses <strong>updateOrCreate</strong> based on WIPNO and Brand</li>
+                        <li>The import uses <strong>update data</strong> based on WIPNO and Brand</li>
                         <li>Existing records will be updated</li>
                         <li>New records will be created</li>
                         <li>Date format: YYYY-MM-DD or Excel date</li>

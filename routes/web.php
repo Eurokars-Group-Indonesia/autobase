@@ -10,6 +10,7 @@ use App\Http\Controllers\MenuController;
 use App\Http\Controllers\BrandController;
 use App\Http\Controllers\DealerController;
 use App\Http\Controllers\TransactionHeaderController;
+use App\Http\Controllers\TransactionBodyController;
 
 // Guest Routes
 Route::middleware('guest')->group(function () {
@@ -133,5 +134,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/transactions/import', [TransactionHeaderController::class, 'showImport'])->name('transactions.header.import');
         Route::post('/transactions/import', [TransactionHeaderController::class, 'import'])->name('transactions.header.import.process');
         Route::get('/transactions/import/template', [TransactionHeaderController::class, 'downloadTemplate'])->name('transactions.header.import.template');
+    });
+    
+    // Transaction Body
+    Route::middleware('permission:transaction-body.view')->group(function () {
+        Route::get('/transaction-body', [TransactionBodyController::class, 'index'])->name('transaction-body.index');
     });
 });

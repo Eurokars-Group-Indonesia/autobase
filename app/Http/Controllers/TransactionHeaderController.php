@@ -95,39 +95,67 @@ class TransactionHeaderController extends Controller
             $import = new TransactionHeaderImport($request->brand_id);
             Excel::import($import, $file);
 
+            // Get custom errors from import class
+            $customErrors = $import->getErrors();
+            $successCount = $import->getSuccessCount();
+            
+            // Get validation failures
             $failures = $import->failures();
             
-            if ($failures->count() > 0) {
-                $errors = [];
-                foreach ($failures as $failure) {
-                    $errors[] = [
-                        'row' => $failure->row(),
-                        'attribute' => $failure->attribute(),
-                        'errors' => $failure->errors(),
-                        'values' => $failure->values()
-                    ];
-                }
-                
+            // Combine all errors
+            $allErrors = [];
+            
+            // Add custom errors
+            foreach ($customErrors as $error) {
+                $allErrors[] = [
+                    'row' => $error['row'],
+                    'field' => $error['field'],
+                    'value' => $error['value'],
+                    'error' => $error['error']
+                ];
+            }
+            
+            // Add validation failures
+            foreach ($failures as $failure) {
+                $allErrors[] = [
+                    'row' => $failure->row(),
+                    'field' => $failure->attribute(),
+                    'value' => $failure->values()[$failure->attribute()] ?? 'N/A',
+                    'error' => implode(', ', $failure->errors())
+                ];
+            }
+            
+            if (count($allErrors) > 0) {
                 // Clear cache after import (even with errors, some data might be imported)
                 $this->clearTransactionCache();
                 
                 return redirect()->route('transactions.header.import')
-                    ->with('import_errors', $errors)
-                    ->with('warning', 'Import completed with ' . count($errors) . ' error(s). Please check the details below.');
+                    ->with('import_errors', $allErrors)
+                    ->with('success_count', $successCount)
+                    ->with('error', "Import completed with {$successCount} success and " . count($allErrors) . " error(s). Please check the details below.");
             }
 
             // Clear cache after successful import
             $this->clearTransactionCache();
 
             return redirect()->route('transactions.index')
-                ->with('success', 'Transaction headers imported successfully!');
+                ->with('success', "Transaction headers imported successfully! {$successCount} records imported.");
         } catch (\Illuminate\Database\QueryException $e) {
-            // Handle SQL errors with user-friendly messages
-            $errorMessage = $this->parseSqlError($e->getMessage());
+            // Handle SQL errors with detailed messages
+            $errorDetails = $this->parseSqlErrorDetailed($e, $import);
+            
+            \Log::error('Import SQL Error', [
+                'message' => $e->getMessage(),
+                'sql' => $e->getSql() ?? 'N/A',
+                'bindings' => $e->getBindings() ?? []
+            ]);
             
             return redirect()->route('transactions.header.import')
-                ->with('error', 'Import failed: ' . $errorMessage);
+                ->with('sql_error', $errorDetails);
         } catch (\Exception $e) {
+            \Log::error('Import Error: ' . $e->getMessage());
+            \Log::error('Stack trace: ' . $e->getTraceAsString());
+            
             return redirect()->route('transactions.header.import')
                 ->with('error', 'Import failed: ' . $e->getMessage());
         }
@@ -175,19 +203,176 @@ class TransactionHeaderController extends Controller
         return "Database error occurred. Please check your data format and try again.";
     }
 
+    private function parseSqlErrorDetailed($exception, $import = null)
+    {
+        $message = $exception->getMessage();
+        $errors = [];
+        
+        // Get current row from import if available
+        $currentRow = $import ? $import->currentRow : 'Unknown';
+        
+        // Parse Incorrect integer value
+        if (strpos($message, 'Incorrect integer value') !== false) {
+            preg_match_all("/Incorrect integer value: '([^']+)' for column '([^']+)' at row (\d+)/", $message, $matches, PREG_SET_ORDER);
+            
+            if (count($matches) > 0) {
+                foreach ($matches as $match) {
+                    $value = $match[1];
+                    $column = $match[2];
+                    $row = $match[3] + 1; // +1 karena row 1 adalah header
+                    $friendlyColumn = $this->getFriendlyColumnName($column);
+                    
+                    $errors[] = [
+                        'row' => $row,
+                        'field' => $friendlyColumn,
+                        'value' => $value,
+                        'error' => "'{$value}' is not a valid number. Please ensure this field contains only numeric values."
+                    ];
+                }
+                return $errors;
+            }
+        }
+        
+        // Parse Data too long
+        if (strpos($message, 'Data too long for column') !== false) {
+            preg_match("/Data too long for column '([^']+)' at row (\d+)/", $message, $matches);
+            if (count($matches) >= 3) {
+                $column = $matches[1];
+                $row = $matches[2] + 1; // +1 karena row 1 adalah header
+                $friendlyColumn = $this->getFriendlyColumnName($column);
+                
+                $errors[] = [
+                    'row' => $row,
+                    'field' => $friendlyColumn,
+                    'value' => 'Too long',
+                    'error' => "The value exceeds the maximum allowed length for this field."
+                ];
+                return $errors;
+            }
+        }
+        
+        // Parse Duplicate entry
+        // if (strpos($message, 'Duplicate entry') !== false) {
+        //     preg_match("/Duplicate entry '([^']+)' for key '([^']+)'/", $message, $matches);
+        //     if (count($matches) >= 2) {
+        //         dd($matches);
+        //         $value = $matches[1];
+        //         $key = $matches[2] ?? '';
+                
+        //         // Determine field based on key name
+        //         $field = 'Unknown';
+        //         $errorMsg = "A record with this value already exists. This should not happen with import. Please contact support.";
+                
+        //         if (strpos($key, 'unique_id') !== false) {
+        //             $field = 'Unique ID';
+        //             $errorMsg = "Duplicate Unique ID detected. This is a system error. Please contact support.";
+        //         }
+
+        //         // if (strpos($key, 'unique_id') !== false) {
+        //         //     $field = 'Unique ID';
+        //         //     $errorMsg = "Duplicate Unique ID detected. This is a system error. Please contact support.";
+        //         // } elseif (strpos($key, 'invoice_no') !== false || strpos($key, 'wip_no') !== false) {
+        //         //     $field = 'WIPNO + InvNo + Brand';
+        //         //     $errorMsg = "A record with this WIPNO, Invoice Number, and Brand combination already exists. The record should be updated instead of creating a new one.";
+        //         // }
+                
+        //         $errors[] = [
+        //             'row' => $currentRow, // Use current row from import
+        //             'field' => $field,
+        //             'value' => $value,
+        //             'error' => $errorMsg
+        //         ];
+        //         return $errors;
+        //     }
+        // }
+        
+        // Parse Incorrect date value
+        if (strpos($message, 'Incorrect date value') !== false || strpos($message, 'Incorrect datetime value') !== false) {
+            preg_match("/Incorrect (?:date|datetime) value: '([^']+)' for column '([^']+)' at row (\d+)/", $message, $matches);
+            if (count($matches) >= 4) {
+                $value = $matches[1];
+                $column = $matches[2];
+                $row = $matches[3] + 1; // +1 karena row 1 adalah header
+                $friendlyColumn = $this->getFriendlyColumnName($column);
+                
+                $errors[] = [
+                    'row' => $row,
+                    'field' => $friendlyColumn,
+                    'value' => $value,
+                    'error' => "Invalid date format. Please use YYYY-MM-DD format (e.g., 2026-01-22)."
+                ];
+                return $errors;
+            }
+        }
+        
+        // Parse Column cannot be null
+        if (strpos($message, 'cannot be null') !== false) {
+            preg_match("/Column '([^']+)' cannot be null/", $message, $matches);
+            if (count($matches) >= 2) {
+                $column = $matches[1];
+                $friendlyColumn = $this->getFriendlyColumnName($column);
+                
+                $errors[] = [
+                    'row' => $currentRow, // Use current row from import
+                    'field' => $friendlyColumn,
+                    'value' => 'NULL',
+                    'error' => "This field is required and cannot be empty."
+                ];
+                return $errors;
+            }
+        }
+        
+        // Generic error - remove technical jargon
+        $cleanMessage = str_replace('Database error: ', '', $message);
+        $cleanMessage = str_replace('SQLSTATE[', '', $cleanMessage);
+        $cleanMessage = preg_replace('/\[.*?\]/', '', $cleanMessage);
+        $cleanMessage = substr($cleanMessage, 0, 200);
+        
+        $errors[] = [
+            'row' => $currentRow, // Use current row from import
+            'field' => 'System',
+            'value' => 'N/A',
+            'error' => "An error occurred: " . trim($cleanMessage)
+        ];
+        
+        return $errors;
+    }
+
     private function getFriendlyColumnName($column)
     {
         $columnMap = [
+            'header_id' => 'Header ID',
+            'brand_id' => 'Brand',
+            'invoice_no' => 'Invoice Number (InvNo)',
+            'wip_no' => 'WIP Number (WIPNO)',
+            'account_code' => 'Account Code',
+            'customer_name' => 'Customer Name (CustName)',
+            'address_1' => 'Address 1 (Add1)',
+            'address_2' => 'Address 2 (Add2)',
+            'address_3' => 'Address 3 (Add3)',
+            'address_4' => 'Address 4 (Add4)',
+            'address_5' => 'Address 5 (Add5)',
+            'department' => 'Department (Dept)',
+            'invoice_date' => 'Invoice Date (InvDate)',
             'vehicle_id' => 'Vehicle ID (MAGICH)',
-            'mileage' => 'Mileage',
+            'document_type' => 'Document Type (DocType)',
             'exchange_rate' => 'Exchange Rate',
+            'registration_no' => 'Registration Number (RegNo)',
+            'chassis' => 'Chassis Number',
+            'mileage' => 'Mileage',
+            'currency_code' => 'Currency Code (CurrCode)',
             'gross_value' => 'Gross Value',
             'net_value' => 'Net Value',
-            'invoice_no' => 'Invoice Number',
-            'wip_no' => 'WIP Number',
-            'customer_name' => 'Customer Name',
-            'chassis' => 'Chassis',
-            'registration_no' => 'Registration Number',
+            'customer_discount' => 'Customer Discount (CustDisc)',
+            'service_code' => 'Service Code (SvcCode)',
+            'registration_date' => 'Registration Date (RegDate)',
+            'description' => 'Description',
+            'engine_no' => 'Engine Number (EngineNo)',
+            'account_company' => 'Account Company (AcctCompany)',
+            'created_by' => 'Created By',
+            'updated_by' => 'Updated By',
+            'unique_id' => 'Unique ID',
+            'is_active' => 'Active Status',
         ];
         
         return $columnMap[$column] ?? ucwords(str_replace('_', ' ', $column));
