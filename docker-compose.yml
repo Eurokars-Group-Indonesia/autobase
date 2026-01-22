@@ -33,7 +33,7 @@ services:
       - "host.docker.internal:host-gateway"
     networks:
       - laravel
-      - percona-net
+      - percona_percona-net
 
   # Queue Worker (separate service)
   queue:
@@ -52,11 +52,10 @@ services:
     restart: unless-stopped
     networks:
       - laravel
-      - percona-net
+      - percona_percona-net
 
 networks:
   laravel:
     driver: bridge
-  percona-net:
+  percona_percona-net:
     external: true
-    name: percona_percona-net
