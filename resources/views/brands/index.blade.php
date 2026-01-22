@@ -42,7 +42,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>No</th>
                                 <th>Code</th>
                                 <th>Name</th>
                                 <th>Brand Group</th>
@@ -54,7 +54,7 @@
                         <tbody>
                             @forelse($brands as $brand)
                                 <tr>
-                                    <td>{{ $brand->brand_id }}</td>
+                                    <td>{{ ($brands->currentPage() - 1) * $brands->perPage() + $loop->iteration }}</td>
                                     <td><code>{{ $brand->brand_code }}</code></td>
                                     <td>{{ $brand->brand_name }}</td>
                                     <td>{{ $brand->brand_group ?? '-' }}</td>

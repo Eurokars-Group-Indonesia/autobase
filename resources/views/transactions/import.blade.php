@@ -278,7 +278,7 @@
 
                     <h6 class="mt-3">Notes</h6>
                     <ul class="small text-muted">
-                        <li>The import uses <strong>update data</strong> based on WIPNO and Brand</li>
+                        <li>The import uses <strong>update data</strong> based on WIPNO, InvNo and Brand</li>
                         <li>Existing records will be updated</li>
                         <li>New records will be created</li>
                         <li>Date format: YYYY-MM-DD or Excel date</li>

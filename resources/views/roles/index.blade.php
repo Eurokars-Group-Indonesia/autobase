@@ -42,7 +42,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>No</th>
                                 <th>Code</th>
                                 <th>Name</th>
                                 <th>Description</th>
@@ -54,7 +54,7 @@
                         <tbody>
                             @forelse($roles as $role)
                                 <tr>
-                                    <td>{{ $role->role_id }}</td>
+                                    <td>{{ ($roles->currentPage() - 1) * $roles->perPage() + $loop->iteration }}</td>
                                     <td><code>{{ $role->role_code }}</code></td>
                                     <td>{{ $role->role_name }}</td>
                                     <td>{{ $role->role_description }}</td>

@@ -42,7 +42,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>No</th>
                                 <th>Name</th>
                                 <th>Email</th>
                                 <th>Full Name</th>
@@ -57,7 +57,7 @@
                         <tbody>
                             @forelse($users as $user)
                                 <tr>
-                                    <td>{{ $user->user_id }}</td>
+                                    <td>{{ ($users->currentPage() - 1) * $users->perPage() + $loop->iteration }}</td>
                                     <td>{{ $user->name }}</td>
                                     <td>{{ $user->email }}</td>
                                     <td>{{ $user->full_name }}</td>

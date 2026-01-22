@@ -42,7 +42,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>No</th>
                                 <th>Code</th>
                                 <th>Name</th>
                                 <th>URL</th>
@@ -56,7 +56,7 @@
                         <tbody>
                             @forelse($menus as $menu)
                                 <tr>
-                                    <td>{{ $menu->menu_id }}</td>
+                                    <td>{{ ($menus->currentPage() - 1) * $menus->perPage() + $loop->iteration }}</td>
                                     <td><code>{{ $menu->menu_code }}</code></td>
                                     <td>
                                         <i class="bi {{ $menu->menu_icon }}"></i> {{ $menu->menu_name }}
