@@ -16,57 +16,71 @@ class TransactionHeaderController extends Controller
         // Start timing
         $startTime = microtime(true);
         
-        // Generate cache key based on user and search parameters
-        $userId = auth()->id();
-        $search = $request->get('search', '');
-        $dateFrom = $request->get('date_from', '');
-        $dateTo = $request->get('date_to', '');
-        $perPage = $request->get('per_page', 10);
-        $page = $request->get('page', 1);
+        $query = TransactionHeader::with('brand')->where('is_active', '1')->orderBy('invoice_date', 'desc');
         
-        $cacheKey = "header:{$userId}:{$search}:{$dateFrom}:{$dateTo}:{$perPage}:{$page}";
+        // Check if there's any search/filter parameter
+        $hasSearch = $request->has('search') && $request->search != '';
+        $hasDateFrom = $request->has('date_from') && $request->date_from != '';
+        $hasDateTo = $request->has('date_to') && $request->date_to != '';
+        $hasFilter = $hasSearch || $hasDateFrom || $hasDateTo;
         
-        // Try to get from cache (1 hour), if not found execute query and cache it
-        $transactions = cache()->remember($cacheKey, now()->addHour(), function () use ($request, $perPage) {
-            $query = TransactionHeader::with('brand')->where('is_active', '1')->orderBy('invoice_date', 'desc');
+        // Only use cache when there's search/filter
+        if ($hasFilter) {
+            // Generate cache key based on user and search parameters
+            $userId = auth()->id();
+            $search = $request->get('search', '');
+            $dateFrom = $request->get('date_from', '');
+            $dateTo = $request->get('date_to', '');
+            $perPage = $request->get('per_page', 10);
+            $page = $request->get('page', 1);
             
-            // Search by text (customer_name, chassis, invoice_date, invoice_no, wip_no, registration_no)
-            // Using 'search%' pattern to utilize B-tree index efficiently
-            if ($request->has('search') && $request->search != '') {
-                $search = $request->search;
-                $query->where(function($q) use ($search) {
-                    $q->where('customer_name', 'like', $search . '%')
-                      ->orWhere('chassis', 'like', $search . '%')
-                      ->orWhere('invoice_no', 'like', $search . '%')
-                      ->orWhere('wip_no', 'like', $search . '%')
-                      ->orWhere('registration_no', 'like', $search . '%')
-                      ->orWhereDate('invoice_date', '=', $search);
-                });
-            }
+            $cacheKey = "header:{$userId}:{$search}:{$dateFrom}:{$dateTo}:{$perPage}:{$page}";
             
-            // Filter by date range
-            if ($request->has('date_from') && $request->date_from != '') {
-                $query->whereDate('invoice_date', '>=', $request->date_from);
-            }
-            
-            if ($request->has('date_to') && $request->date_to != '') {
-                $query->whereDate('invoice_date', '<=', $request->date_to);
-            }
-            
-            // Pagination with per_page option
+            // Try to get from cache (1 hour)
+            $transactions = cache()->remember($cacheKey, now()->addHour(), function () use ($request, $query) {
+                // Search by text
+                if ($request->has('search') && $request->search != '') {
+                    $search = $request->search;
+                    $query->where(function($q) use ($search) {
+                        $q->where('customer_name', 'like', $search . '%')
+                          ->orWhere('chassis', 'like', $search . '%')
+                          ->orWhere('invoice_no', 'like', $search . '%')
+                          ->orWhere('wip_no', 'like', $search . '%')
+                          ->orWhere('registration_no', 'like', $search . '%')
+                          ->orWhereDate('invoice_date', '=', $search);
+                    });
+                }
+                
+                // Filter by date range
+                if ($request->has('date_from') && $request->date_from != '') {
+                    $query->whereDate('invoice_date', '>=', $request->date_from);
+                }
+                
+                if ($request->has('date_to') && $request->date_to != '') {
+                    $query->whereDate('invoice_date', '<=', $request->date_to);
+                }
+                
+                // Pagination
+                $perPage = $request->get('per_page', 10);
+                $perPageValue = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
+                
+                return $query->paginate($perPageValue)->withQueryString();
+            });
+        } else {
+            // No search/filter - execute query directly without cache
+            $perPage = $request->get('per_page', 10);
             $perPageValue = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
-            
-            return $query->paginate($perPageValue)->withQueryString();
-        });
+            $transactions = $query->paginate($perPageValue)->withQueryString();
+        }
         
         // Calculate execution time
         $endTime = microtime(true);
-        $executionTime = ($endTime - $startTime) * 1000; // Convert to milliseconds
+        $executionTime = ($endTime - $startTime) * 1000;
         
-        // Log search history asynchronously if there's a search query or date filter
-        if ($request->has('search') || $request->has('date_from') || $request->has('date_to')) {
+        // Log search history asynchronously only if there's a search query or date filter
+        if ($hasFilter) {
             LogSearchHistory::dispatch(
-                $userId,
+                auth()->id(),
                 $request->get('search'),
                 $request->get('date_from'),
                 $request->get('date_to'),
