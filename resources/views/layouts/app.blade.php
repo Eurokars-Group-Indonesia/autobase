@@ -272,7 +272,7 @@
             width: 35px;
             height: 35px;
             border-radius: 50%;
-            background: #0d6efd;
+            background: #FA891A;
             display: flex;
             align-items: center;
             justify-content: center;
