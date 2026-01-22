@@ -67,6 +67,16 @@ class User extends Authenticatable
     /**
      * Relationships
      */
+    public function brand()
+    {
+        return $this->belongsTo(Brand::class, 'brand_id', 'brand_id');
+    }
+
+    public function dealer()
+    {
+        return $this->belongsTo(Dealer::class, 'dealer_id', 'dealer_id');
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by', 'user_id');

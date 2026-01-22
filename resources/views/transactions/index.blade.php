@@ -297,10 +297,10 @@
                                 <tr>
                                     <td><code>${item.part_no || '-'}</code></td>
                                     <td>${item.description || '-'}</td>
-                                    <td class="text-end">${parseFloat(item.qty || 0).toFixed(2)}</td>
-                                    <td class="text-end">${parseFloat(item.selling_price || 0).toFixed(2)}</td>
-                                    <td class="text-end">${parseFloat(item.discount || 0).toFixed(2)}%</td>
-                                    <td class="text-end">${parseFloat(item.extended_price || 0).toFixed(2)}</td>
+                                    <td class="text-end">${parseFloat(item.qty || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                    <td class="text-end">${parseFloat(item.selling_price || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                                    <td class="text-end">${parseFloat(item.discount || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}%</td>
+                                    <td class="text-end">${parseFloat(item.extended_price || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                                     <td>${item.vat || '-'}</td>
                                     <td>${item.analysis_code || '-'}</td>
                                     <td>
@@ -313,7 +313,7 @@
                         });
                         
                         $('#detailsTableBody').html(html);
-                        $('#totalExtPrice').text(totalExtPrice.toFixed(2));
+                        $('#totalExtPrice').text(totalExtPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
                         $('#modalContent').show();
                     } else {
                         $('#modalError').show();
