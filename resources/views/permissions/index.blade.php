@@ -42,7 +42,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>No</th>
                                 <th>Code</th>
                                 <th>Name</th>
                                 <th>Status</th>
@@ -52,7 +52,7 @@
                         <tbody>
                             @forelse($permissions as $permission)
                                 <tr>
-                                    <td>{{ $permission->permission_id }}</td>
+                                    <td>{{ ($permissions->currentPage() - 1) * $permissions->perPage() + $loop->iteration }}</td>
                                     <td><code>{{ $permission->permission_code }}</code></td>
                                     <td>{{ $permission->permission_name }}</td>
                                     <td>

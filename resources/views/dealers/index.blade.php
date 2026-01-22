@@ -42,7 +42,7 @@
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <th>No</th>
                                 <th>Code</th>
                                 <th>Name</th>
                                 <th>City</th>
@@ -53,7 +53,7 @@
                         <tbody>
                             @forelse($dealers as $dealer)
                                 <tr>
-                                    <td>{{ $dealer->dealer_id }}</td>
+                                    <td>{{ ($dealers->currentPage() - 1) * $dealers->perPage() + $loop->iteration }}</td>
                                     <td><code>{{ $dealer->dealer_code }}</code></td>
                                     <td>{{ $dealer->dealer_name }}</td>
                                     <td>{{ $dealer->city ?? '-' }}</td>
