@@ -401,9 +401,9 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
         }
         
         // Remove any non-numeric characters except decimal point and minus
-        $cleaned = preg_replace('/[^0-9\-]/', '', $value);
+        //$cleaned = preg_replace('/[^0-9\-]/', '', $value);
         
-        return is_numeric($cleaned) ? (int)$cleaned : null;
+        return is_numeric($value) ? (int)$value : null;
     }
 
     private function parseDecimal($value)
