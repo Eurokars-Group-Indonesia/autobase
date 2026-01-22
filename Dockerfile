@@ -26,10 +26,11 @@ RUN apk add --no-cache \
     supervisor \
     redis \
     nodejs \
-    npm
+    npm \
+    icu-dev
 
 # Install PHP extensions
-RUN docker-php-ext-install pdo_mysql zip gd pcntl opcache
+RUN docker-php-ext-install pdo_mysql zip gd pcntl opcache intl
 
 # Install Redis extension via PECL
 RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \

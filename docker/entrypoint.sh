@@ -43,11 +43,24 @@ fi
 # Wait for database to be ready
 echo "Waiting for database connection..."
 echo "Database: $DB_HOST:$DB_PORT/$DB_DATABASE"
-max_attempts=15
+max_attempts=30
 attempt=0
 
 while [ $attempt -lt $max_attempts ]; do
-    if php artisan db:show > /dev/null 2>&1; then
+    # Try to connect using PHP PDO directly (more reliable than artisan)
+    if php -r "
+        try {
+            \$pdo = new PDO(
+                'mysql:host=' . getenv('DB_HOST') . ';port=' . getenv('DB_PORT') . ';dbname=' . getenv('DB_DATABASE'),
+                getenv('DB_USERNAME'),
+                getenv('DB_PASSWORD'),
+                [PDO::ATTR_TIMEOUT => 3, PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false]
+            );
+            exit(0);
+        } catch (Exception \$e) {
+            exit(1);
+        }
+    " 2>/dev/null; then
         echo "✓ Database connection successful!"
         break
     fi
@@ -55,7 +68,7 @@ while [ $attempt -lt $max_attempts ]; do
     attempt=$((attempt + 1))
     if [ $attempt -lt $max_attempts ]; then
         echo "Attempt $attempt/$max_attempts - Waiting for database..."
-        sleep 3
+        sleep 2
     fi
 done
 
@@ -71,18 +84,18 @@ if [ $attempt -eq $max_attempts ]; then
     echo "  - MySQL server is running and accessible"
     echo ""
     echo "You can:"
-    echo "  1. Run migrations manually: docker-compose exec app php artisan migrate --force"
+    echo "  1. Run migrations manually: docker exec -it laravel_app php artisan migrate --force"
     echo "  2. Set SKIP_DB_SETUP=true to skip this check"
     echo ""
     echo "Continuing without database setup..."
 else
     echo ""
     echo "Running database migrations..."
-    if php artisan migrate --force; then
+    if php artisan migrate --force 2>&1; then
         echo "✓ Migrations completed successfully!"
     else
         echo "⚠ Warning: Migrations failed!"
-        echo "You can run manually: docker-compose exec app php artisan migrate --force"
+        echo "You can run manually: docker exec -it laravel_app php artisan migrate --force"
     fi
     
     # Run seeders if SEED_DATABASE is set to true
