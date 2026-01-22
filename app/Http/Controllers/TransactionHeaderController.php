@@ -456,4 +456,24 @@ class TransactionHeaderController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
     }
+
+    public function getBodyDetails(Request $request)
+    {
+        $request->validate([
+            'wip_no' => 'required',
+            'invoice_no' => 'required',
+            'brand_id' => 'required',
+        ]);
+
+        $bodies = \App\Models\TransactionBody::where('wip_no', $request->wip_no)
+            ->where('invoice_no', $request->invoice_no)
+            ->where('is_active', '1')
+            ->orderBy('line')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $bodies
+        ]);
+    }
 }

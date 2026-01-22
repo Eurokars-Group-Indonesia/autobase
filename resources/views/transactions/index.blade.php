@@ -100,6 +100,7 @@
                     <table class="table table-hover table-sm table-nowrap">
                         <thead>
                             <tr>
+                                <th style="min-width: 80px;">Actions</th>
                                 <th style="min-width: 120px;">Invoice No</th>
                                 <th style="min-width: 120px;">WIP No</th>
                                 <th style="min-width: 120px;">Invoice Date</th>
@@ -116,6 +117,15 @@
                         <tbody>
                             @forelse($transactions as $transaction)
                                 <tr>
+                                    <td>
+                                        <button class="btn btn-sm btn-info view-details" 
+                                                data-wipno="{{ $transaction->wip_no }}" 
+                                                data-invno="{{ $transaction->invoice_no }}" 
+                                                data-brandid="{{ $transaction->brand_id }}"
+                                                title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </td>
                                     <td><code>{{ $transaction->invoice_no }}</code></td>
                                     <td><code>{{ $transaction->wip_no }}</code></td>
                                     <td>{{ $transaction->invoice_date->format('d M Y') }}</td>
@@ -131,7 +141,6 @@
                                     <td>{{ $transaction->brand->brand_name ?? '-' }}</td>
                                     <td class="text-end">{{ $transaction->currency_code }} {{ number_format($transaction->gross_value, 2) }}</td>
                                     <td class="text-end">{{ $transaction->currency_code }} {{ number_format($transaction->net_value, 2) }}</td>
-                                   
                                 </tr>
                             @empty
                                 <tr>
@@ -149,6 +158,65 @@
                         {{ $transactions->links() }}
                     </div>
                 </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Transaction Body Details -->
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Transaction Body Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="modalLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading transaction details...</p>
+                </div>
+                <div id="modalContent" style="display: none;">
+                    <div class="mb-3">
+                        <strong>WIP No:</strong> <span id="modalWipNo"></span> | 
+                        <strong>Invoice No:</strong> <span id="modalInvNo"></span>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Part No</th>
+                                    <th>Description</th>
+                                    <th class="text-end">Qty</th>
+                                    <th class="text-end">Selling Price</th>
+                                    <th class="text-end">Discount %</th>
+                                    <th class="text-end">Extended Price</th>
+                                    <th>VAT</th>
+                                    <th>Analysis Code</th>
+                                    <th>Parts/Labour</th>
+                                </tr>
+                            </thead>
+                            <tbody id="detailsTableBody">
+                                <!-- Data will be loaded here via AJAX -->
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="5" class="text-end">Total:</th>
+                                    <th class="text-end" id="totalExtPrice">0.00</th>
+                                    <th colspan="3"></th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+                <div id="modalError" style="display: none;" class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle"></i> <span id="errorMessage"></span>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -184,6 +252,81 @@
             dateFormat: "Y-m-d",
             allowInput: false,
             minDate: document.getElementById('date_from').value || null
+        });
+
+        // Handle view details button click
+        $(document).on('click', '.view-details', function() {
+            const wipNo = $(this).data('wipno');
+            const invNo = $(this).data('invno');
+            const brandId = $(this).data('brandid');
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
+            modal.show();
+            
+            // Reset modal state
+            $('#modalLoading').show();
+            $('#modalContent').hide();
+            $('#modalError').hide();
+            $('#detailsTableBody').empty();
+            
+            // Set header info
+            $('#modalWipNo').text(wipNo);
+            $('#modalInvNo').text(invNo);
+            
+            // Fetch data via AJAX
+            $.ajax({
+                url: '{{ route("transactions.body.details") }}',
+                method: 'GET',
+                data: {
+                    wip_no: wipNo,
+                    invoice_no: invNo,
+                    brand_id: brandId
+                },
+                success: function(response) {
+                    $('#modalLoading').hide();
+                    
+                    if (response.success && response.data.length > 0) {
+                        let totalExtPrice = 0;
+                        let html = '';
+                        
+                        response.data.forEach(function(item) {
+                            totalExtPrice += parseFloat(item.extended_price || 0);
+                            
+                            html += `
+                                <tr>
+                                    <td><code>${item.part_no || '-'}</code></td>
+                                    <td>${item.description || '-'}</td>
+                                    <td class="text-end">${parseFloat(item.qty || 0).toFixed(2)}</td>
+                                    <td class="text-end">${parseFloat(item.selling_price || 0).toFixed(2)}</td>
+                                    <td class="text-end">${parseFloat(item.discount || 0).toFixed(2)}%</td>
+                                    <td class="text-end">${parseFloat(item.extended_price || 0).toFixed(2)}</td>
+                                    <td>${item.vat || '-'}</td>
+                                    <td>${item.analysis_code || '-'}</td>
+                                    <td>
+                                        <span class="badge bg-${item.part_or_labour === 'P' ? 'primary' : 'success'}">
+                                            ${item.part_or_labour === 'P' ? 'Parts' : 'Labour'}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                        
+                        $('#detailsTableBody').html(html);
+                        $('#totalExtPrice').text(totalExtPrice.toFixed(2));
+                        $('#modalContent').show();
+                    } else {
+                        $('#modalError').show();
+                        $('#errorMessage').text('No transaction body details found for this transaction.');
+                    }
+                },
+                error: function(xhr) {
+                    $('#modalLoading').hide();
+                    $('#modalError').show();
+                    $('#errorMessage').text('Failed to load transaction details. Please try again.');
+                    console.error('AJAX Error:', xhr);
+                }
+            });
         });
     });
 </script>
