@@ -465,12 +465,38 @@ class TransactionBodyImport implements ToModel, WithHeadingRow, WithValidation, 
         }
 
         try {
+            // Handle Excel date serial number
             if (is_numeric($date)) {
                 return Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date));
             }
             
+            // Handle string dates with various formats
+            // Try common date formats: d/m/Y, d-m-Y, Y-m-d, etc.
+            $formats = [
+                'd/m/Y',    // 31/08/2009
+                'd-m-Y',    // 31-08-2009
+                'Y-m-d',    // 2009-08-31
+                'd/m/y',    // 31/08/09
+                'd-m-y',    // 31-08-09
+                'm/d/Y',    // 08/31/2009
+                'm-d-Y',    // 08-31-2009
+            ];
+            
+            foreach ($formats as $format) {
+                try {
+                    $parsed = Carbon::createFromFormat($format, $date);
+                    if ($parsed !== false) {
+                        return $parsed;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+            
+            // If all formats fail, try Carbon::parse as fallback
             return Carbon::parse($date);
         } catch (\Exception $e) {
+            Log::warning("Failed to parse date: {$date}", ['error' => $e->getMessage()]);
             return null;
         }
     }
