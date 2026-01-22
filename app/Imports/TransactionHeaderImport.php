@@ -45,27 +45,28 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
             // Log raw row data for debugging
             Log::info("Processing row {$this->currentRow}", ['data' => $row]);
 
+            // Collect all validation errors for this row
+            $rowErrors = [];
+
             // Validate required fields
             if (empty($row['wipno'])) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'WIPNO',
                     'value' => $row['wipno'] ?? 'empty',
                     'error' => 'WIPNO is required and cannot be empty'
                 ];
-                return null;
             }
 
             // Validate WIPNO is numeric (integer only)
             $wipNo = $this->parseNumeric($row['wipno'] ?? null);
-            if ($wipNo === null || $wipNo === '') {
-                $this->errors[] = [
+            if (!empty($row['wipno']) && ($wipNo === null || $wipNo === '')) {
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'WIPNO',
                     'value' => $row['wipno'] ?? 'empty',
                     'error' => 'WIPNO must be a valid integer number (e.g., 1, 123). Text values like "WIP000001" are not allowed.'
                 ];
-                return null;
             }
 
             // Parse dates
@@ -73,13 +74,12 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
             $registrationDate = $this->parseDate($row['regdate'] ?? null);
 
             if (empty($invoiceDate)) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'InvDate',
                     'value' => $row['invdate'] ?? 'empty',
                     'error' => 'Invoice Date is required and must be a valid date'
                 ];
-                return null;
             }
 
             // Parse numeric fields
@@ -92,179 +92,159 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
 
             // Validate required numeric fields
             if ($vehicleId === null || $vehicleId === '') {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'MAGICH',
                     'value' => $row['magich'] ?? 'empty',
                     'error' => 'Vehicle ID (MAGICH) is required and must be a valid number'
                 ];
-                return null;
             }
 
             if ($invoiceNo === null || $invoiceNo === '') {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'InvNo',
                     'value' => $row['invno'] ?? 'empty',
-                    'error' => 'Invoice Number is required and must be a valid number'
+                    'error' => 'Invoice Number is required and must be a valid integer number (e.g., 1, 123). Text values like "INV000001" are not allowed.'
                 ];
-                return null;
-            }
-
-            $invoiceNo = $this->parseNumeric($row['invno'] ?? null);
-            if ($invoiceNo === null || $invoiceNo === '') {
-                $this->errors[] = [
-                    'row' => $this->currentRow,
-                    'field' => 'InvNo',
-                    'value' => $row['invno'] ?? 'empty',
-                    'error' => 'InvNo must be a valid integer number (e.g., 1, 123). Text values like "INV000001" are not allowed.'
-                ];
-                return null;
             }
 
             // Mileage boleh 0, tapi tidak boleh null atau empty string
             if ($mileage === null || $mileage === '') {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Mileage',
                     'value' => $row['mileage'] ?? 'empty',
                     'error' => 'Mileage is required and must be a valid number (0 is allowed)'
                 ];
-                return null;
             }
 
             // Validate document type
             $docType = strtoupper($row['doctype'] ?? '');
             if (!in_array($docType, ['I', 'C'])) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'DocType',
                     'value' => $row['doctype'] ?? 'empty',
                     'error' => 'Document Type must be either I (Invoice) or C (Credit Note)'
                 ];
-                return null;
             }
 
             // Validate currency code (max 3 chars)
             $currCode = strtoupper($row['currcode'] ?? '');
             if (empty($currCode) || strlen($currCode) > 3) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'CurrCode',
                     'value' => $row['currcode'] ?? 'empty',
                     'error' => 'Currency Code is required and must be 3 characters or less'
                 ];
-                return null;
             }
 
             // Validate service_code (max 3 chars)
             $serviceCode = !empty($row['svccode']) ? strtoupper($row['svccode']) : null;
             if ($serviceCode !== null && strlen($serviceCode) > 3) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'SvcCode',
                     'value' => $row['svccode'],
                     'error' => 'Service Code must be 3 characters or less'
                 ];
-                return null;
             }
 
             // Validate account_code (max 20 chars)
             if (!empty($row['account']) && strlen($row['account']) > 20) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Account',
                     'value' => $row['account'],
                     'error' => 'Account Code must be 20 characters or less'
                 ];
-                return null;
             }
 
             // Validate customer_name (max 150 chars)
             if (!empty($row['custname']) && strlen($row['custname']) > 150) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'CustName',
                     'value' => substr($row['custname'], 0, 50) . '...',
                     'error' => 'Customer Name must be 150 characters or less'
                 ];
-                return null;
             }
 
             // Validate department (max 50 chars)
             if (!empty($row['dept']) && strlen($row['dept']) > 50) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Dept',
                     'value' => $row['dept'],
                     'error' => 'Department must be 50 characters or less'
                 ];
-                return null;
             }
 
             // Validate registration_no (max 20 chars)
             if (!empty($row['regno']) && strlen($row['regno']) > 20) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'RegNo',
                     'value' => $row['regno'],
                     'error' => 'Registration Number must be 20 characters or less'
                 ];
-                return null;
             }
 
             // Validate chassis (max 25 chars)
             if (!empty($row['chassis']) && strlen($row['chassis']) > 25) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Chassis',
                     'value' => $row['chassis'],
                     'error' => 'Chassis Number must be 25 characters or less'
                 ];
-                return null;
             }
 
             // Validate customer_discount (max 10 chars)
             if (!empty($row['custdisc']) && strlen($row['custdisc']) > 10) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'CustDisc',
                     'value' => $row['custdisc'],
                     'error' => 'Customer Discount must be 10 characters or less'
                 ];
-                return null;
             }
 
             // Validate description (max 250 chars)
             if (!empty($row['description']) && strlen($row['description']) > 250) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Description',
                     'value' => substr($row['description'], 0, 50) . '...',
                     'error' => 'Description must be 250 characters or less'
                 ];
-                return null;
             }
 
             // Validate engine_no (max 20 chars)
             if (!empty($row['engineno']) && strlen($row['engineno']) > 20) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'EngineNo',
                     'value' => $row['engineno'],
                     'error' => 'Engine Number must be 20 characters or less'
                 ];
-                return null;
             }
 
             // Validate account_company (max 50 chars)
             if (!empty($row['acctcompany']) && strlen($row['acctcompany']) > 50) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'AcctCompany',
                     'value' => $row['acctcompany'],
                     'error' => 'Account Company must be 50 characters or less'
                 ];
+            }
+
+            // If there are any validation errors, add them all and skip this row
+            if (!empty($rowErrors)) {
+                $this->errors = array_merge($this->errors, $rowErrors);
                 return null;
             }
 
