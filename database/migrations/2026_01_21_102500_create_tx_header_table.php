@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tx_header', function (Blueprint $table) {
-            $table->unsignedInteger('header_id')->primary();
+            $table->unsignedInteger('header_id')->primary()->autoIncrement();
             $table->unsignedInteger('brand_id');
             $table->unsignedInteger('invoice_no');
             $table->unsignedInteger('wip_no');

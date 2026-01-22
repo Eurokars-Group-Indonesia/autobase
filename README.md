@@ -7,6 +7,36 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## 🚀 Quick Start - Docker Deployment
+
+Deploy aplikasi ini dengan Docker + Nginx + SSL dalam beberapa langkah:
+
+```bash
+# Setup otomatis (Windows)
+docker-setup.bat
+
+# Atau manual
+generate-ssl-cert.bat
+copy .env.docker .env
+docker-compose up -d --build
+```
+
+Akses aplikasi:
+- **HTTPS**: https://localhost:8443 ✅
+- **HTTP**: http://localhost:8000 (redirect ke HTTPS)
+
+📚 **Dokumentasi Lengkap**: [DOCKER_README.md](DOCKER_README.md)
+
+**Performance**: OPcache + JIT enabled untuk 2-3x faster response time! 🚀
+
+## 📦 Tech Stack (Docker)
+
+- **Nginx** - Web server dengan SSL/TLS
+- **PHP 8.3-FPM** - Application server dengan OPcache + JIT
+- **Percona MySQL 8.0** - Database
+- **Redis** - Cache & Queue
+- **Supervisor** - Queue worker manager
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

@@ -11,7 +11,7 @@ class TransactionHeader extends Model
     protected $primaryKey = 'header_id';
     public $incrementing = true;
     protected $keyType = 'integer';
-    const CREATED_AT = 'created_at';
+    const CREATED_AT = 'created_date';
     const UPDATED_AT = 'updated_date';
 
     protected $fillable = [
@@ -51,7 +51,7 @@ class TransactionHeader extends Model
     protected $casts = [
         'invoice_date' => 'date',
         'registration_date' => 'date',
-        'created_at' => 'datetime',
+        'created_date' => 'datetime',
         'updated_date' => 'datetime',
         'is_active' => 'string',
         'exchange_rate' => 'decimal:2',
