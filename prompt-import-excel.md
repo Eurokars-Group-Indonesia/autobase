@@ -1,115 +1,159 @@
-Buatkan fungsi import dari excel transaction header, pakai createOrReplace
+1. Buatkan fungsi import dari excel transaction body, pakai createOrReplace / updateOrCreate
 
-dan tambahkan button Import di Datatable Transaction Header
+dan tambahkan button Import di Datatable Transaction Body dengan permission "transaction-body.import"
 
-Buat input field nya pakai drag n drop, dan validasi mime type csv, xls, xlsx
+
+
+2. Buat input field nya pakai drag n drop, dan validasi mime type csv, xls, xlsx
 
 kalau ada yang gagal simpan ke dalam Array, lalu tampilkan ke sisi user berupa list / daftar pakai loop dan gagal nya di line berapa, dan error nya apa
 
+
+
+untuk contoh nya bisa di lihat dari halaman import transaction header
+
 untuk template import excel nya : 
 
-1. WIPNO
+1. Part
 
-2. Account  
+2. Desc
 
-3. CustName 
+3. Qty 
 
-4. Add1 
+4. SellPrice 
 
-5. Add2 
+5. Disc% 
 
-6. Add3 
+6. ExtPrice 
 
-7. Add4 
+7. MP 
 
-8. Add5 
+8. VAT 
 
-9. Dept 
+9. MV 
 
-10. InvNo
+10. CostPr
 
-11. InvDate 
+11. AnalCode 
 
-12. MAGICH  
+12. InvStat
 
-13. DocType 
+13. UOI 
 
-14. ExchangeRate    
+14. MpU
 
-15. RegNo   
+15. WIPNo
 
-16. Chassis 
+16. Line 
 
-17. Mileage 
+17. Acct 
 
-18. CurrCode    
+18. Dept
 
-19. GrossValue  
+19. InvNo
 
-20. NetValue    
+20. FC
 
-21. CustDisc    
+21. SaleType
 
-22. SvcCode 
+22. Wcode 
 
-23. RegDate 
+23. MenuFlag 
 
-24. Description 
+24. Contrib 
 
-25. EngineNo    
+25. DateDecard
 
-26. AcctCompany
+26. HMagic1
 
-diatas adalah nama header di excel nya, nah nanti dari header di atas insert ke table : tx_header di field2 berikut:
+27. HMagic2
 
-1. WIPNO -> wip_no
+28. PO
 
-2. Account -> account_code
+29. GRN
 
-3. CustName -> customer_name
+30. Menu
 
-4. Add1 -> address_1
+31. LR
 
-5. Add2 -> address_2
+32. Supp
 
-6. Add3 -> address_3
+33. MenuLink
 
-7. Add4 -> address_4
+34. CurPrice
 
-8. Add5 -> address_5
+35. Parts/Labour
 
-9. Dept -> department
 
-10. InvNo -> invoice_no
 
-11. InvDate -> invoice_date
+diatas adalah nama body di excel nya, nah nanti dari body di atas insert ke table : tx_body di field2 berikut:
 
-12. MAGICH  -> vehicle_id
+1. Part -> part_no
 
-13. DocType -> document_type
+2. Desc -> description
 
-14. ExchangeRate -> exchange_rate
+3. Qty -> qty
 
-15. RegNo -> registration_no
+4. SellPrice -> selling_price
 
-16. Chassis -> chassis
+5. Disc% -> discount
 
-17. Mileage -> mileage
+6. ExtPrice -> extended_price
 
-18. CurrCode -> currency_code
+7. MP -> menu_price
 
-19. GrossValue -> gross_value   
+8. VAT -> vat
 
-20. NetValue -> net_value
+9. MV -> menu_vat
 
-21. CustDisc -> customer_discount
+10. CostPr -> cost_price
 
-22. SvcCode -> service_code
+11. AnalCode -> analysis_code
 
-23. RegDate -> registration_date
+12. InvStat -> invoice_status
 
-24. Description -> description
+13. UOI -> unit
 
-25. EngineNo -> engineer_no
+14. MpU -> mins_per_unit
 
-26. AcctCompany -> account_company
+15. WIPNo -> wip_no
+
+16. Line -> line
+
+17. Acct -> account_code
+
+18. Dept -> department
+
+19. InvNo -> invoice_no
+
+20. FC -> franchise_code
+
+21. SaleType -> sales_type
+
+22. Wcode -> sales_type
+
+23. MenuFlag -> menu_flag
+
+24. Contrib -> contribution
+
+25. DateDecard -> date_decard
+
+26. HMagic1 -> magic_1
+
+27. HMagic2 -> magic_2
+
+28. PO -> po_no
+
+29. GRN -> grn_no
+
+30. Menu -> menu_code
+
+31. LR -> labour_rates
+
+32. Supp -> supplier_code
+
+33. MenuLink -> menu_link
+
+34. CurPrice -> currency_price
+
+35. Parts/Labour -> part_or_labour

@@ -50,7 +50,6 @@ class TransactionBody extends Model
         'menu_link',
         'currency_price',
         'part_or_labour',
-        'account_company',
         'created_by',
         'updated_by',
         'unique_id',

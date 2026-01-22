@@ -46,13 +46,18 @@
 <div class="row">
     <div class="col-12">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-list-ul"></i> Transaction Body</span>
+                @if(auth()->user()->hasPermission('transaction-body.import'))
+                <a href="{{ route('transaction-body.import') }}" class="btn btn-light btn-sm">
+                    <i class="bi bi-upload"></i> Import Excel
+                </a>
+                @endif
             </div>
             <div class="card-body">
                 <form action="{{ route('transaction-body.index') }}" method="GET" id="searchForm">
                     <div class="row mb-3">
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                             <label class="form-label">Per Page</label>
                             <select class="form-select" name="per_page" onchange="this.form.submit()">
                                 <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
@@ -61,10 +66,10 @@
                                 <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label class="form-label">Search</label>
                             <input type="text" class="form-control" name="search" 
-                                   placeholder="Part No, Invoice No, WIP No, Description..." 
+                                   placeholder="Part No, Invoice No, WIP No..." 
                                    value="{{ request('search') }}">
                         </div>
                         <div class="col-md-2">

@@ -140,4 +140,9 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:transaction-body.view')->group(function () {
         Route::get('/transaction-body', [TransactionBodyController::class, 'index'])->name('transaction-body.index');
     });
+    Route::middleware('permission:transaction-body.import')->group(function () {
+        Route::get('/transaction-body/import', [TransactionBodyController::class, 'showImport'])->name('transaction-body.import');
+        Route::post('/transaction-body/import', [TransactionBodyController::class, 'import'])->name('transaction-body.import.process');
+        Route::get('/transaction-body/import/template', [TransactionBodyController::class, 'downloadTemplate'])->name('transaction-body.import.template');
+    });
 });

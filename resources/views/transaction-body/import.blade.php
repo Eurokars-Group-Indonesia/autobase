@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Import Transaction Headers')
+@section('title', 'Import Transaction Body')
 
 @push('styles')
 <style>
@@ -92,7 +92,7 @@
 <div class="container-fluid">
     <div class="row mb-3">
         <div class="col-12">
-            <h1 class="h3 mb-0">Import Transaction Headers</h1>
+            <h1 class="h3 mb-0">Import Transaction Body</h1>
         </div>
     </div>
 
@@ -177,23 +177,8 @@
                     <h5 class="card-title mb-0">Upload Excel File</h5>
                 </div>
                 <div class="card-body">
-                    <form action="{{ route('transactions.header.import.process') }}" method="POST" enctype="multipart/form-data" id="importForm">
+                    <form action="{{ route('transaction-body.import.process') }}" method="POST" enctype="multipart/form-data" id="importForm">
                         @csrf
-                        
-                        <div class="mb-3">
-                            <label for="brand_id" class="form-label">Brand <span class="text-danger">*</span></label>
-                            <select name="brand_id" id="brand_id" class="form-select @error('brand_id') is-invalid @enderror" required>
-                                <option value="">Select Brand</option>
-                                @foreach($brands as $brand)
-                                    <option value="{{ $brand->brand_id }}" {{ old('brand_id') == $brand->brand_id ? 'selected' : '' }}>
-                                        {{ $brand->brand_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('brand_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
 
                         <div class="mb-3">
                             <label class="form-label">Excel File <span class="text-danger">*</span></label>
@@ -229,7 +214,7 @@
                             <button type="submit" class="btn btn-primary" id="submitBtn">
                                 <i class="bi bi-upload"></i> Import
                             </button>
-                            <a href="{{ route('transactions.index') }}" class="btn btn-secondary">
+                            <a href="{{ route('transaction-body.index') }}" class="btn btn-secondary">
                                 <i class="bi bi-arrow-left"></i> Back
                             </a>
                         </div>
@@ -246,42 +231,57 @@
                 <div class="card-body">
                     <h6>Download Template</h6>
                     <p class="text-muted small">Download the Excel template with the correct column headers.</p>
-                    <a href="{{ route('transactions.header.import.template') }}" class="btn btn-success btn-sm mb-3">
+                    <a href="{{ route('transaction-body.import.template') }}" class="btn btn-success btn-sm mb-3">
                         <i class="bi bi-download"></i> Download Template
                     </a>
 
                     <h6>Required Columns</h6>
                     <ul class="small text-muted">
-                        <li><strong>WIPNO</strong> - Work In Progress Number (Required)</li>
-                        <li><strong>Account</strong> - Account Code</li>
-                        <li><strong>CustName</strong> - Customer Name</li>
-                        <li><strong>Add1-Add5</strong> - Address Lines</li>
+                        <li><strong>Part</strong> - Part Number (Required)</li>
+                        <li><strong>InvNo</strong> - Invoice Number (Required)</li>
+                        <li><strong>WIPNo</strong> - WIP Number (Required)</li>
+                        <li><strong>Line</strong> - Line Number (Required)</li>
+                        <li><strong>AnalCode</strong> - Analysis Code (Required, 1 char)</li>
+                        <li><strong>InvStat</strong> - Invoice Status: X or C (Required)</li>
+                        <li><strong>SaleType</strong> - Sales Type (Required, 1 char)</li>
+                        <li><strong>Wcode</strong> - Warranty Code (Optional, max 3 chars)</li>
+                        <li><strong>Parts/Labour</strong> - P (Part) or L (Labour) (Required)</li>
+                        <li><strong>Desc</strong> - Description</li>
+                        <li><strong>Qty</strong> - Quantity</li>
+                        <li><strong>SellPrice</strong> - Selling Price</li>
+                        <li><strong>Disc%</strong> - Discount Percentage</li>
+                        <li><strong>ExtPrice</strong> - Extended Price</li>
+                        <li><strong>MP</strong> - Menu Price</li>
+                        <li><strong>VAT</strong> - VAT</li>
+                        <li><strong>MV</strong> - Menu VAT</li>
+                        <li><strong>CostPr</strong> - Cost Price</li>
+                        <li><strong>UOI</strong> - Unit of Issue</li>
+                        <li><strong>MpU</strong> - Minutes Per Unit</li>
+                        <li><strong>Acct</strong> - Account Code</li>
                         <li><strong>Dept</strong> - Department</li>
-                        <li><strong>InvNo</strong> - Invoice Number</li>
-                        <li><strong>InvDate</strong> - Invoice Date</li>
-                        <li><strong>MAGICH</strong> - Vehicle ID</li>
-                        <li><strong>DocType</strong> - Document Type</li>
-                        <li><strong>ExchangeRate</strong> - Exchange Rate</li>
-                        <li><strong>RegNo</strong> - Registration Number</li>
-                        <li><strong>Chassis</strong> - Chassis Number</li>
-                        <li><strong>Mileage</strong> - Mileage</li>
-                        <li><strong>CurrCode</strong> - Currency Code</li>
-                        <li><strong>GrossValue</strong> - Gross Value</li>
-                        <li><strong>NetValue</strong> - Net Value</li>
-                        <li><strong>CustDisc</strong> - Customer Discount</li>
-                        <li><strong>SvcCode</strong> - Service Code</li>
-                        <li><strong>RegDate</strong> - Registration Date</li>
-                        <li><strong>Description</strong> - Description</li>
-                        <li><strong>EngineNo</strong> - Engine Number</li>
-                        <li><strong>AcctCompany</strong> - Account Company</li>
+                        <li><strong>FC</strong> - Franchise Code</li>
+                        <li><strong>MenuFlag</strong> - Menu Flag</li>
+                        <li><strong>Contrib</strong> - Contribution</li>
+                        <li><strong>DateDecard</strong> - Date Decard</li>
+                        <li><strong>HMagic1</strong> - Magic 1</li>
+                        <li><strong>HMagic2</strong> - Magic 2</li>
+                        <li><strong>PO</strong> - PO Number</li>
+                        <li><strong>GRN</strong> - GRN Number</li>
+                        <li><strong>Menu</strong> - Menu Code</li>
+                        <li><strong>LR</strong> - Labour Rates</li>
+                        <li><strong>Supp</strong> - Supplier Code</li>
+                        <li><strong>MenuLink</strong> - Menu Link</li>
+                        <li><strong>CurPrice</strong> - Currency Price</li>
                     </ul>
 
                     <h6 class="mt-3">Notes</h6>
                     <ul class="small text-muted">
-                        <li>The import uses <strong>update data</strong> based on WIPNO and Brand</li>
+                        <li>The import uses <strong>updateOrCreate</strong> based on Part + InvNo + WIPNo + Line</li>
                         <li>Existing records will be updated</li>
                         <li>New records will be created</li>
                         <li>Date format: YYYY-MM-DD or Excel date</li>
+                        <li>InvStat: X = Closed, C = Completed</li>
+                        <li>Parts/Labour: P = Part, L = Labour</li>
                     </ul>
                 </div>
             </div>

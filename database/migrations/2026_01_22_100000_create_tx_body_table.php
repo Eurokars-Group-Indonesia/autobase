@@ -31,7 +31,7 @@ return new class extends Migration
             $table->string('department', 50)->nullable();
             $table->string('franchise_code', 3)->nullable();
             $table->char('sales_type', 1);
-            $table->string('warranty_code', 3);
+            $table->string('warranty_code', 3)->nullable();
             $table->char('menu_flag', 1)->nullable();
             $table->double('contribution', 3, 2)->default(0);
             $table->date('date_decard')->nullable();
@@ -45,7 +45,6 @@ return new class extends Migration
             $table->unsignedTinyInteger('menu_link')->default(0);
             $table->double('currency_price', 20, 2)->nullable();
             $table->enum('part_or_labour', ['P', 'L']);
-            $table->string('account_company', 10);
             $table->unsignedBigInteger('created_by');
             $table->dateTime('created_date')->nullable()->useCurrent();
             $table->unsignedBigInteger('updated_by')->nullable();
