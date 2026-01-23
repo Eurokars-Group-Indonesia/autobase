@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TransactionHeader;
 use App\Models\Brand;
 use App\Imports\TransactionHeaderImport;
+use App\Exports\TransactionHeaderExport;
 use App\Jobs\LogSearchHistory;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -515,5 +516,19 @@ class TransactionHeaderController extends Controller
             'success' => true,
             'data' => $bodies
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        $search = $request->get('search');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+
+        $filename = 'transaction_headers_' . date('Y-m-d_His') . '.xlsx';
+
+        return Excel::download(
+            new TransactionHeaderExport($search, $dateFrom, $dateTo),
+            $filename
+        );
     }
 }
