@@ -45,45 +45,44 @@ class TransactionBodyImport implements
         try {
             Log::info("Processing row {$this->currentRow}", ['data' => $row]);
 
+            // Array to collect all errors for this row
+            $rowErrors = [];
+
             // Validate required fields
             if (empty($row['part'])) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Part',
                     'value' => $row['part'] ?? 'empty',
                     'error' => 'Part is required and cannot be empty'
                 ];
-                return null;
             }
 
             if (empty($row['invno'])) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'InvNo',
                     'value' => $row['invno'] ?? 'empty',
                     'error' => 'Invoice Number is required and cannot be empty'
                 ];
-                return null;
             }
 
             if (empty($row['wipno'])) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'WIPNo',
                     'value' => $row['wipno'] ?? 'empty',
                     'error' => 'WIP Number is required and cannot be empty'
                 ];
-                return null;
             }
 
             if (empty($row['line'])) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Line',
                     'value' => $row['line'] ?? 'empty',
                     'error' => 'Line is required and cannot be empty'
                 ];
-                return null;
             }
 
             // Parse numeric fields
@@ -112,169 +111,160 @@ class TransactionBodyImport implements
             // Validate required numeric fields
             // InvNo boleh 0, tapi tidak boleh null atau empty string
             if ($invoiceNo === null || $invoiceNo === '') {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'InvNo',
                     'value' => $row['invno'] ?? 'empty',
                     'error' => 'Invoice Number must be a valid number (0 is allowed)'
                 ];
-                return null;
             }
 
             if ($wipNo === null || $wipNo === '') {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'WIPNo',
                     'value' => $row['wipno'] ?? 'empty',
                     'error' => 'WIP Number must be a valid integer number (e.g., 1, 123). Text values like "WIP000001" are not allowed.'
                 ];
-                return null;
             }
 
             if ($line === null || $line === '') {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Line',
                     'value' => $row['line'] ?? 'empty',
                     'error' => 'Line must be a valid number'
                 ];
-                return null;
             }
 
             // Validate analysis_code (required, 1 char)
             $analysisCode = strtoupper($row['analcode'] ?? '');
             if (empty($analysisCode) || strlen($analysisCode) > 1) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'AnalCode',
                     'value' => $row['analcode'] ?? 'empty',
                     'error' => 'Analysis Code is required and must be 1 character'
                 ];
-                return null;
             }
 
             // Validate invoice_status (required, 1 char, X or C)
             $invoiceStatus = strtoupper($row['invstat'] ?? '');
             if (!in_array($invoiceStatus, ['X', 'C'])) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'InvStat',
                     'value' => $row['invstat'] ?? 'empty',
                     'error' => 'Invoice Status must be either X (Closed) or C (Completed)'
                 ];
-                return null;
             }
 
             // Validate sales_type (required, 1 char)
             $salesType = strtoupper($row['saletype'] ?? '');
             if (empty($salesType) || strlen($salesType) > 1) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'SaleType',
                     'value' => $row['saletype'] ?? 'empty',
                     'error' => 'Sales Type is required and must be 1 character'
                 ];
-                return null;
             }
 
             // Validate warranty_code (optional, max 3 chars)
             $warrantyCode = !empty($row['wcode']) ? strtoupper($row['wcode']) : null;
             if ($warrantyCode !== null && strlen($warrantyCode) > 3) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Wcode',
                     'value' => $row['wcode'],
                     'error' => 'Warranty Code must be 3 characters or less'
                 ];
-                return null;
             }
 
             // Validate part_or_labour (required, P or L)
             $partOrLabour = strtoupper($row['partslabour'] ?? '');
             if (!in_array($partOrLabour, ['P', 'L'])) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Parts/Labour',
                     'value' => $row['partslabour'] ?? 'empty',
                     'error' => 'Parts/Labour must be either P (Part) or L (Labour)'
                 ];
-                return null;
             }
 
             // Validate part_no (max 100 chars)
             if (strlen($row['part']) > 100) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Part',
                     'value' => substr($row['part'], 0, 50) . '...',
                     'error' => 'Part Number must be 100 characters or less'
                 ];
-                return null;
             }
 
             // Validate description (max 250 chars)
             if (!empty($row['desc']) && strlen($row['desc']) > 250) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Desc',
                     'value' => substr($row['desc'], 0, 50) . '...',
                     'error' => 'Description must be 250 characters or less'
                 ];
-                return null;
             }
 
             // Validate unit (max 10 chars)
             if (!empty($row['uoi']) && strlen($row['uoi']) > 10) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'UOI',
                     'value' => $row['uoi'],
                     'error' => 'Unit must be 10 characters or less'
                 ];
-                return null;
             }
 
             // Validate account_code (max 20 chars)
             if (!empty($row['acct']) && strlen($row['acct']) > 20) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Acct',
                     'value' => $row['acct'],
                     'error' => 'Account Code must be 20 characters or less'
                 ];
-                return null;
             }
 
             // Validate department (max 50 chars)
             if (!empty($row['dept']) && strlen($row['dept']) > 50) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Dept',
                     'value' => $row['dept'],
                     'error' => 'Department must be 50 characters or less'
                 ];
-                return null;
             }
 
             // Validate franchise_code (max 3 chars)
             if (!empty($row['fc']) && strlen($row['fc']) > 3) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'FC',
                     'value' => $row['fc'],
                     'error' => 'Franchise Code must be 3 characters or less'
                 ];
-                return null;
             }
 
             // Validate supplier_code (max 20 chars)
             if (!empty($row['supp']) && strlen($row['supp']) > 20) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Supp',
                     'value' => $row['supp'],
                     'error' => 'Supplier Code must be 20 characters or less'
                 ];
+            }
+
+            // If there are any validation errors, add them all and skip this row
+            if (!empty($rowErrors)) {
+                $this->errors = array_merge($this->errors, $rowErrors);
                 return null;
             }
 
@@ -358,22 +348,25 @@ class TransactionBodyImport implements
             // Handle SQL errors specifically
             $errorMessage = $e->getMessage();
             
+            $rowErrors = [];
             // Check for integer value error
             if (strpos($errorMessage, 'Incorrect integer value') !== false) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'WIPNo',
                     'value' => $row['wipno'] ?? 'N/A',
                     'error' => 'WIP Number must be a valid integer. Text values like "WIP000001" are not allowed. Please use only numbers (e.g., 1, 123).'
                 ];
             } else {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Database',
                     'value' => 'N/A',
                     'error' => 'Database error: ' . $errorMessage
                 ];
             }
+            
+            $this->errors = array_merge($this->errors, $rowErrors);
             
             Log::error("Database error importing row {$this->currentRow}", [
                 'error' => $errorMessage,
@@ -382,12 +375,15 @@ class TransactionBodyImport implements
             
             return null;
         } catch (\Exception $e) {
-            $this->errors[] = [
+            $rowErrors = [];
+            $rowErrors[] = [
                 'row' => $this->currentRow,
                 'field' => 'General',
                 'value' => 'N/A',
                 'error' => $e->getMessage()
             ];
+            
+            $this->errors = array_merge($this->errors, $rowErrors);
             
             Log::error("Error importing row {$this->currentRow}", [
                 'error' => $e->getMessage(),
