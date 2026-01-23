@@ -594,7 +594,7 @@
     <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="{{ route('dashboard') }}">
-                <i class="bi bi-shield-check"></i> Admin Panel
+                <i class="bi bi-car-front-fill"></i> AutoBase
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
