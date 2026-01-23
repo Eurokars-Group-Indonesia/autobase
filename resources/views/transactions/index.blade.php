@@ -107,7 +107,7 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-receipt"></i> Transaction Headers</span>
                 <div>
-                    @if(auth()->user()->hasPermission('transactions.view'))
+                    @if(auth()->user()->hasPermission('transactions.view') && (request('search') || request('date_from') || request('date_to')))
                     <a href="{{ route('transactions.export', request()->all()) }}" class="btn btn-success btn-sm me-2">
                         <i class="bi bi-file-earmark-excel"></i> Export Excel
                     </a>

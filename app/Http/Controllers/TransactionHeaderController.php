@@ -6,6 +6,7 @@ use App\Models\TransactionHeader;
 use App\Models\Brand;
 use App\Imports\TransactionHeaderImport;
 use App\Exports\TransactionHeaderExport;
+use App\Exports\TransactionHeaderOnlyExport;
 use App\Jobs\LogSearchHistory;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -541,8 +542,18 @@ class TransactionHeaderController extends Controller
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
 
+        // Check if there's any filter
+        $hasFilter = !empty($search) || !empty($dateFrom) || !empty($dateTo);
+
+        // Only allow export when there's filter
+        if (!$hasFilter) {
+            return redirect()->route('transactions.index')
+                ->with('error', 'Please apply search or date filter before exporting.');
+        }
+
         $filename = 'transaction_headers_' . date('Y-m-d_His') . '.xlsx';
 
+        // Export with body details
         return Excel::download(
             new TransactionHeaderExport($search, $dateFrom, $dateTo),
             $filename
