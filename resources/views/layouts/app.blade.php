@@ -50,7 +50,7 @@
             background-color: var(--bg-body);
             color: var(--text-primary);
             transition: background-color 0.3s ease, color 0.3s ease;
-            font-size: 12px;
+            font-size: 13px;
         }
         .navbar-custom {
             background: var(--navbar-bg);
