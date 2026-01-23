@@ -16,13 +16,14 @@ class TransactionHeaderController extends Controller
         // Start timing
         $startTime = microtime(true);
         
-        $query = TransactionHeader::with('brand')->where('is_active', '1')->orderBy('invoice_date', 'desc');
-        
         // Check if there's any search/filter parameter
         $hasSearch = $request->has('search') && $request->search != '';
         $hasDateFrom = $request->has('date_from') && $request->date_from != '';
         $hasDateTo = $request->has('date_to') && $request->date_to != '';
         $hasFilter = $hasSearch || $hasDateFrom || $hasDateTo;
+        
+        // Base query with brand
+        $query = TransactionHeader::with('brand')->where('tx_header.is_active', '1')->orderBy('tx_header.invoice_date', 'desc');
         
         // Only use cache when there's search/filter
         if ($hasFilter) {
@@ -38,26 +39,41 @@ class TransactionHeaderController extends Controller
             
             // Try to get from cache (1 hour)
             $transactions = cache()->remember($cacheKey, now()->addHour(), function () use ($request, $query) {
-                // Search by text
+                // Search by text - search in header and body
                 if ($request->has('search') && $request->search != '') {
                     $search = $request->search;
                     $query->where(function($q) use ($search) {
-                        $q->where('customer_name', 'like', $search . '%')
-                          ->orWhere('chassis', 'like', $search . '%')
-                          ->orWhere('invoice_no', 'like', $search . '%')
-                          ->orWhere('wip_no', 'like', $search . '%')
-                          ->orWhere('registration_no', 'like', $search . '%')
-                          ->orWhereDate('invoice_date', '=', $search);
+                        // Search in header fields
+                        $q->where('tx_header.customer_name', 'like', $search . '%')
+                          ->orWhere('tx_header.chassis', 'like', $search . '%')
+                          ->orWhere('tx_header.invoice_no', 'like', $search . '%')
+                          ->orWhere('tx_header.wip_no', 'like', $search . '%')
+                          ->orWhere('tx_header.registration_no', 'like', $search . '%')
+                          ->orWhereDate('tx_header.invoice_date', '=', $search)
+                          // Search in body fields using whereExists
+                          ->orWhereExists(function($existsQuery) use ($search) {
+                              $existsQuery->select(\DB::raw(1))
+                                          ->from('tx_body')
+                                          ->whereColumn('tx_body.wip_no', 'tx_header.wip_no')
+                                          ->whereColumn('tx_body.invoice_no', 'tx_header.invoice_no')
+                                          ->where('tx_body.is_active', '1')
+                                          ->where(function($bodyWhere) use ($search) {
+                                              $bodyWhere->where('tx_body.part_no', 'like', $search . '%')
+                                                        ->orWhere('tx_body.wip_no', 'like', $search . '%')
+                                                        ->orWhere('tx_body.invoice_no', 'like', $search . '%')
+                                                        ->orWhereDate('tx_body.date_decard', '=', $search);
+                                          });
+                          });
                     });
                 }
                 
                 // Filter by date range
                 if ($request->has('date_from') && $request->date_from != '') {
-                    $query->whereDate('invoice_date', '>=', $request->date_from);
+                    $query->whereDate('tx_header.invoice_date', '>=', $request->date_from);
                 }
                 
                 if ($request->has('date_to') && $request->date_to != '') {
-                    $query->whereDate('invoice_date', '<=', $request->date_to);
+                    $query->whereDate('tx_header.invoice_date', '<=', $request->date_to);
                 }
                 
                 // Pagination
@@ -66,6 +82,24 @@ class TransactionHeaderController extends Controller
                 
                 return $query->paginate($perPageValue)->withQueryString();
             });
+            
+            // Manually load bodies for each transaction using raw query with composite key
+            foreach ($transactions as $transaction) {
+                $transaction->bodies = \DB::table('tx_body')
+                    ->where('wip_no', $transaction->wip_no)
+                    ->where('invoice_no', $transaction->invoice_no)
+                    ->where('is_active', '1')
+                    ->orderBy('line')
+                    ->get()
+                    ->map(function($body) {
+                        // Convert to TransactionBody model instance
+                        $bodyModel = new \App\Models\TransactionBody();
+                        foreach ($body as $key => $value) {
+                            $bodyModel->$key = $value;
+                        }
+                        return $bodyModel;
+                    });
+            }
         } else {
             // No search/filter - execute query directly without cache
             $perPage = $request->get('per_page', 10);
@@ -89,7 +123,7 @@ class TransactionHeaderController extends Controller
             );
         }
         
-        return view('transactions.index', compact('transactions'));
+        return view('transactions.index', compact('transactions', 'hasFilter'));
     }
 
     public function showImport()

@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel')</title>
+    <!-- Google Fonts - Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -16,8 +20,19 @@
             --text-primary: #212529;
             --text-secondary: #6c757d;
             --border-color: #dee2e6;
-            --navbar-bg: #0d6efd;
-            --card-header-bg: #0d6efd;
+            --navbar-bg: #002856;
+            --card-header-bg: #002856;
+            
+            /* Override Bootstrap blue color */
+            --bs-blue: #002856;
+            --bs-primary: #002856;
+            --bs-primary-rgb: 0, 40, 86;
+            --bs-link-color: #002856;
+            --bs-link-hover-color: #001a3d;
+
+            /* Pagination colors */
+            --bs-pagination-active-bg: #002856;
+            --bs-pagination-active-border-color: #002856;
         }
         
         [data-theme="dark"] {
@@ -31,7 +46,7 @@
         }
         
         body {
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
             background-color: var(--bg-body);
             color: var(--text-primary);
             transition: background-color 0.3s ease, color 0.3s ease;
@@ -47,7 +62,7 @@
             border-bottom: 1px solid var(--border-color);
         }
         .navbar-custom .navbar-brand {
-            color: white;
+            color: #FA891A;
             font-weight: 600;
             font-size: 1.5rem;
         }
@@ -59,6 +74,19 @@
         }
         .navbar-custom .nav-link:hover {
             color: white;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 5px;
+        }
+        .navbar-custom .nav-link:focus,
+        .navbar-custom .nav-link:active,
+        .navbar-custom .nav-link.show {
+            color: white !important;
+        }
+        .navbar-custom .dropdown-toggle::after {
+            color: white;
+        }
+        .navbar-custom .dropdown-toggle.show {
+            color: white !important;
             background-color: rgba(255,255,255,0.1);
             border-radius: 5px;
         }
@@ -113,7 +141,7 @@
             
             .navbar-nav .nav-link:hover {
                 background-color: #f8f9fa;
-                color: #0d6efd !important;
+                color: #002856 !important;
             }
             
             [data-theme="dark"] .navbar-nav .nav-link:hover {
@@ -144,7 +172,7 @@
             
             .navbar-nav .dropdown-item:hover {
                 background-color: white;
-                color: #0d6efd;
+                color: #002856;
             }
             
             [data-theme="dark"] .navbar-nav .dropdown-item:hover {
@@ -153,7 +181,7 @@
             }
             
             .theme-toggle {
-                background: #0d6efd !important;
+                background: #002856 !important;
                 color: white !important;
                 margin-bottom: 0.5rem;
                 width: 100%;
@@ -168,7 +196,7 @@
             .theme-toggle:hover,
             .theme-toggle:focus,
             .theme-toggle:active {
-                background: #0b5ed7 !important;
+                background: #001a3d !important;
                 color: white !important;
             }
             
@@ -238,23 +266,39 @@
             transition: background-color 0.3s ease;
         }
         .breadcrumb-item.active {
-            color: #0d6efd;
+            color: black;
+        }
+        [data-theme="dark"] .breadcrumb-item.active {
+            color: white;
         }
         .breadcrumb-item a {
-            color: var(--text-primary);
+            color: #002856;
             text-decoration: none;
         }
         .breadcrumb-item a:hover {
-            color: #0d6efd;
+            color: #002856;
+        }
+        [data-theme="dark"] .breadcrumb-item a:hover {
+            color: white;
         }
         .btn-primary {
-            background: #0d6efd;
+            background: #002856;
             border: none;
         }
         .btn-primary:hover {
-            background: #0b5ed7;
+            background: #001a3d;
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0,0,0,.2);
+        }
+        .btn-info {
+            background: #002856;
+            color: #ffffff;
+            border: #002856;
+        }
+        .btn-info:hover {
+            background: #FA891A;
+            color: #ffffff;
+            border: #002856;
         }
         .table {
             background-color: var(--bg-card);
@@ -262,9 +306,9 @@
             transition: background-color 0.3s ease, color 0.3s ease;
         }
         .table thead th {
-            background-color: var(--bg-body);
-            border-bottom: 2px solid #0d6efd;
-            color: var(--text-primary);
+            background-color: #002856;
+            border-bottom: 2px solid #002856;
+            color: white;
             font-weight: 600;
         }
         .table tbody tr {
@@ -303,7 +347,7 @@
             width: 38px;
         }
         .theme-toggle:hover {
-            background: #0d6efd;
+            background: #002856;
         }
         .theme-toggle i {
             font-size: 1.1rem;
@@ -319,7 +363,7 @@
         .form-control:focus, .form-select:focus {
             background-color: var(--bg-card);
             color: var(--text-primary);
-            border-color: #0d6efd;
+            border-color: #002856;
         }
         
         [data-theme="dark"] .form-control::placeholder {
@@ -418,9 +462,9 @@
         }
         
         [data-theme="dark"] .pagination .page-item.active .page-link {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
-            color: white;
+            background-color: #FA891A;
+            border-color: #FA891A;
+            color: black;
         }
         
         [data-theme="dark"] .pagination .page-item.disabled .page-link {
@@ -454,6 +498,9 @@
         
         .pagination .page-item.active .page-link {
             font-weight: 600;
+            background-color: #002856;
+            border-color: #002856;
+            color: white;
         }
         
         h1, h2, h3, h4, h5, h6 {
@@ -465,11 +512,11 @@
         }
         
         a {
-            color: #0d6efd;
+            color: #002856;
         }
         
         [data-theme="dark"] a:not(.btn):not(.nav-link):not(.dropdown-item):not(.page-link) {
-            color: #6ea8fe;
+            color: #FA891A;
         }
         
         .input-group .btn {
@@ -482,6 +529,14 @@
         
         .input-group .btn:not(:last-child) {
             border-radius: 0;
+        }
+
+        .breadcrumb-item+.breadcrumb-item::before {
+            color: var(--bs-breadcrumb-divider-color);
+        }
+
+        [data-theme="dark"] .breadcrumb-item+.breadcrumb-item::before {
+            color: white;
         }
         
         /* Prevent horizontal scroll on mobile */

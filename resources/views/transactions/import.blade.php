@@ -13,10 +13,27 @@
         transition: all 0.3s ease;
         background-color: #f8f9fa;
     }
+
+    [data-theme="dark"] .drop-zone {
+        background-color: #002856;
+    }
     
     .drop-zone:hover {
         border-color: #4299e1;
         background-color: #ebf8ff;
+    }
+
+    [data-theme="dark"] .drop-zone:hover {
+        border-color: #FA891A;
+        background-color: #ebf8ff;
+    }
+
+    [data-theme="dark"] p > strong {
+        color: #FA891A;
+    }
+
+    [data-theme="dark"] .form-text {
+        color: white;
     }
     
     .drop-zone.dragover {
@@ -131,7 +148,7 @@
                         </div>
                         <div class="error-message">
                             <strong>Field:</strong> {{ $error['field'] }}<br>
-                            <strong>Value:</strong> <code>{{ is_array($error['value']) ? json_encode($error['value']) : $error['value'] }}</code><br>
+                            <strong>Value:</strong> {{ is_array($error['value']) ? json_encode($error['value']) : $error['value'] }}<br>
                             <strong>Error:</strong> {{ $error['error'] }}
                         </div>
                     </div>
@@ -161,7 +178,7 @@
                         </div>
                         <div class="error-message">
                             <strong>Field:</strong> {{ $error['field'] }}<br>
-                            <strong>Value:</strong> <code>{{ is_array($error['value']) ? json_encode($error['value']) : $error['value'] }}</code><br>
+                            <strong>Value:</strong> {{ is_array($error['value']) ? json_encode($error['value']) : $error['value'] }}<br>
                             <strong>Error:</strong> {{ $error['error'] }}
                         </div>
                     </div>

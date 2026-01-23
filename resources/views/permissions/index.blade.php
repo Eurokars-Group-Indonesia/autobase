@@ -53,7 +53,7 @@
                             @forelse($permissions as $permission)
                                 <tr>
                                     <td>{{ ($permissions->currentPage() - 1) * $permissions->perPage() + $loop->iteration }}</td>
-                                    <td><code>{{ $permission->permission_code }}</code></td>
+                                    <td>{{ $permission->permission_code }}</td>
                                     <td>{{ $permission->permission_name }}</td>
                                     <td>
                                         <span class="badge bg-{{ $permission->is_active == '1' ? 'success' : 'danger' }}">

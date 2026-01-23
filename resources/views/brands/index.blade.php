@@ -55,7 +55,7 @@
                             @forelse($brands as $brand)
                                 <tr>
                                     <td>{{ ($brands->currentPage() - 1) * $brands->perPage() + $loop->iteration }}</td>
-                                    <td><code>{{ $brand->brand_code }}</code></td>
+                                    <td>{{ $brand->brand_code }}</td>
                                     <td>{{ $brand->brand_name }}</td>
                                     <td>{{ $brand->brand_group ?? '-' }}</td>
                                     <td>{{ $brand->country_origin ?? '-' }}</td>
