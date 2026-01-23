@@ -8,6 +8,14 @@ echo ""
 # Fix git ownership issue
 git config --global --add safe.directory /var/www/html 2>/dev/null || true
 
+# Fix storage permissions
+echo "Fixing storage permissions..."
+mkdir -p /var/www/html/storage/framework/cache /var/www/html/storage/framework/sessions /var/www/html/storage/framework/views /var/www/html/storage/logs /var/www/html/storage/app/public 2>/dev/null || true
+chmod -R 775 /var/www/html/storage 2>/dev/null || true
+chmod -R 775 /var/www/html/bootstrap/cache 2>/dev/null || true
+echo "✓ Storage permissions fixed!"
+echo ""
+
 # Install dependencies if vendor directory doesn't exist
 if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
     echo "Installing Composer dependencies..."
