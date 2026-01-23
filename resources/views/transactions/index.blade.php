@@ -367,7 +367,7 @@
                         Showing {{ $transactions->firstItem() ?? 0 }} to {{ $transactions->lastItem() ?? 0 }} of {{ $transactions->total() }} entries
                     </div>
                     <div>
-                        {{ $transactions->links() }}
+                        {{ $transactions->links('vendor.pagination.custom') }}
                     </div>
                 </div>
             </div>

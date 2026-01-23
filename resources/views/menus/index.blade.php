@@ -96,7 +96,7 @@
                     </table>
                 </div>
                 <div class="mt-3">
-                    {{ $menus->links() }}
+                    {{ $menus->links('vendor.pagination.custom') }}
                 </div>
             </div>
         </div>

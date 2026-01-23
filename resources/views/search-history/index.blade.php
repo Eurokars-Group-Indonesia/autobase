@@ -186,7 +186,7 @@
                         Showing {{ $histories->firstItem() ?? 0 }} to {{ $histories->lastItem() ?? 0 }} of {{ $histories->total() }} entries
                     </div>
                     <div>
-                        {{ $histories->links() }}
+                        {{ $histories->links('vendor.pagination.custom') }}
                     </div>
                 </div>
             </div>
