@@ -15,9 +15,50 @@
     .flatpickr-input {
         background-color: white !important;
     }
+    [data-theme="dark"] .flatpickr-input {
+        background-color: var(--bg-card) !important;
+    }
     .table-nowrap th,
     .table-nowrap td {
         white-space: nowrap;
+    }
+
+    .table-nowrap th {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .table-nowrap td {
+        font-size: 0.90em;
+        vertical-align: middle;
+        text-align: center;
+    }
+    
+    /* Table border radius */
+    .table-responsive {
+        border-radius: 10px;
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+    
+    .table-nowrap {
+        margin-bottom: 0;
+    }
+    
+    .table-nowrap thead th:first-child {
+        border-top-left-radius: 6px;
+    }
+    
+    .table-nowrap thead th:last-child {
+        border-top-right-radius: 6px;
+    }
+    
+    .table-nowrap tbody tr:last-child td:first-child {
+        border-bottom-left-radius: 6px;
+    }
+    
+    .table-nowrap tbody tr:last-child td:last-child {
+        border-bottom-right-radius: 6px;
     }
     
     /* Prevent horizontal scroll on mobile */
@@ -117,9 +158,9 @@
                         <tbody>
                             @forelse($transactions as $transaction)
                                 <tr>
-                                    <td><code>{{ $transaction->part_no }}</code></td>
-                                    <td><code>{{ $transaction->invoice_no }}</code></td>
-                                    <td><code>{{ $transaction->wip_no }}</code></td>
+                                    <td>{{ $transaction->part_no }}</td>
+                                    <td>{{ $transaction->invoice_no }}</td>
+                                    <td>{{ $transaction->wip_no }}</td>
                                     <td>{{ $transaction->description ?? '-' }}</td>
                                     <td>{{ $transaction->date_decard ? $transaction->date_decard->format('d M Y') : '-' }}</td>
                                     <td class="text-end">{{ number_format($transaction->qty, 2) }}</td>
