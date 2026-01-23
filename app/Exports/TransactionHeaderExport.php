@@ -65,17 +65,29 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
 
         $transactions = $query->get();
         
+        // Get all bodies in one query using whereIn
+        $transactionKeys = $transactions->map(function($t) {
+            return $t->wip_no . '|' . $t->invoice_no;
+        })->toArray();
+        
+        // Fetch all bodies at once
+        $allBodies = \DB::table('tx_body')
+            ->where('is_active', '1')
+            ->whereIn(\DB::raw("CONCAT(wip_no, '|', invoice_no)"), $transactionKeys)
+            ->orderBy('wip_no')
+            ->orderBy('invoice_no')
+            ->orderBy('line')
+            ->get()
+            ->groupBy(function($body) {
+                return $body->wip_no . '|' . $body->invoice_no;
+            });
+        
         // Transform data to flat structure with 2 separate tables
         $rows = collect();
         
         foreach ($transactions as $transaction) {
-            // Get bodies manually using composite key
-            $bodies = \DB::table('tx_body')
-                ->where('wip_no', $transaction->wip_no)
-                ->where('invoice_no', $transaction->invoice_no)
-                ->where('is_active', '1')
-                ->orderBy('line')
-                ->get();
+            $key = $transaction->wip_no . '|' . $transaction->invoice_no;
+            $bodies = $allBodies->get($key, collect());
             
             // Add empty row for spacing (except first transaction)
             if ($rows->count() > 0) {
@@ -138,7 +150,7 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
             ]);
             
             // Add body rows
-            if ($bodies && count($bodies) > 0) {
+            if ($bodies->count() > 0) {
                 $no = 1;
                 foreach ($bodies as $body) {
                     $rows->push([

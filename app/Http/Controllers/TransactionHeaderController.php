@@ -84,15 +84,31 @@ class TransactionHeaderController extends Controller
                 return $query->paginate($perPageValue)->withQueryString();
             });
             
-            // Manually load bodies for each transaction using raw query with composite key
-            foreach ($transactions as $transaction) {
-                $transaction->bodies = \DB::table('tx_body')
-                    ->where('wip_no', $transaction->wip_no)
-                    ->where('invoice_no', $transaction->invoice_no)
+            // Manually load bodies for each transaction using batch query to avoid N+1
+            if ($transactions->count() > 0) {
+                // Get all transaction keys
+                $transactionKeys = $transactions->map(function($t) {
+                    return $t->wip_no . '|' . $t->invoice_no;
+                })->toArray();
+                
+                // Fetch all bodies at once
+                $allBodies = \DB::table('tx_body')
                     ->where('is_active', '1')
+                    ->whereIn(\DB::raw("CONCAT(wip_no, '|', invoice_no)"), $transactionKeys)
+                    ->orderBy('wip_no')
+                    ->orderBy('invoice_no')
                     ->orderBy('line')
                     ->get()
-                    ->map(function($body) {
+                    ->groupBy(function($body) {
+                        return $body->wip_no . '|' . $body->invoice_no;
+                    });
+                
+                // Assign bodies to each transaction
+                foreach ($transactions as $transaction) {
+                    $key = $transaction->wip_no . '|' . $transaction->invoice_no;
+                    $bodies = $allBodies->get($key, collect());
+                    
+                    $transaction->bodies = $bodies->map(function($body) {
                         // Convert to TransactionBody model instance
                         $bodyModel = new \App\Models\TransactionBody();
                         foreach ($body as $key => $value) {
@@ -100,6 +116,7 @@ class TransactionHeaderController extends Controller
                         }
                         return $bodyModel;
                     });
+                }
             }
         } else {
             // No search/filter - execute query directly without cache
