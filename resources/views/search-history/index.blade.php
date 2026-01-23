@@ -45,6 +45,14 @@
     .table-nowrap {
         margin-bottom: 0;
     }
+
+    .table thead th {
+        font-size: 12px;
+    }
+
+    .form-label, label {
+        font-size: 12px;
+    }
     
     /* Prevent horizontal scroll on mobile */
     @media (max-width: 767.98px) {
@@ -78,9 +86,9 @@
             <div class="card-body">
                 <form action="{{ route('search-history.index') }}" method="GET" id="searchForm">
                     <div class="row mb-3">
-                        <div class="col-md-2">
+                        <div class="col-md-1">
                             <label class="form-label">Per Page</label>
-                            <select class="form-select" name="per_page" onchange="this.form.submit()">
+                            <select class="form-select form-select-sm" name="per_page" onchange="this.form.submit()">
                                 <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
                                 <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
                                 <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
@@ -89,7 +97,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Transaction Type</label>
-                            <select class="form-select" name="transaction_type">
+                            <select class="form-select form-select-sm" name="transaction_type">
                                 <option value="">All</option>
                                 <option value="H" {{ request('transaction_type') == 'H' ? 'selected' : '' }}>Header</option>
                                 <option value="B" {{ request('transaction_type') == 'B' ? 'selected' : '' }}>Body</option>
@@ -97,7 +105,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">User</label>
-                            <select class="form-select" name="user_id">
+                            <select class="form-select form-select-sm" name="user_id">
                                 <option value="">All Users</option>
                                 @foreach($users as $user)
                                     <option value="{{ $user->user_id }}" {{ request('user_id') == $user->user_id ? 'selected' : '' }}>
@@ -108,22 +116,22 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Date From</label>
-                            <input type="text" class="form-control" id="date_from_display" 
+                            <input type="text" class="form-control form-control-sm" id="date_from_display" 
                                    placeholder="Select date from" readonly>
                             <input type="hidden" name="date_from" id="date_from" value="{{ request('date_from') }}">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Date To</label>
-                            <input type="text" class="form-control" id="date_to_display" 
+                            <input type="text" class="form-control form-control-sm" id="date_to_display" 
                                    placeholder="Select date to" readonly>
                             <input type="hidden" name="date_to" id="date_to" value="{{ request('date_to') }}">
                         </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-primary me-2" type="submit">
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-primary btn-sm me-2" type="submit">
                                 <i class="bi bi-search"></i> Filter
                             </button>
                             @if(request('transaction_type') || request('user_id') || request('date_from') || request('date_to'))
-                                <a href="{{ route('search-history.index') }}" class="btn btn-secondary">
+                                <a href="{{ route('search-history.index') }}" class="btn btn-secondary btn-sm">
                                     <i class="bi bi-x-circle"></i> Clear
                                 </a>
                             @endif
