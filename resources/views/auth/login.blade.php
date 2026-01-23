@@ -107,7 +107,7 @@
         <div class="login-card">
             <div class="login-header">
                 <i class="bi bi-shield-lock login-icon"></i>
-                <p>Sign in to your account</p>
+                <p style="font-size: 24px;"><strong>AutoBase</strong> Login</p>
             </div>
             <div class="login-body">
                 @if($errors->any())
@@ -162,7 +162,7 @@
             </div>
         </div>
         <div class="text-center mt-3">
-            <small class="text-muted">&copy; {{ date('Y') }} AutoBase. All rights reserved.</small>
+            <small class="text-muted">&copy; {{ date('Y') }} IT Team Eurokars Group Indonesia. All rights reserved.</small>
         </div>
     </div>
 

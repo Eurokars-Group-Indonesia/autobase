@@ -59,6 +59,9 @@
             color: var(--text-primary);
             transition: background-color 0.3s ease, color 0.3s ease;
             font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .navbar-custom {
             background: var(--navbar-bg);
@@ -246,6 +249,7 @@
             margin-top: 40px;
             margin-bottom: 40px;
             padding-top: 20px;
+            flex: 1;
         }
         .card {
             border: none;
@@ -573,6 +577,18 @@
             color: white;
         }
         
+        /* Footer */
+        footer {
+            background-color: var(--bg-card);
+            color: var(--text-secondary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin-top: auto;
+        }
+        
+        footer .border-top {
+            border-color: var(--border-color) !important;
+        }
+        
         /* Prevent horizontal scroll on mobile */
         @media (max-width: 767.98px) {
             html, body {
@@ -702,6 +718,15 @@
 
         @yield('content')
     </div>
+
+    <!-- Footer -->
+    <footer class="mt-5 py-3 border-top">
+        <div class="container-fluid">
+            <div class="text-center text-muted">
+                <small>&copy; 2026 IT Team Eurokars Group Indonesia. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
