@@ -108,13 +108,15 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Date From</label>
-                            <input type="text" class="form-control" name="date_from" id="date_from" 
-                                   placeholder="Select date from" value="{{ request('date_from') }}" readonly>
+                            <input type="text" class="form-control" id="date_from_display" 
+                                   placeholder="Select date from" readonly>
+                            <input type="hidden" name="date_from" id="date_from" value="{{ request('date_from') }}">
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Date To</label>
-                            <input type="text" class="form-control" name="date_to" id="date_to" 
-                                   placeholder="Select date to" value="{{ request('date_to') }}" readonly>
+                            <input type="text" class="form-control" id="date_to_display" 
+                                   placeholder="Select date to" readonly>
+                            <input type="hidden" name="date_to" id="date_to" value="{{ request('date_to') }}">
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button class="btn btn-primary me-2" type="submit">
@@ -190,28 +192,68 @@
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Function to convert Y-m-d to d-m-Y
+        function formatDateForDisplay(dateStr) {
+            if (!dateStr) return '';
+            const parts = dateStr.split('-');
+            if (parts.length === 3) {
+                return parts[2] + '-' + parts[1] + '-' + parts[0];
+            }
+            return dateStr;
+        }
+
+        // Set initial display values if dates exist
+        const initialDateFrom = document.getElementById('date_from').value;
+        const initialDateTo = document.getElementById('date_to').value;
+        if (initialDateFrom) {
+            document.getElementById('date_from_display').value = formatDateForDisplay(initialDateFrom);
+        }
+        if (initialDateTo) {
+            document.getElementById('date_to_display').value = formatDateForDisplay(initialDateTo);
+        }
+
         // Initialize date_from picker
-        const dateFromPicker = flatpickr("#date_from", {
-            dateFormat: "Y-m-d",
+        const dateFromPicker = flatpickr("#date_from_display", {
+            dateFormat: "d-m-Y",
             allowInput: false,
             onChange: function(selectedDates, dateStr, instance) {
+                // Convert d-m-Y to Y-m-d for hidden input
                 if (dateStr) {
+                    const parts = dateStr.split('-');
+                    const ymdFormat = parts[2] + '-' + parts[1] + '-' + parts[0];
+                    document.getElementById('date_from').value = ymdFormat;
+                    
+                    // Update date_to minDate
                     dateToPicker.set('minDate', dateStr);
-                    const dateToValue = document.getElementById('date_to').value;
-                    if (dateToValue && dateToValue < dateStr) {
+                    
+                    // Clear date_to if it's before the new date_from
+                    const dateToValue = document.getElementById('date_to_display').value;
+                    if (dateToValue && new Date(dateToValue.split('-').reverse().join('-')) < new Date(ymdFormat)) {
                         dateToPicker.clear();
+                        document.getElementById('date_to').value = '';
                     }
                 } else {
+                    document.getElementById('date_from').value = '';
                     dateToPicker.set('minDate', null);
                 }
             }
         });
 
         // Initialize date_to picker
-        const dateToPicker = flatpickr("#date_to", {
-            dateFormat: "Y-m-d",
+        const dateToPicker = flatpickr("#date_to_display", {
+            dateFormat: "d-m-Y",
             allowInput: false,
-            minDate: document.getElementById('date_from').value || null
+            minDate: initialDateFrom ? formatDateForDisplay(initialDateFrom) : null,
+            onChange: function(selectedDates, dateStr, instance) {
+                // Convert d-m-Y to Y-m-d for hidden input
+                if (dateStr) {
+                    const parts = dateStr.split('-');
+                    const ymdFormat = parts[2] + '-' + parts[1] + '-' + parts[0];
+                    document.getElementById('date_to').value = ymdFormat;
+                } else {
+                    document.getElementById('date_to').value = '';
+                }
+            }
         });
     });
 </script>
