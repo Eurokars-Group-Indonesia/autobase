@@ -311,6 +311,7 @@
             border-bottom: 2px solid #002856;
             color: white;
             font-weight: 600;
+            padding: 0.5rem;
         }
         .table tbody tr {
             border-color: var(--border-color);
@@ -318,8 +319,25 @@
         .table tbody tr:hover {
             background-color: var(--bg-body);
         }
+        .table tbody td {
+            padding: 0.4rem 0.5rem;
+        }
+        .table-sm tbody td,
+        .table-sm thead th {
+            padding: 0.3rem 0.5rem;
+        }
         .badge {
             padding: 0.5em 0.8em;
+        }
+        .modal-body {
+            font-size: 13px;
+        }
+        .modal-body .table {
+            font-size: 13px;
+        }
+        .modal-body .table thead th,
+        .modal-body .table tbody td {
+            font-size: 13px;
         }
         .user-avatar {
             width: 35px;
