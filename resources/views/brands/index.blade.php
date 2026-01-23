@@ -90,7 +90,7 @@
                     </table>
                 </div>
                 <div class="mt-3">
-                    {{ $brands->links() }}
+                    {{ $brands->links('vendor.pagination.custom') }}
                 </div>
             </div>
         </div>

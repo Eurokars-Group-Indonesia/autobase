@@ -106,7 +106,7 @@
                     </table>
                 </div>
                 <div class="mt-3">
-                    {{ $users->links() }}
+                    {{ $users->links('vendor.pagination.custom') }}
                 </div>
             </div>
         </div>

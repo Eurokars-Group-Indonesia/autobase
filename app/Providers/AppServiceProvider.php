@@ -20,5 +20,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         \Illuminate\Pagination\Paginator::useBootstrapFive();
+        
+        // Set pagination to show max 5 links on each side
+        \Illuminate\Pagination\Paginator::defaultSimpleView('pagination::bootstrap-5');
     }
 }

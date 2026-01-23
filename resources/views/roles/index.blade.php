@@ -92,7 +92,7 @@
                     </table>
                 </div>
                 <div class="mt-3">
-                    {{ $roles->links() }}
+                    {{ $roles->links('vendor.pagination.custom') }}
                 </div>
             </div>
         </div>
