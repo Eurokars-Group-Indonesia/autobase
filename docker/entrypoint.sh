@@ -5,8 +5,48 @@ echo "Laravel Docker Entrypoint"
 echo "========================================="
 echo ""
 
-# Fix git ownership issue
-git config --global --add safe.directory /var/www/html 2>/dev/null || true
+# Check if running as root
+if [ "$(id -u)" = "0" ]; then
+    echo "Running as root - fixing permissions..."
+    
+    # Fix git ownership issue
+    git config --global --add safe.directory /var/www/html 2>/dev/null || true
+    
+    # Ensure storage directories exist
+    mkdir -p /var/www/html/storage/framework/cache \
+             /var/www/html/storage/framework/sessions \
+             /var/www/html/storage/framework/views \
+             /var/www/html/storage/framework/testing \
+             /var/www/html/storage/logs \
+             /var/www/html/storage/app/public \
+             /var/www/html/bootstrap/cache 2>/dev/null || true
+    
+    # Create log files if they don't exist
+    touch /var/www/html/storage/logs/laravel.log 2>/dev/null || true
+    touch /var/www/html/storage/logs/supervisord.log 2>/dev/null || true
+    touch /var/www/html/storage/logs/worker.log 2>/dev/null || true
+    
+    # Fix ownership and permissions
+    chown -R www-data:www-data /var/www/html/storage 2>/dev/null || true
+    chown -R www-data:www-data /var/www/html/bootstrap/cache 2>/dev/null || true
+    chmod -R 775 /var/www/html/storage 2>/dev/null || true
+    chmod -R 775 /var/www/html/bootstrap/cache 2>/dev/null || true
+    
+    echo "✓ Permissions fixed!"
+    echo ""
+else
+    echo "Running as $(whoami) - limited permission fixes..."
+    
+    # Fix git ownership issue
+    git config --global --add safe.directory /var/www/html 2>/dev/null || true
+    
+    # Try to fix permissions (will work if user has access)
+    chmod -R 775 /var/www/html/storage 2>/dev/null || true
+    chmod -R 775 /var/www/html/bootstrap/cache 2>/dev/null || true
+    
+    echo "✓ Permission check complete!"
+    echo ""
+fi
 
 # Install dependencies if vendor directory doesn't exist
 if [ ! -d "vendor" ] || [ ! -f "vendor/autoload.php" ]; then
@@ -115,9 +155,9 @@ else
     
     echo ""
     echo "Optimizing application..."
-    php artisan config:cache
-    php artisan route:cache
-    php artisan view:cache
+    php artisan config:cache 2>&1 || echo "⚠ Config cache failed"
+    php artisan route:cache 2>&1 || echo "⚠ Route cache failed"
+    php artisan view:cache 2>&1 || echo "✓ View cache successful"
 fi
 
 echo ""

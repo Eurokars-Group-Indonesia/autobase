@@ -9,11 +9,18 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 use Maatwebsite\Excel\Concerns\SkipsEmptyRows;
 use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\SkipsFailures;
+use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
-class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation, SkipsEmptyRows, SkipsOnFailure
+class TransactionHeaderImport implements 
+    ToModel, 
+    WithHeadingRow, 
+    WithValidation, 
+    SkipsEmptyRows, 
+    SkipsOnFailure,
+    WithChunkReading
 {
     use SkipsFailures;
 
@@ -45,15 +52,28 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
             // Log raw row data for debugging
             Log::info("Processing row {$this->currentRow}", ['data' => $row]);
 
+            // Collect all validation errors for this row
+            $rowErrors = [];
+
             // Validate required fields
             if (empty($row['wipno'])) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'WIPNO',
                     'value' => $row['wipno'] ?? 'empty',
                     'error' => 'WIPNO is required and cannot be empty'
                 ];
-                return null;
+            }
+
+            // Validate WIPNO is numeric (integer only)
+            $wipNo = $this->parseNumeric($row['wipno'] ?? null);
+            if (!empty($row['wipno']) && ($wipNo === null || $wipNo === '')) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'WIPNO',
+                    'value' => $row['wipno'] ?? 'empty',
+                    'error' => 'WIPNO must be a valid integer number (e.g., 1, 123). Text values like "WIP000001" are not allowed.'
+                ];
             }
 
             // Parse dates
@@ -61,13 +81,12 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
             $registrationDate = $this->parseDate($row['regdate'] ?? null);
 
             if (empty($invoiceDate)) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'InvDate',
                     'value' => $row['invdate'] ?? 'empty',
                     'error' => 'Invoice Date is required and must be a valid date'
                 ];
-                return null;
             }
 
             // Parse numeric fields
@@ -80,69 +99,172 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
 
             // Validate required numeric fields
             if ($vehicleId === null || $vehicleId === '') {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'MAGICH',
                     'value' => $row['magich'] ?? 'empty',
                     'error' => 'Vehicle ID (MAGICH) is required and must be a valid number'
                 ];
-                return null;
             }
 
+            // InvNo boleh 0, tapi tidak boleh null atau empty string
             if ($invoiceNo === null || $invoiceNo === '') {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'InvNo',
                     'value' => $row['invno'] ?? 'empty',
-                    'error' => 'Invoice Number is required and must be a valid number'
+                    'error' => 'Invoice Number is required and must be a valid integer number (0 is allowed, e.g., 0, 1, 123). Text values like "INV000001" are not allowed.'
                 ];
-                return null;
             }
 
             // Mileage boleh 0, tapi tidak boleh null atau empty string
             if ($mileage === null || $mileage === '') {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'Mileage',
                     'value' => $row['mileage'] ?? 'empty',
                     'error' => 'Mileage is required and must be a valid number (0 is allowed)'
                 ];
-                return null;
             }
 
             // Validate document type
             $docType = strtoupper($row['doctype'] ?? '');
             if (!in_array($docType, ['I', 'C'])) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'DocType',
                     'value' => $row['doctype'] ?? 'empty',
                     'error' => 'Document Type must be either I (Invoice) or C (Credit Note)'
                 ];
-                return null;
             }
 
-            // Validate currency code
+            // Validate currency code (max 3 chars)
             $currCode = strtoupper($row['currcode'] ?? '');
             if (empty($currCode) || strlen($currCode) > 3) {
-                $this->errors[] = [
+                $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'CurrCode',
                     'value' => $row['currcode'] ?? 'empty',
                     'error' => 'Currency Code is required and must be 3 characters or less'
                 ];
+            }
+
+            // Validate service_code (max 3 chars)
+            $serviceCode = !empty($row['svccode']) ? strtoupper($row['svccode']) : null;
+            if ($serviceCode !== null && strlen($serviceCode) > 3) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'SvcCode',
+                    'value' => $row['svccode'],
+                    'error' => 'Service Code must be 3 characters or less'
+                ];
+            }
+
+            // Validate account_code (max 20 chars)
+            if (!empty($row['account']) && strlen($row['account']) > 20) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'Account',
+                    'value' => $row['account'],
+                    'error' => 'Account Code must be 20 characters or less'
+                ];
+            }
+
+            // Validate customer_name (max 150 chars)
+            if (!empty($row['custname']) && strlen($row['custname']) > 150) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'CustName',
+                    'value' => substr($row['custname'], 0, 50) . '...',
+                    'error' => 'Customer Name must be 150 characters or less'
+                ];
+            }
+
+            // Validate department (max 50 chars)
+            if (!empty($row['dept']) && strlen($row['dept']) > 50) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'Dept',
+                    'value' => $row['dept'],
+                    'error' => 'Department must be 50 characters or less'
+                ];
+            }
+
+            // Validate registration_no (max 20 chars)
+            if (!empty($row['regno']) && strlen($row['regno']) > 20) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'RegNo',
+                    'value' => $row['regno'],
+                    'error' => 'Registration Number must be 20 characters or less'
+                ];
+            }
+
+            // Validate chassis (max 25 chars)
+            if (!empty($row['chassis']) && strlen($row['chassis']) > 25) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'Chassis',
+                    'value' => $row['chassis'],
+                    'error' => 'Chassis Number must be 25 characters or less'
+                ];
+            }
+
+            // Validate customer_discount (max 10 chars)
+            if (!empty($row['custdisc']) && strlen($row['custdisc']) > 10) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'CustDisc',
+                    'value' => $row['custdisc'],
+                    'error' => 'Customer Discount must be 10 characters or less'
+                ];
+            }
+
+            // Validate description (max 250 chars)
+            if (!empty($row['description']) && strlen($row['description']) > 250) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'Description',
+                    'value' => substr($row['description'], 0, 50) . '...',
+                    'error' => 'Description must be 250 characters or less'
+                ];
+            }
+
+            // Validate engine_no (max 20 chars)
+            if (!empty($row['engineno']) && strlen($row['engineno']) > 20) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'EngineNo',
+                    'value' => $row['engineno'],
+                    'error' => 'Engine Number must be 20 characters or less'
+                ];
+            }
+
+            // Validate account_company (max 50 chars)
+            if (!empty($row['acctcompany']) && strlen($row['acctcompany']) > 50) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'AcctCompany',
+                    'value' => $row['acctcompany'],
+                    'error' => 'Account Company must be 50 characters or less'
+                ];
+            }
+
+            // If there are any validation errors, add them all and skip this row
+            if (!empty($rowErrors)) {
+                $this->errors = array_merge($this->errors, $rowErrors);
                 return null;
             }
 
             // Check if record exists: wipno + invno + brand
-            $existing = TransactionHeader::where('wip_no', $row['wipno'])
+            $existing = TransactionHeader::where('wip_no', $wipNo)
                 ->where('invoice_no', $invoiceNo)
                 ->where('brand_id', $this->brandId)
                 ->first();
 
             // Prepare data
             $data = [
-                'wip_no' => $row['wipno'],
+                'wip_no' => $wipNo,
                 'invoice_no' => $invoiceNo,
                 'brand_id' => $this->brandId,
                 'account_code' => $row['account'] ?? null,
@@ -164,7 +286,7 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
                 'gross_value' => $grossValue ?? 0,
                 'net_value' => $netValue ?? 0,
                 'customer_discount' => $row['custdisc'] ?? '0',
-                'service_code' => $row['svccode'] ?? null,
+                'service_code' => $serviceCode,
                 'registration_date' => $registrationDate,
                 'description' => $row['description'] ?? null,
                 'engine_no' => $row['engineno'] ?? null,
@@ -179,17 +301,18 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
                 $header = $existing;
                 Log::info("Row {$this->currentRow} UPDATED", [
                     'header_id' => $header->header_id,
-                    'wipno' => $row['wipno'],
+                    'wipno' => $wipNo,
                     'invno' => $invoiceNo
                 ]);
             } else {
                 // INSERT: Record not exists
                 $data['created_by'] = (string) Auth::id();
+                $data['unique_id'] = (string) \Illuminate\Support\Str::uuid();
                 // header_id dibiarkan null (auto increment)
                 $header = TransactionHeader::create($data);
                 Log::info("Row {$this->currentRow} INSERTED", [
                     'header_id' => $header->header_id,
-                    'wipno' => $row['wipno'],
+                    'wipno' => $wipNo,
                     'invno' => $invoiceNo
                 ]);
             }
@@ -197,6 +320,33 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
             $this->successCount++;
             return $header;
 
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Handle SQL errors specifically
+            $errorMessage = $e->getMessage();
+            
+            // Check for integer value error
+            if (strpos($errorMessage, 'Incorrect integer value') !== false) {
+                $this->errors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'WIPNO',
+                    'value' => $row['wipno'] ?? 'N/A',
+                    'error' => 'WIPNO must be a valid integer number. Text values like "WIP000001" are not allowed. Please use only numbers (e.g., 1, 123).'
+                ];
+            } else {
+                $this->errors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'Database',
+                    'value' => 'N/A',
+                    'error' => 'Database error: ' . $errorMessage
+                ];
+            }
+            
+            Log::error("Database error importing row {$this->currentRow}", [
+                'error' => $errorMessage,
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return null;
         } catch (\Exception $e) {
             $this->errors[] = [
                 'row' => $this->currentRow,
@@ -251,9 +401,9 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
         }
         
         // Remove any non-numeric characters except decimal point and minus
-        $cleaned = preg_replace('/[^0-9\-]/', '', $value);
+        //$cleaned = preg_replace('/[^0-9\-]/', '', $value);
         
-        return is_numeric($cleaned) ? (int)$cleaned : null;
+        return is_numeric($value) ? (int)$value : null;
     }
 
     private function parseDecimal($value)
@@ -286,11 +436,44 @@ class TransactionHeaderImport implements ToModel, WithHeadingRow, WithValidation
                 return Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date));
             }
             
-            // Handle string dates
+            // Handle string dates with various formats
+            // Try common date formats: d/m/Y, d-m-Y, Y-m-d, etc.
+            $formats = [
+                'd/m/Y',    // 31/08/2009
+                'd-m-Y',    // 31-08-2009
+                'Y-m-d',    // 2009-08-31
+                'd/m/y',    // 31/08/09
+                'd-m-y',    // 31-08-09
+                'm/d/Y',    // 08/31/2009
+                'm-d-Y',    // 08-31-2009
+            ];
+            
+            foreach ($formats as $format) {
+                try {
+                    $parsed = Carbon::createFromFormat($format, $date);
+                    if ($parsed !== false) {
+                        return $parsed;
+                    }
+                } catch (\Exception $e) {
+                    continue;
+                }
+            }
+            
+            // If all formats fail, try Carbon::parse as fallback
             return Carbon::parse($date);
         } catch (\Exception $e) {
+            Log::warning("Failed to parse date: {$date}", ['error' => $e->getMessage()]);
             return null;
         }
+    }
+
+    /**
+     * Chunk size for reading Excel file
+     * Process 1000 rows at a time for better memory management
+     */
+    public function chunkSize(): int
+    {
+        return 1000;
     }
 }
 

@@ -1,0 +1,208 @@
+# Quick Fix Commands - Storage Permission
+
+## ⚠️ IMPORTANT: Jika Error "unknown uid 1000" atau "Operation not permitted"
+
+**Gunakan flag `--user root` untuk semua command:**
+
+```bash
+docker exec -it --user root laravel_app chmod -R 777 /var/www/html/storage
+```
+
+---
+
+## Untuk Server Remote (via SSH)
+
+### 1. Login ke Server
+```bash
+ssh user@your-server-ip
+```
+
+### 2. Masuk ke Direktori Project
+```bash
+cd /path/to/your/laravel-project
+```
+
+### 3. Fix Permission (Pilih salah satu)
+
+#### Option A: Quick Fix dengan Root User (RECOMMENDED untuk UID 1000 issue)
+```bash
+docker exec -it --user root laravel_app chmod -R 777 /var/www/html/storage
+docker exec -it --user root laravel_app chmod -R 777 /var/www/html/bootstrap/cache
+```
+
+#### Option B: Quick Fix (jika tidak ada UID issue)
+```bash
+docker exec -it laravel_app chmod -R 775 /var/www/html/storage
+docker exec -it laravel_app chmod -R 775 /var/www/html/bootstrap/cache
+```
+
+#### Option C: Full Fix dengan Ownership (sebagai root)
+```bash
+docker exec -it --user root laravel_app sh -c "
+    chown -R www-data:www-data /var/www/html/storage && 
+    chown -R www-data:www-data /var/www/html/bootstrap/cache && 
+    chmod -R 775 /var/www/html/storage && 
+    chmod -R 775 /var/www/html/bootstrap/cache
+"
+```
+
+#### Option D: Hapus Cache Laravel Excel (jika error di laravel-excel)
+```bash
+docker exec -it --user root laravel_app rm -rf /var/www/html/storage/framework/cache/laravel-excel
+docker exec -it --user root laravel_app chmod -R 777 /var/www/html/storage
+```
+
+### 4. Verifikasi
+```bash
+# Cek permission
+docker exec -it laravel_app ls -la /var/www/html/storage
+
+# Test write
+docker exec -it laravel_app touch /var/www/html/storage/test.txt
+docker exec -it laravel_app rm /var/www/html/storage/test.txt
+```
+
+### 5. Restart Container (Optional)
+```bash
+docker-compose restart app
+```
+
+---
+
+## Untuk Permanent Fix
+
+### Update Entrypoint dan Rebuild
+
+File `docker/entrypoint.sh` sudah diupdate. Rebuild container:
+
+```bash
+# Di server
+cd /path/to/your/laravel-project
+
+# Stop containers
+docker-compose down
+
+# Rebuild
+docker-compose up -d --build
+
+# Cek logs
+docker-compose logs -f app
+```
+
+---
+
+## One-Liner Commands (Copy-Paste Ready)
+
+### Fix Permission sebagai Root (RECOMMENDED untuk UID 1000 issue)
+```bash
+docker exec -it --user root laravel_app sh -c "chmod -R 777 /var/www/html/storage && chmod -R 777 /var/www/html/bootstrap/cache && echo 'Permission fixed!'"
+```
+
+### Fix Permission + Ownership sebagai Root
+```bash
+docker exec -it --user root laravel_app sh -c "chown -R www-data:www-data /var/www/html/storage && chown -R www-data:www-data /var/www/html/bootstrap/cache && chmod -R 775 /var/www/html/storage && chmod -R 775 /var/www/html/bootstrap/cache && echo 'Permission and ownership fixed!'"
+```
+
+### Hapus Cache Laravel Excel + Fix Permission
+```bash
+docker exec -it --user root laravel_app sh -c "rm -rf /var/www/html/storage/framework/cache/laravel-excel && chmod -R 777 /var/www/html/storage && echo 'Cache cleared and permission fixed!'"
+```
+
+### Fix Permission (tanpa root - jika tidak ada UID issue)
+```bash
+docker exec -it laravel_app sh -c "chmod -R 775 /var/www/html/storage && chmod -R 775 /var/www/html/bootstrap/cache && echo 'Permission fixed!'"
+```
+
+---
+
+## Troubleshooting
+
+### Container Name Berbeda?
+
+Cek nama container:
+```bash
+docker ps
+```
+
+Ganti `laravel_app` dengan nama container yang sesuai:
+```bash
+docker exec -it YOUR_CONTAINER_NAME chmod -R 775 /var/www/html/storage
+```
+
+### Masih Error "Permission Denied"?
+
+1. **Cek user yang menjalankan container:**
+   ```bash
+   docker exec -it laravel_app whoami
+   docker exec -it laravel_app id
+   ```
+
+2. **Cek permission saat ini:**
+   ```bash
+   docker exec -it laravel_app ls -la /var/www/html/storage
+   ```
+
+3. **Gunakan 777 (temporary):**
+   ```bash
+   docker exec -it laravel_app chmod -R 777 /var/www/html/storage
+   ```
+
+4. **Restart container:**
+   ```bash
+   docker-compose restart app
+   ```
+
+### Error "Operation not permitted"?
+
+Container tidak punya akses untuk chown. Gunakan chmod saja:
+```bash
+docker exec -it laravel_app chmod -R 777 /var/www/html/storage
+```
+
+---
+
+## Untuk Windows Users (Akses ke Server Linux)
+
+### Via PuTTY atau PowerShell SSH
+
+1. **Connect ke server:**
+   ```powershell
+   ssh user@server-ip
+   ```
+
+2. **Run fix command:**
+   ```bash
+   docker exec -it laravel_app chmod -R 775 /var/www/html/storage
+   ```
+
+### Via WinSCP + PuTTY
+
+1. Upload file `fix-storage-permission.sh` ke server
+2. SSH ke server via PuTTY
+3. Run:
+   ```bash
+   bash fix-storage-permission.sh
+   ```
+
+---
+
+## Summary
+
+**Untuk Error "unknown uid 1000" atau "Operation not permitted" (COPY-PASTE INI):**
+
+```bash
+docker exec -it --user root laravel_app sh -c "rm -rf /var/www/html/storage/framework/cache/laravel-excel && chmod -R 777 /var/www/html/storage && chmod -R 777 /var/www/html/bootstrap/cache && echo 'Done!'"
+```
+
+**Jika tidak ada UID issue:**
+
+```bash
+docker exec -it laravel_app chmod -R 775 /var/www/html/storage && docker exec -it laravel_app chmod -R 775 /var/www/html/bootstrap/cache && echo "Done!"
+```
+
+**Untuk permanent fix (edit docker-compose.yml):**
+
+1. Comment baris `user: "${USER_ID:-1000}:${GROUP_ID:-1000}"` di service `app` dan `queue`
+2. Rebuild: `docker-compose down && docker-compose up -d --build`
+
+**Lihat dokumentasi lengkap di:** `FIX_UID_1000_ISSUE.md`

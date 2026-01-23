@@ -129,7 +129,7 @@
                                     <td><code>{{ $transaction->invoice_no }}</code></td>
                                     <td><code>{{ $transaction->wip_no }}</code></td>
                                     <td>{{ $transaction->invoice_date->format('d M Y') }}</td>
-                                    <td>{{ $transaction->account ?? '-' }}</td>
+                                    <td>{{ $transaction->account_code ?? '-' }}</td>
                                     <td>{{ $transaction->customer_name ?? '-' }}</td>
                                     <td>{{ $transaction->registration_no ?? '-' }}</td>
                                     <td>{{ $transaction->chassis ?? '-' }}</td>
@@ -167,9 +167,9 @@
 <div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="detailsModalLabel">Transaction Body Details</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title text-white" id="detailsModalLabel">Transaction Body Details</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div id="modalLoading" class="text-center py-5">
@@ -187,15 +187,16 @@
                         <table class="table table-sm table-bordered table-hover">
                             <thead class="table-light">
                                 <tr>
-                                    <th>Part No</th>
-                                    <th>Description</th>
-                                    <th class="text-end">Qty</th>
-                                    <th class="text-end">Selling Price</th>
-                                    <th class="text-end">Discount %</th>
-                                    <th class="text-end">Extended Price</th>
-                                    <th>VAT</th>
-                                    <th>Analysis Code</th>
-                                    <th>Parts/Labour</th>
+                                    <th style="width: 50px;" class="text-center">No</th>
+                                    <th class="text-center">Part No</th>
+                                    <th class="text-center">Description</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-center">Selling Price</th>
+                                    <th class="text-center">Discount %</th>
+                                    <th class="text-center">Extended Price</th>
+                                    <th class="text-center">VAT</th>
+                                    <th class="text-center">Analysis Code</th>
+                                    <th class="text-center">Parts/Labour</th>
                                 </tr>
                             </thead>
                             <tbody id="detailsTableBody">
@@ -203,7 +204,7 @@
                             </tbody>
                             <tfoot class="table-light">
                                 <tr>
-                                    <th colspan="5" class="text-end">Total:</th>
+                                    <th colspan="6" class="text-end">Total:</th>
                                     <th class="text-end" id="totalExtPrice">0.00</th>
                                     <th colspan="3"></th>
                                 </tr>
@@ -290,11 +291,12 @@
                         let totalExtPrice = 0;
                         let html = '';
                         
-                        response.data.forEach(function(item) {
+                        response.data.forEach(function(item, index) {
                             totalExtPrice += parseFloat(item.extended_price || 0);
                             
                             html += `
                                 <tr>
+                                    <td class="text-center">${index + 1}</td>
                                     <td><code>${item.part_no || '-'}</code></td>
                                     <td>${item.description || '-'}</td>
                                     <td class="text-end">${parseFloat(item.qty || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>

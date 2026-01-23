@@ -175,6 +175,9 @@ class TransactionHeaderController extends Controller
             return redirect()->route('transactions.index')
                 ->with('success', "Transaction headers imported successfully! {$successCount} records imported.");
         } catch (\Illuminate\Database\QueryException $e) {
+            // Clear cache on error
+            $this->clearTransactionCache();
+            
             // Handle SQL errors with detailed messages
             $errorDetails = $this->parseSqlErrorDetailed($e, $import);
             
@@ -187,6 +190,9 @@ class TransactionHeaderController extends Controller
             return redirect()->route('transactions.header.import')
                 ->with('sql_error', $errorDetails);
         } catch (\Exception $e) {
+            // Clear cache on error
+            $this->clearTransactionCache();
+            
             \Log::error('Import Error: ' . $e->getMessage());
             \Log::error('Stack trace: ' . $e->getTraceAsString());
             
