@@ -131,6 +131,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:transactions.view')->group(function () {
         Route::get('/transactions', [TransactionHeaderController::class, 'index'])->name('transactions.index');
         Route::get('/transactions/body-details', [TransactionHeaderController::class, 'getBodyDetails'])->name('transactions.body.details');
+        Route::get('/transactions/export', [TransactionHeaderController::class, 'export'])->name('transactions.export');
     });
     Route::middleware('permission:transactions.header.import')->group(function () {
         Route::get('/transactions/import', [TransactionHeaderController::class, 'showImport'])->name('transactions.header.import');
