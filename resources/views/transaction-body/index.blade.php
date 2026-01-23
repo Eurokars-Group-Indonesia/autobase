@@ -36,29 +36,14 @@
     
     /* Table border radius */
     .table-responsive {
-        border-radius: 10px;
+        border-radius: 8px;
         overflow-x: auto;
         overflow-y: visible;
+        box-shadow: 1rem 1rem 1rem 1rem rgba(0, 0, 0, 0.075);
     }
     
     .table-nowrap {
         margin-bottom: 0;
-    }
-    
-    .table-nowrap thead th:first-child {
-        border-top-left-radius: 6px;
-    }
-    
-    .table-nowrap thead th:last-child {
-        border-top-right-radius: 6px;
-    }
-    
-    .table-nowrap tbody tr:last-child td:first-child {
-        border-bottom-left-radius: 6px;
-    }
-    
-    .table-nowrap tbody tr:last-child td:last-child {
-        border-bottom-right-radius: 6px;
     }
     
     /* Prevent horizontal scroll on mobile */
