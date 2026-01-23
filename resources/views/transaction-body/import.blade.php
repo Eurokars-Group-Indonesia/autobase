@@ -148,7 +148,7 @@
                         </div>
                         <div class="error-message">
                             <strong>Field:</strong> {{ $error['field'] }}<br>
-                            <strong>Value:</strong> <code>{{ is_array($error['value']) ? json_encode($error['value']) : $error['value'] }}</code><br>
+                            <strong>Value:</strong> {{ is_array($error['value']) ? json_encode($error['value']) : $error['value'] }}<br>
                             <strong>Error:</strong> {{ $error['error'] }}
                         </div>
                     </div>
@@ -178,7 +178,7 @@
                         </div>
                         <div class="error-message">
                             <strong>Field:</strong> {{ $error['field'] }}<br>
-                            <strong>Value:</strong> <code>{{ is_array($error['value']) ? json_encode($error['value']) : $error['value'] }}</code><br>
+                            <strong>Value:</strong> {{ is_array($error['value']) ? json_encode($error['value']) : $error['value'] }}<br>
                             <strong>Error:</strong> {{ $error['error'] }}
                         </div>
                     </div>

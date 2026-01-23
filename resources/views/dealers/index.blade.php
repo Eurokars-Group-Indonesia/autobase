@@ -54,7 +54,7 @@
                             @forelse($dealers as $dealer)
                                 <tr>
                                     <td>{{ ($dealers->currentPage() - 1) * $dealers->perPage() + $loop->iteration }}</td>
-                                    <td><code>{{ $dealer->dealer_code }}</code></td>
+                                    <td>{{ $dealer->dealer_code }}</td>
                                     <td>{{ $dealer->dealer_name }}</td>
                                     <td>{{ $dealer->city ?? '-' }}</td>
                                     <td>

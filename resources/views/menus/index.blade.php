@@ -57,7 +57,7 @@
                             @forelse($menus as $menu)
                                 <tr>
                                     <td>{{ ($menus->currentPage() - 1) * $menus->perPage() + $loop->iteration }}</td>
-                                    <td><code>{{ $menu->menu_code }}</code></td>
+                                    <td>{{ $menu->menu_code }}</td>
                                     <td>
                                         <i class="bi {{ $menu->menu_icon }}"></i> {{ $menu->menu_name }}
                                     </td>

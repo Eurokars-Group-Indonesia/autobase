@@ -15,11 +15,38 @@
     .flatpickr-input {
         background-color: white !important;
     }
+    [data-theme="dark"] .flatpickr-input {
+        background-color: var(--bg-card) !important;
+    }
     .table-nowrap th,
     .table-nowrap td {
         white-space: nowrap;
     }
+
+    .table-nowrap th {
+        vertical-align: middle;
+        text-align: center;
+    }
+
+    .table-nowrap td {
+        font-size: 0.90em;
+        vertical-align: middle;
+        text-align: center;
+    }
     
+    /* Table border radius */
+    .table-responsive {
+        border-radius: 8px;
+        overflow-x: auto;
+        overflow-y: visible;
+        box-shadow: 1rem 1rem 1rem 1rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .table-nowrap {
+        margin-bottom: 0;
+    }
+    
+    /* Prevent horizontal scroll on mobile */
     @media (max-width: 767.98px) {
         body {
             overflow-x: hidden;
@@ -119,17 +146,17 @@
                         <tbody>
                             @forelse($histories as $history)
                                 <tr>
-                                    <td><code>{{ $history->search_id }}</code></td>
+                                    <td>{{ $history->search_id }}</td>
                                     <td>{{ $history->user->full_name ?? '-' }}</td>
                                     <td>
-                                        <span class="badge bg-{{ $history->transaction_type === 'H' ? 'primary' : 'info' }}">
+                                        <span class="badge bg-{{ $history->transaction_type === 'H' ? 'primary' : 'success' }}">
                                             {{ $history->getTransactionTypeLabel() }}
                                         </span>
                                     </td>
                                     <td>{{ $history->search ?? '-' }}</td>
-                                    <td>{{ $history->date_from ? $history->date_from->format('Y-m-d') : '-' }}</td>
-                                    <td>{{ $history->date_to ? $history->date_to->format('Y-m-d') : '-' }}</td>
-                                    <td>{{ $history->executed_date->format('Y-m-d H:i:s') }}</td>
+                                    <td>{{ $history->date_from ? $history->date_from->format('d M Y') : '-' }}</td>
+                                    <td>{{ $history->date_to ? $history->date_to->format('d M Y') : '-' }}</td>
+                                    <td>{{ $history->executed_date->format('d M Y H:i:s') }}</td>
                                     <td>
                                         <span class="badge bg-{{ $history->execution_time < 500 ? 'success' : ($history->execution_time < 1500 ? 'warning' : 'danger') }}">
                                             {{ number_format($history->execution_time, 2) }} ms

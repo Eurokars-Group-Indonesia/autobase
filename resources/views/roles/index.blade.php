@@ -55,7 +55,7 @@
                             @forelse($roles as $role)
                                 <tr>
                                     <td>{{ ($roles->currentPage() - 1) * $roles->perPage() + $loop->iteration }}</td>
-                                    <td><code>{{ $role->role_code }}</code></td>
+                                    <td>{{ $role->role_code }}</td>
                                     <td>{{ $role->role_name }}</td>
                                     <td>{{ $role->role_description }}</td>
                                     <td>
