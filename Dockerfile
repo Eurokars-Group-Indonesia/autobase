@@ -27,7 +27,8 @@ RUN apk add --no-cache \
     redis \
     nodejs \
     npm \
-    icu-dev
+    icu-dev \
+    shadow
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql zip gd pcntl opcache intl
@@ -37,6 +38,12 @@ RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del .build-deps
+
+# Create user with UID 1000 if it doesn't exist
+RUN if ! id -u 1000 > /dev/null 2>&1; then \
+        addgroup -g 1000 appuser && \
+        adduser -D -u 1000 -G appuser appuser; \
+    fi
 
 # Copy PHP-FPM pool configuration
 COPY docker/php/www.conf /usr/local/etc/php-fpm.d/www.conf
@@ -62,14 +69,24 @@ COPY --from=node-builder /app/public/build ./public/build
 # Generate optimized autoload files
 RUN composer dump-autoload --optimize
 
-# Set permissions
+# Create storage directories with proper structure
+RUN mkdir -p storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/testing \
+    storage/logs \
+    storage/app/public \
+    bootstrap/cache
+
+# Set ownership and permissions
+# Give ownership to both www-data and UID 1000
 RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 755 /var/www/html/storage \
-    && chmod -R 755 /var/www/html/bootstrap/cache \
-    && mkdir -p /var/www/html/storage/logs \
-    && touch /var/www/html/storage/logs/supervisord.log \
-    && touch /var/www/html/storage/logs/worker.log \
-    && chown -R www-data:www-data /var/www/html/storage/logs
+    && chmod -R 775 /var/www/html/storage \
+    && chmod -R 775 /var/www/html/bootstrap/cache \
+    && find /var/www/html/storage -type d -exec chmod 775 {} \; \
+    && find /var/www/html/storage -type f -exec chmod 664 {} \; \
+    && find /var/www/html/bootstrap/cache -type d -exec chmod 775 {} \; \
+    && find /var/www/html/bootstrap/cache -type f -exec chmod 664 {} \;
 
 # Copy supervisor configuration
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -81,6 +98,9 @@ RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/queue-entrypoint.sh
 
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
+
+# Run as www-data user by default
+USER www-data
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

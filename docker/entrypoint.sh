@@ -8,9 +8,18 @@ echo ""
 # Fix git ownership issue
 git config --global --add safe.directory /var/www/html 2>/dev/null || true
 
-# Fix storage permissions
+# Ensure storage directories exist and have correct permissions
+echo "Ensuring storage directories exist..."
+mkdir -p /var/www/html/storage/framework/cache \
+         /var/www/html/storage/framework/sessions \
+         /var/www/html/storage/framework/views \
+         /var/www/html/storage/framework/testing \
+         /var/www/html/storage/logs \
+         /var/www/html/storage/app/public \
+         /var/www/html/bootstrap/cache 2>/dev/null || true
+
+# Fix storage permissions (run as current user, should be www-data)
 echo "Fixing storage permissions..."
-mkdir -p /var/www/html/storage/framework/cache /var/www/html/storage/framework/sessions /var/www/html/storage/framework/views /var/www/html/storage/logs /var/www/html/storage/app/public 2>/dev/null || true
 chmod -R 775 /var/www/html/storage 2>/dev/null || true
 chmod -R 775 /var/www/html/bootstrap/cache 2>/dev/null || true
 echo "✓ Storage permissions fixed!"

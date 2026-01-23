@@ -1,5 +1,15 @@
 # Quick Fix Commands - Storage Permission
 
+## ⚠️ IMPORTANT: Jika Error "unknown uid 1000" atau "Operation not permitted"
+
+**Gunakan flag `--user root` untuk semua command:**
+
+```bash
+docker exec -it --user root laravel_app chmod -R 777 /var/www/html/storage
+```
+
+---
+
 ## Untuk Server Remote (via SSH)
 
 ### 1. Login ke Server
@@ -14,15 +24,21 @@ cd /path/to/your/laravel-project
 
 ### 3. Fix Permission (Pilih salah satu)
 
-#### Option A: Quick Fix (Recommended)
+#### Option A: Quick Fix dengan Root User (RECOMMENDED untuk UID 1000 issue)
+```bash
+docker exec -it --user root laravel_app chmod -R 777 /var/www/html/storage
+docker exec -it --user root laravel_app chmod -R 777 /var/www/html/bootstrap/cache
+```
+
+#### Option B: Quick Fix (jika tidak ada UID issue)
 ```bash
 docker exec -it laravel_app chmod -R 775 /var/www/html/storage
 docker exec -it laravel_app chmod -R 775 /var/www/html/bootstrap/cache
 ```
 
-#### Option B: Full Fix dengan Ownership
+#### Option C: Full Fix dengan Ownership (sebagai root)
 ```bash
-docker exec -it laravel_app sh -c "
+docker exec -it --user root laravel_app sh -c "
     chown -R www-data:www-data /var/www/html/storage && 
     chown -R www-data:www-data /var/www/html/bootstrap/cache && 
     chmod -R 775 /var/www/html/storage && 
@@ -30,9 +46,10 @@ docker exec -it laravel_app sh -c "
 "
 ```
 
-#### Option C: Permissive Fix (jika masih error)
+#### Option D: Hapus Cache Laravel Excel (jika error di laravel-excel)
 ```bash
-docker exec -it laravel_app chmod -R 777 /var/www/html/storage
+docker exec -it --user root laravel_app rm -rf /var/www/html/storage/framework/cache/laravel-excel
+docker exec -it --user root laravel_app chmod -R 777 /var/www/html/storage
 ```
 
 ### 4. Verifikasi
@@ -74,21 +91,26 @@ docker-compose logs -f app
 
 ---
 
-## One-Liner Commands
+## One-Liner Commands (Copy-Paste Ready)
 
-### Fix Permission (Copy-Paste Ready)
+### Fix Permission sebagai Root (RECOMMENDED untuk UID 1000 issue)
+```bash
+docker exec -it --user root laravel_app sh -c "chmod -R 777 /var/www/html/storage && chmod -R 777 /var/www/html/bootstrap/cache && echo 'Permission fixed!'"
+```
+
+### Fix Permission + Ownership sebagai Root
+```bash
+docker exec -it --user root laravel_app sh -c "chown -R www-data:www-data /var/www/html/storage && chown -R www-data:www-data /var/www/html/bootstrap/cache && chmod -R 775 /var/www/html/storage && chmod -R 775 /var/www/html/bootstrap/cache && echo 'Permission and ownership fixed!'"
+```
+
+### Hapus Cache Laravel Excel + Fix Permission
+```bash
+docker exec -it --user root laravel_app sh -c "rm -rf /var/www/html/storage/framework/cache/laravel-excel && chmod -R 777 /var/www/html/storage && echo 'Cache cleared and permission fixed!'"
+```
+
+### Fix Permission (tanpa root - jika tidak ada UID issue)
 ```bash
 docker exec -it laravel_app sh -c "chmod -R 775 /var/www/html/storage && chmod -R 775 /var/www/html/bootstrap/cache && echo 'Permission fixed!'"
-```
-
-### Fix Permission + Ownership
-```bash
-docker exec -it laravel_app sh -c "chown -R www-data:www-data /var/www/html/storage && chown -R www-data:www-data /var/www/html/bootstrap/cache && chmod -R 775 /var/www/html/storage && chmod -R 775 /var/www/html/bootstrap/cache && echo 'Permission and ownership fixed!'"
-```
-
-### Permissive Fix (777)
-```bash
-docker exec -it laravel_app sh -c "chmod -R 777 /var/www/html/storage && echo 'Permissive permission set!'"
 ```
 
 ---
@@ -166,20 +188,21 @@ docker exec -it laravel_app chmod -R 777 /var/www/html/storage
 
 ## Summary
 
-**Paling Simple (Copy-Paste ke SSH):**
+**Untuk Error "unknown uid 1000" atau "Operation not permitted" (COPY-PASTE INI):**
+
+```bash
+docker exec -it --user root laravel_app sh -c "rm -rf /var/www/html/storage/framework/cache/laravel-excel && chmod -R 777 /var/www/html/storage && chmod -R 777 /var/www/html/bootstrap/cache && echo 'Done!'"
+```
+
+**Jika tidak ada UID issue:**
 
 ```bash
 docker exec -it laravel_app chmod -R 775 /var/www/html/storage && docker exec -it laravel_app chmod -R 775 /var/www/html/bootstrap/cache && echo "Done!"
 ```
 
-**Jika masih error, gunakan 777:**
+**Untuk permanent fix (edit docker-compose.yml):**
 
-```bash
-docker exec -it laravel_app chmod -R 777 /var/www/html/storage && echo "Done!"
-```
+1. Comment baris `user: "${USER_ID:-1000}:${GROUP_ID:-1000}"` di service `app` dan `queue`
+2. Rebuild: `docker-compose down && docker-compose up -d --build`
 
-**Untuk permanent fix, rebuild container:**
-
-```bash
-docker-compose down && docker-compose up -d --build
-```
+**Lihat dokumentasi lengkap di:** `FIX_UID_1000_ISSUE.md`

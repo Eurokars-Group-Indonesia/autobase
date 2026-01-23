@@ -262,6 +262,50 @@ class TransactionBodyImport implements
                 ];
             }
 
+            // Validate VAT (max 1 char)
+            $vat = !empty($row['vat']) ? strtoupper($row['vat']) : null;
+            if ($vat !== null && strlen($vat) > 1) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'VAT',
+                    'value' => $row['vat'],
+                    'error' => 'VAT must be 1 character or less'
+                ];
+            }
+
+            // Validate Menu VAT (max 1 char)
+            $menuVat = !empty($row['mv']) ? strtoupper($row['mv']) : null;
+            if ($menuVat !== null && strlen($menuVat) > 1) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'MV (Menu VAT)',
+                    'value' => $row['mv'],
+                    'error' => 'Menu VAT must be 1 character or less'
+                ];
+            }
+
+            // Validate Menu Flag (max 1 char)
+            $menuFlag = !empty($row['menuflag']) ? strtoupper($row['menuflag']) : null;
+            if ($menuFlag !== null && strlen($menuFlag) > 1) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'MenuFlag',
+                    'value' => $row['menuflag'],
+                    'error' => 'Menu Flag must be 1 character or less'
+                ];
+            }
+
+            // Validate Labour Rates (max 1 char)
+            $labourRates = !empty($row['lr']) ? strtoupper($row['lr']) : null;
+            if ($labourRates !== null && strlen($labourRates) > 1) {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'LR (Labour Rates)',
+                    'value' => $row['lr'],
+                    'error' => 'Labour Rates must be 1 character or less'
+                ];
+            }
+
             // If there are any validation errors, add them all and skip this row
             if (!empty($rowErrors)) {
                 $this->errors = array_merge($this->errors, $rowErrors);
