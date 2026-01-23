@@ -323,7 +323,7 @@
                             html += `
                                 <tr>
                                     <td class="text-center">${index + 1}</td>
-                                    <td><code>${item.part_no || '-'}</code></td>
+                                    <td>${item.part_no || '-'}</td>
                                     <td>${item.description || '-'}</td>
                                     <td class="text-end">${parseFloat(item.qty || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                                     <td class="text-end">${parseFloat(item.selling_price || 0).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>

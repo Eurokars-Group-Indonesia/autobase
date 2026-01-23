@@ -154,7 +154,7 @@
                                     <td class="text-end">{{ number_format($transaction->discount, 2) }}%</td>
                                     <td class="text-end">{{ number_format($transaction->extended_price, 2) }}</td>
                                     <td>
-                                        <span class="badge bg-{{ $transaction->part_or_labour === 'P' ? 'info' : 'warning' }}">
+                                        <span class="badge bg-{{ $transaction->part_or_labour === 'P' ? 'primary' : 'success' }}">
                                             {{ $transaction->getPartOrLabourLabel() }}
                                         </span>
                                     </td>
