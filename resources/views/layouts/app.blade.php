@@ -50,6 +50,7 @@
             background-color: var(--bg-body);
             color: var(--text-primary);
             transition: background-color 0.3s ease, color 0.3s ease;
+            font-size: 12px;
         }
         .navbar-custom {
             background: var(--navbar-bg);
@@ -358,12 +359,19 @@
             color: var(--text-primary);
             border-color: var(--border-color);
             transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
         }
         
         .form-control:focus, .form-select:focus {
             background-color: var(--bg-card);
             color: var(--text-primary);
             border-color: #002856;
+        }
+        
+        .btn {
+            font-size: 0.875rem;
+            padding: 0.25rem 0.5rem;
         }
         
         [data-theme="dark"] .form-control::placeholder {
