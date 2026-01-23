@@ -57,7 +57,7 @@ WORKDIR /var/www/html
 # Copy composer files
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies
+# Install PHP dependencies as root
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 
 # Copy application files
@@ -78,15 +78,19 @@ RUN mkdir -p storage/framework/cache \
     storage/app/public \
     bootstrap/cache
 
-# Set ownership and permissions
-# Give ownership to both www-data and UID 1000
+# Set ownership and permissions - CRITICAL: Do this as root before switching user
 RUN chown -R www-data:www-data /var/www/html \
     && chmod -R 775 /var/www/html/storage \
     && chmod -R 775 /var/www/html/bootstrap/cache \
     && find /var/www/html/storage -type d -exec chmod 775 {} \; \
     && find /var/www/html/storage -type f -exec chmod 664 {} \; \
     && find /var/www/html/bootstrap/cache -type d -exec chmod 775 {} \; \
-    && find /var/www/html/bootstrap/cache -type f -exec chmod 664 {} \;
+    && find /var/www/html/bootstrap/cache -type f -exec chmod 664 {} \; \
+    && touch /var/www/html/storage/logs/laravel.log \
+    && touch /var/www/html/storage/logs/supervisord.log \
+    && touch /var/www/html/storage/logs/worker.log \
+    && chown www-data:www-data /var/www/html/storage/logs/*.log \
+    && chmod 664 /var/www/html/storage/logs/*.log
 
 # Copy supervisor configuration
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
@@ -99,8 +103,9 @@ RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/queue-entrypoint.sh
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
 
-# Run as www-data user by default
-USER www-data
+# Don't switch to www-data yet - let entrypoint handle it
+# This allows entrypoint to run as root for permission fixes
+# USER www-data
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
