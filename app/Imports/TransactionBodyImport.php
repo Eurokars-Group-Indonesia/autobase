@@ -107,6 +107,15 @@ class TransactionBodyImport implements
 
             // Parse date
             $dateDecard = $this->parseDate($row['datedecard'] ?? null);
+            
+            // Debug logging for date parsing
+            if (!empty($row['datedecard'])) {
+                Log::debug("Date parsing for row {$this->currentRow}", [
+                    'original_value' => $row['datedecard'],
+                    'parsed_value' => $dateDecard ? $dateDecard->format('Y-m-d') : 'null',
+                    'is_numeric' => is_numeric($row['datedecard']),
+                ]);
+            }
 
             // Validate required numeric fields
             // InvNo boleh 0, tapi tidak boleh null atau empty string
@@ -509,32 +518,59 @@ class TransactionBodyImport implements
 
     private function parseDate($date)
     {
-        if (empty($date)) {
+        if (empty($date) || $date === '' || $date === null) {
             return null;
         }
 
         try {
-            // Handle Excel date serial number
+            // Handle Excel date serial number (numeric value)
             if (is_numeric($date)) {
-                return Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date));
+                // Excel dates start from 1900-01-01 (serial 1)
+                // Valid Excel dates are typically between 1 (1900-01-01) and 50000 (2036-11-05)
+                if ($date > 0 && $date < 100000) {
+                    try {
+                        $parsed = Carbon::instance(\PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($date));
+                        // Validate the parsed date is reasonable (between 1900 and 2100)
+                        if ($parsed->year >= 1900 && $parsed->year <= 2100) {
+                            return $parsed;
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to parse Excel date serial: {$date}", ['error' => $e->getMessage()]);
+                    }
+                }
+                
+                // If numeric but not valid Excel serial, try as Unix timestamp
+                if ($date > 946684800 && $date < 2147483647) { // Between 2000-01-01 and 2038-01-19
+                    try {
+                        return Carbon::createFromTimestamp($date);
+                    } catch (\Exception $e) {
+                        Log::warning("Failed to parse Unix timestamp: {$date}", ['error' => $e->getMessage()]);
+                    }
+                }
             }
             
             // Handle string dates with various formats
-            // Try common date formats: d/m/Y, d-m-Y, Y-m-d, etc.
+            $dateString = trim((string)$date);
+            
+            // Try common date formats
             $formats = [
+                'Y-m-d',    // 2009-08-31 (ISO format)
                 'd/m/Y',    // 31/08/2009
                 'd-m-Y',    // 31-08-2009
-                'Y-m-d',    // 2009-08-31
-                'd/m/y',    // 31/08/09
-                'd-m-y',    // 31-08-09
                 'm/d/Y',    // 08/31/2009
                 'm-d-Y',    // 08-31-2009
+                'd/m/y',    // 31/08/09
+                'd-m-y',    // 31-08-09
+                'Y/m/d',    // 2009/08/31
+                'd.m.Y',    // 31.08.2009
+                'd M Y',    // 31 Aug 2009
+                'd F Y',    // 31 August 2009
             ];
             
             foreach ($formats as $format) {
                 try {
-                    $parsed = Carbon::createFromFormat($format, $date);
-                    if ($parsed !== false) {
+                    $parsed = Carbon::createFromFormat($format, $dateString);
+                    if ($parsed !== false && $parsed->year >= 1900 && $parsed->year <= 2100) {
                         return $parsed;
                     }
                 } catch (\Exception $e) {
@@ -543,9 +579,25 @@ class TransactionBodyImport implements
             }
             
             // If all formats fail, try Carbon::parse as fallback
-            return Carbon::parse($date);
+            try {
+                $parsed = Carbon::parse($dateString);
+                if ($parsed->year >= 1900 && $parsed->year <= 2100) {
+                    return $parsed;
+                }
+            } catch (\Exception $e) {
+                Log::warning("Failed to parse date with Carbon::parse: {$dateString}", ['error' => $e->getMessage()]);
+            }
+            
+            // If everything fails, return null instead of invalid date
+            Log::warning("Could not parse date, returning null: {$date}");
+            return null;
+            
         } catch (\Exception $e) {
-            Log::warning("Failed to parse date: {$date}", ['error' => $e->getMessage()]);
+            Log::error("Error in parseDate function", [
+                'date' => $date,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return null;
         }
     }
