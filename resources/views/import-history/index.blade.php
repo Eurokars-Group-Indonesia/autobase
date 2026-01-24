@@ -185,7 +185,7 @@
                                     </td>
                                     <td>{{ $history->executed_date->format('d M Y H:i:s') }}</td>
                                     <td>
-                                        <span class="badge bg-{{ $history->execution_time < 1000 ? 'success' : ($history->execution_time < 3000 ? 'warning' : 'danger') }}">
+                                        <span class="badge bg-{{ $history->execution_time < 10000 ? 'success' : ($history->execution_time < 30000 ? 'warning' : 'danger') }}">
                                             {{ number_format($history->execution_time, 2) }} ms
                                         </span>
                                     </td>
