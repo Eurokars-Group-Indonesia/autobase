@@ -75,7 +75,7 @@
             </div>
             <div class="card-body">
                 <h5>Hello, {{ auth()->user()->full_name }}!</h5>
-                <p>Welcome to your admin dashboard. Here you can manage transactions, users, and system settings.</p>
+                <p>Welcome to AutoBase, Autoline DataBase Here you can search the Transactions.</p>
                 <p class="mb-0"><strong>Last Login:</strong> {{ auth()->user()->last_login ? auth()->user()->last_login->format('d M Y H:i:s') : 'First time login' }}</p>
             </div>
         </div>
