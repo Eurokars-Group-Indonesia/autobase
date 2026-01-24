@@ -58,35 +58,37 @@
                         </div>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Brand</label>
-                            <select class="form-select @error('brand_id') is-invalid @enderror" name="brand_id">
-                                <option value="">-- Select Brand --</option>
-                                @foreach($brands as $brand)
-                                    <option value="{{ $brand->brand_id }}" {{ old('brand_id', $user->brand_id) == $brand->brand_id ? 'selected' : '' }}>
-                                        {{ $brand->brand_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('brand_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
+                    <div class="mb-3">
+                        <label class="form-label">Brands</label>
+                        <div class="row">
+                            @foreach($brands as $brand)
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="brands[]" 
+                                               value="{{ $brand->brand_id }}" id="brand{{ $brand->brand_id }}"
+                                               {{ in_array($brand->brand_id, $userBrands) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="brand{{ $brand->brand_id }}">
+                                            {{ $brand->brand_name }}
+                                        </label>
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
-                        <div class="col-md-6 mb-3">
-                            <label class="form-label">Dealer</label>
-                            <select class="form-select @error('dealer_id') is-invalid @enderror" name="dealer_id">
-                                <option value="">-- Select Dealer --</option>
-                                @foreach($dealers as $dealer)
-                                    <option value="{{ $dealer->dealer_id }}" {{ old('dealer_id', $user->dealer_id) == $dealer->dealer_id ? 'selected' : '' }}>
-                                        {{ $dealer->dealer_name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                            @error('dealer_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Dealer</label>
+                        <select class="form-select @error('dealer_id') is-invalid @enderror" name="dealer_id">
+                            <option value="">-- Select Dealer --</option>
+                            @foreach($dealers as $dealer)
+                                <option value="{{ $dealer->dealer_id }}" {{ old('dealer_id', $user->dealer_id) == $dealer->dealer_id ? 'selected' : '' }}>
+                                    {{ $dealer->dealer_name }}
+                                </option>
+                            @endforeach
+                        </select>
+                        @error('dealer_id')
+                            <div class="invalid-feedback">{{ $message }}</div>
+                        @enderror
                     </div>
 
                     <div class="row">

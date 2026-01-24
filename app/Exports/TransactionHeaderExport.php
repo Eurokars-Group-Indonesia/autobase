@@ -15,12 +15,14 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
     protected $search;
     protected $dateFrom;
     protected $dateTo;
+    protected $userBrandIds;
 
-    public function __construct($search = null, $dateFrom = null, $dateTo = null)
+    public function __construct($search = null, $dateFrom = null, $dateTo = null, $userBrandIds = [])
     {
         $this->search = $search;
         $this->dateFrom = $dateFrom;
         $this->dateTo = $dateTo;
+        $this->userBrandIds = $userBrandIds;
     }
 
     public function collection()
@@ -28,6 +30,11 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
         $query = TransactionHeader::with('brand')
             ->where('tx_header.is_active', '1')
             ->orderBy('tx_header.invoice_date', 'desc');
+
+        // Filter by user's brands
+        if (!empty($this->userBrandIds)) {
+            $query->whereIn('tx_header.brand_id', $this->userBrandIds);
+        }
 
         // Apply filters
         if ($this->search) {

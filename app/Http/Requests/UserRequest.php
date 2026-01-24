@@ -20,8 +20,11 @@ class UserRequest extends FormRequest
             'name' => 'required|string|max:150',
             'full_name' => 'required|string|max:150',
             'phone' => 'nullable|string|max:20',
+            'dealer_id' => 'nullable|exists:ms_dealers,dealer_id',
             'roles' => 'nullable|array',
             'roles.*' => 'exists:ms_role,role_id',
+            'brands' => 'nullable|array',
+            'brands.*' => 'exists:ms_brand,brand_id',
         ];
 
         // is_active only for update
