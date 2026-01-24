@@ -108,6 +108,16 @@ class User extends Authenticatable
         return $this->hasMany(UserBrand::class, 'user_id', 'user_id');
     }
 
+    /**
+     * Get user's brand IDs (realtime query)
+     * 
+     * @return array
+     */
+    public function getBrandIds()
+    {
+        return $this->brands()->pluck('ms_brand.brand_id')->toArray();
+    }
+
     public function hasPermission($permissionCode)
     {
         // Cek apakah user memiliki role yang memiliki permission ini

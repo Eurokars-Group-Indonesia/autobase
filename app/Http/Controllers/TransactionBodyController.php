@@ -16,21 +16,21 @@ class TransactionBodyController extends Controller
         // Start timing
         $startTime = microtime(true);
         
-        // Get user's brand IDs from session
-        $userBrandIds = session('user_brand_ids', []);
+        // Get user's brand IDs (realtime query)
+        $userBrandIds = auth()->user()->getBrandIds();
         
         $query = TransactionBody::where('tx_body.is_active', '1')
             ->orderBy('tx_body.created_date', 'desc');
         
         // Filter by user's brands - join with header to get brand_id
-        // if (!empty($userBrandIds)) {
-        //     $query->join('tx_header', function($join) {
-        //         $join->on('tx_body.wip_no', '=', 'tx_header.wip_no')
-        //              ->on('tx_body.invoice_no', '=', 'tx_header.invoice_no');
-        //     })
-        //     ->whereIn('tx_header.brand_id', $userBrandIds)
-        //     ->select('tx_body.*'); // Select only body columns
-        // }
+        if (!empty($userBrandIds)) {
+            $query->join('tx_header', function($join) {
+                $join->on('tx_body.wip_no', '=', 'tx_header.wip_no')
+                     ->on('tx_body.invoice_no', '=', 'tx_header.invoice_no');
+            })
+            ->whereIn('tx_header.brand_id', $userBrandIds)
+            ->select('tx_body.*'); // Select only body columns
+        }
         
         // Check if there's any search/filter parameter
         $hasSearch = $request->has('search') && $request->search != '';

@@ -19,8 +19,8 @@ class TransactionHeaderController extends Controller
         // Start timing
         $startTime = microtime(true);
         
-        // Get user's brand IDs from session
-        $userBrandIds = session('user_brand_ids', []);
+        // Get user's brand IDs (realtime query)
+        $userBrandIds = auth()->user()->getBrandIds();
         
         // Check if there's any search/filter parameter
         $hasSearch = $request->has('search') && $request->search != '';
@@ -156,8 +156,8 @@ class TransactionHeaderController extends Controller
 
     public function showImport()
     {
-        // Get user's brand IDs from session
-        $userBrandIds = session('user_brand_ids', []);
+        // Get user's brand IDs (realtime query)
+        $userBrandIds = auth()->user()->getBrandIds();
         
         // Filter brands based on user's access
         $brands = Brand::where('is_active', '1')
@@ -560,8 +560,8 @@ class TransactionHeaderController extends Controller
             'brand_id' => 'required',
         ]);
 
-        // Get user's brand IDs from session
-        $userBrandIds = session('user_brand_ids', []);
+        // Get user's brand IDs (realtime query)
+        $userBrandIds = auth()->user()->getBrandIds();
         
         // Check if user has access to this brand
         if (!empty($userBrandIds) && !in_array($request->brand_id, $userBrandIds)) {
@@ -598,8 +598,8 @@ class TransactionHeaderController extends Controller
                 ->with('error', 'Please apply search or date filter before exporting.');
         }
 
-        // Get user's brand IDs from session
-        $userBrandIds = session('user_brand_ids', []);
+        // Get user's brand IDs (realtime query)
+        $userBrandIds = auth()->user()->getBrandIds();
 
         $filename = 'transaction_headers_' . date('Y-m-d_His') . '.xlsx';
 
