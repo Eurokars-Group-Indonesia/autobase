@@ -12,7 +12,7 @@ class UserController extends Controller
 {
     public function index()
     {
-        $query = User::with(['roles', 'brand', 'dealer'])->where('is_active', '1');
+        $query = User::with(['roles', 'brands', 'dealer'])->where('is_active', '1');
         
         // Search functionality
         if (request()->has('search') && request('search') != '') {
@@ -55,13 +55,29 @@ class UserController extends Controller
         $data['created_by'] = auth()->id();
         $data['is_active'] = '1'; // Default active
 
+        // Remove brand_id from data since we'll use many-to-many
+        unset($data['brand_id']);
+
         $user = User::create($data);
 
+        // Attach roles
         if ($request->has('roles')) {
             foreach ($request->roles as $roleId) {
                 $user->roles()->attach($roleId, [
                     'unique_id' => (string) Str::uuid(),
                     'assigned_date' => now(),
+                    'created_by' => auth()->id(),
+                    'created_date' => now(),
+                    'is_active' => '1',
+                ]);
+            }
+        }
+
+        // Attach brands
+        if ($request->has('brands')) {
+            foreach ($request->brands as $brandId) {
+                $user->brands()->attach($brandId, [
+                    'unique_id' => (string) Str::uuid(),
                     'created_by' => auth()->id(),
                     'created_date' => now(),
                     'is_active' => '1',
@@ -79,12 +95,13 @@ class UserController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
-        $user->load('roles');
+        $user->load(['roles', 'brands']);
         $roles = Role::where('is_active', '1')->get();
         $brands = \App\Models\Brand::where('is_active', '1')->orderBy('brand_name')->get();
         $dealers = \App\Models\Dealer::where('is_active', '1')->orderBy('dealer_name')->get();
         $userRoles = $user->roles->pluck('role_id')->toArray();
-        return view('users.edit', compact('user', 'roles', 'brands', 'dealers', 'userRoles'));
+        $userBrands = $user->brands->pluck('brand_id')->toArray();
+        return view('users.edit', compact('user', 'roles', 'brands', 'dealers', 'userRoles', 'userBrands'));
     }
 
     public function update(UserRequest $request, User $user)
@@ -102,6 +119,9 @@ class UserController extends Controller
             unset($data['password']);
         }
         
+        // Remove brand_id from data since we'll use many-to-many
+        unset($data['brand_id']);
+        
         $data['updated_by'] = auth()->id();
         $user->update($data);
 
@@ -112,6 +132,19 @@ class UserController extends Controller
                 $user->roles()->attach($roleId, [
                     'unique_id' => (string) Str::uuid(),
                     'assigned_date' => now(),
+                    'created_by' => auth()->id(),
+                    'created_date' => now(),
+                    'is_active' => '1',
+                ]);
+            }
+        }
+
+        // Sync brands
+        $user->brands()->detach();
+        if ($request->has('brands')) {
+            foreach ($request->brands as $brandId) {
+                $user->brands()->attach($brandId, [
+                    'unique_id' => (string) Str::uuid(),
                     'created_by' => auth()->id(),
                     'created_date' => now(),
                     'is_active' => '1',

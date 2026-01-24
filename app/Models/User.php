@@ -95,6 +95,19 @@ class User extends Authenticatable
             ->withPivot('assigned_date', 'created_by', 'created_date', 'updated_by', 'updated_date', 'unique_id');
     }
 
+    public function brands()
+    {
+        return $this->belongsToMany(Brand::class, 'ms_user_brand', 'user_id', 'brand_id')
+            ->wherePivot('is_active', '1')
+            ->where('ms_brand.is_active', '1')
+            ->withPivot('created_by', 'created_date', 'updated_by', 'updated_date', 'unique_id');
+    }
+
+    public function userBrands()
+    {
+        return $this->hasMany(UserBrand::class, 'user_id', 'user_id');
+    }
+
     public function hasPermission($permissionCode)
     {
         // Cek apakah user memiliki role yang memiliki permission ini

@@ -62,7 +62,13 @@
                                     <td>{{ $user->email }}</td>
                                     <td>{{ $user->full_name }}</td>
                                     <td>{{ $user->phone ?? '-' }}</td>
-                                    <td>{{ $user->brand->brand_name ?? '-' }}</td>
+                                    <td>
+                                        @forelse($user->brands as $brand)
+                                            <span class="badge bg-info">{{ $brand->brand_name }}</span>
+                                        @empty
+                                            -
+                                        @endforelse
+                                    </td>
                                     <td>{{ $user->dealer->dealer_name ?? '-' }}</td>
                                     <td>
                                         @foreach($user->roles as $role)
@@ -105,8 +111,13 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3">
-                    {{ $users->links('vendor.pagination.custom') }}
+                <div class="mt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+                    <div class="text-center text-md-start">
+                        Showing {{ $users->firstItem() ?? 0 }} to {{ $users->lastItem() ?? 0 }} of {{ $users->total() }} entries
+                    </div>
+                    <div>
+                        {{ $users->links('vendor.pagination.custom') }}
+                    </div>
                 </div>
             </div>
         </div>

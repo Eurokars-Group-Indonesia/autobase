@@ -89,8 +89,13 @@
                         </tbody>
                     </table>
                 </div>
-                <div class="mt-3">
-                    {{ $brands->links('vendor.pagination.custom') }}
+                <div class="mt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
+                    <div class="text-center text-md-start">
+                        Showing {{ $brands->firstItem() ?? 0 }} to {{ $brands->lastItem() ?? 0 }} of {{ $brands->total() }} entries
+                    </div>
+                    <div>
+                        {{ $brands->links('vendor.pagination.custom') }}
+                    </div>
                 </div>
             </div>
         </div>
