@@ -6,7 +6,9 @@ use App\Models\TransactionHeader;
 use App\Models\Brand;
 use App\Imports\TransactionHeaderImport;
 use App\Exports\TransactionHeaderExport;
+use App\Exports\TransactionHeaderOnlyExport;
 use App\Jobs\LogSearchHistory;
+use App\Jobs\LogImportHistory;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -152,6 +154,9 @@ class TransactionHeaderController extends Controller
 
     public function import(Request $request)
     {
+        // Start timing
+        $startTime = microtime(true);
+        
         $request->validate([
             'file' => [
                 'required',
@@ -210,6 +215,22 @@ class TransactionHeaderController extends Controller
                     'error' => implode(', ', $failure->errors())
                 ];
             }
+            
+            // Calculate execution time
+            $endTime = microtime(true);
+            $executionTime = ($endTime - $startTime) * 1000;
+            
+            // Calculate total rows (success + errors)
+            $totalRows = $successCount + count($allErrors);
+            
+            // Log import history asynchronously
+            LogImportHistory::dispatch(
+                auth()->id(),
+                $totalRows,
+                $successCount,
+                count($allErrors),
+                $executionTime
+            );
             
             if (count($allErrors) > 0) {
                 // Clear cache after import (even with errors, some data might be imported)
@@ -541,8 +562,18 @@ class TransactionHeaderController extends Controller
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
 
+        // Check if there's any filter
+        $hasFilter = !empty($search) || !empty($dateFrom) || !empty($dateTo);
+
+        // Only allow export when there's filter
+        if (!$hasFilter) {
+            return redirect()->route('transactions.index')
+                ->with('error', 'Please apply search or date filter before exporting.');
+        }
+
         $filename = 'transaction_headers_' . date('Y-m-d_His') . '.xlsx';
 
+        // Export with body details
         return Excel::download(
             new TransactionHeaderExport($search, $dateFrom, $dateTo),
             $filename

@@ -24,13 +24,13 @@ return new class extends Migration
             $table->date('invoice_date');
             $table->unsignedInteger('vehicle_id');
             $table->enum('document_type', ['I', 'C'])->comment('I = Invoice, C = Credit Note');
-            $table->double('exchange_rate', 10, 2)->nullable();
+            $table->decimal('exchange_rate', 10, 2)->nullable();
             $table->string('registration_no', 20)->nullable();
             $table->string('chassis', 25)->nullable();
             $table->unsignedInteger('mileage');
             $table->char('currency_code', 3);
-            $table->double('gross_value', 20, 2)->nullable();
-            $table->double('net_value', 20, 2)->nullable();
+            $table->decimal('gross_value', 20, 2)->nullable();
+            $table->decimal('net_value', 20, 2)->nullable();
             $table->string('customer_discount', 10);
             $table->char('service_code', 3)->nullable();
             $table->date('registration_date')->nullable();

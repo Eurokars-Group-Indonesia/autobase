@@ -1,4 +1,4 @@
-# RBAC Admin Panel - Installation Guide
+# RBAC AutoBase - Installation Guide
 
 ## Prerequisites
 - PHP 8.2 or higher
@@ -92,7 +92,7 @@ Visit: http://localhost:8000
 ### UI/UX
 - Bootstrap 5.3.2
 - Responsive Design
-- Modern Admin Panel Layout
+- Modern AutoBase Layout
 - Top Navigation Menu
 - Breadcrumb Navigation
 - Dynamic Menu based on User Roles

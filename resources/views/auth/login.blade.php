@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Login - Admin Panel</title>
+    <title>Login - AutoBase</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <style>
@@ -28,7 +36,7 @@
             overflow: hidden;
         }
         .login-header {
-            background: #0d6efd;
+            background: #002856;
             color: white;
             padding: 2.5rem 2rem;
             text-align: center;
@@ -52,7 +60,7 @@
             transition: all 0.3s;
         }
         .form-control:focus {
-            border-color: #0d6efd;
+            border-color: #002856;
             box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
         }
         .input-group-text {
@@ -66,7 +74,7 @@
             border-radius: 0 10px 10px 0;
         }
         .btn-login {
-            background: #0d6efd;
+            background: #002856;
             border: none;
             padding: 0.75rem;
             border-radius: 10px;
@@ -81,8 +89,8 @@
             color: white;
         }
         .form-check-input:checked {
-            background-color: #0d6efd;
-            border-color: #0d6efd;
+            background-color: #002856;
+            border-color: #002856;
         }
         .alert {
             border-radius: 10px;
@@ -99,8 +107,7 @@
         <div class="login-card">
             <div class="login-header">
                 <i class="bi bi-shield-lock login-icon"></i>
-                <h3>Welcome Back</h3>
-                <p>Sign in to your account</p>
+                <p style="font-size: 24px;"><strong>AutoBase</strong> Login</p>
             </div>
             <div class="login-body">
                 @if($errors->any())
@@ -155,7 +162,7 @@
             </div>
         </div>
         <div class="text-center mt-3">
-            <small class="text-muted">&copy; {{ date('Y') }} Admin Panel. All rights reserved.</small>
+            <small class="text-muted">&copy; {{ date('Y') }} IT Team Eurokars Group Indonesia. All rights reserved.</small>
         </div>
     </div>
 

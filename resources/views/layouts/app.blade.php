@@ -4,7 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Admin Panel')</title>
+    <title>@yield('title', 'AutoBase')</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    
     <!-- Google Fonts - Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -51,6 +59,9 @@
             color: var(--text-primary);
             transition: background-color 0.3s ease, color 0.3s ease;
             font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .navbar-custom {
             background: var(--navbar-bg);
@@ -238,6 +249,7 @@
             margin-top: 40px;
             margin-bottom: 40px;
             padding-top: 20px;
+            flex: 1;
         }
         .card {
             border: none;
@@ -565,6 +577,18 @@
             color: white;
         }
         
+        /* Footer */
+        footer {
+            background-color: var(--bg-card);
+            color: var(--text-secondary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin-top: auto;
+        }
+        
+        footer .border-top {
+            border-color: var(--border-color) !important;
+        }
+        
         /* Prevent horizontal scroll on mobile */
         @media (max-width: 767.98px) {
             html, body {
@@ -694,6 +718,15 @@
 
         @yield('content')
     </div>
+
+    <!-- Footer -->
+    <footer class="mt-5 py-3 border-top">
+        <div class="container-fluid">
+            <div class="text-center text-muted">
+                <small>&copy; 2026 IT Team Eurokars Group Indonesia. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

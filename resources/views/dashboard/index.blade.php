@@ -71,7 +71,7 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <i class="bi bi-info-circle"></i> Welcome to Admin Panel
+                <i class="bi bi-info-circle"></i> Welcome to AutoBase
             </div>
             <div class="card-body">
                 <h5>Hello, {{ auth()->user()->full_name }}!</h5>

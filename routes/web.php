@@ -12,6 +12,7 @@ use App\Http\Controllers\DealerController;
 use App\Http\Controllers\TransactionHeaderController;
 use App\Http\Controllers\TransactionBodyController;
 use App\Http\Controllers\SearchHistoryController;
+use App\Http\Controllers\ImportHistoryController;
 
 // Guest Routes
 Route::middleware('guest')->group(function () {
@@ -152,5 +153,10 @@ Route::middleware('auth')->group(function () {
     // Search History
     Route::middleware('permission:search-history.view')->group(function () {
         Route::get('/search-history', [SearchHistoryController::class, 'index'])->name('search-history.index');
+    });
+    
+    // Import History
+    Route::middleware('permission:import-history.view')->group(function () {
+        Route::get('/import-history', [ImportHistoryController::class, 'index'])->name('import-history.index');
     });
 });
