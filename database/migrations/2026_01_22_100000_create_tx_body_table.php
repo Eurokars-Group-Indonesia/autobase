@@ -13,14 +13,14 @@ return new class extends Migration
             $table->string('part_no', 100);
             $table->unsignedInteger('invoice_no');
             $table->string('description', 250)->nullable();
-            $table->double('qty', 10, 2)->default(0);
-            $table->double('selling_price', 20, 2);
-            $table->double('discount', 3, 2)->default(0);
-            $table->double('extended_price', 20, 2)->default(0);
-            $table->double('menu_price', 20, 2)->default(0);
+            $table->decimal('qty', 10, 2)->default(0);
+            $table->decimal('selling_price', 20, 2);
+            $table->decimal('discount', 5, 2)->default(0);
+            $table->decimal('extended_price', 20, 2)->default(0);
+            $table->decimal('menu_price', 20, 2)->default(0);
             $table->char('vat', 1)->nullable();
             $table->char('menu_vat', 1)->nullable();
-            $table->double('cost_price', 20, 2)->default(0);
+            $table->decimal('cost_price', 20, 2)->default(0);
             $table->char('analysis_code', 1);
             $table->char('invoice_status', 1)->comment('X = Closed, C = Completed');
             $table->string('unit', 10)->comment('Example : Litre, Each, Pieces');
@@ -33,7 +33,7 @@ return new class extends Migration
             $table->char('sales_type', 1);
             $table->string('warranty_code', 3)->nullable();
             $table->char('menu_flag', 1)->nullable();
-            $table->double('contribution', 3, 2)->default(0);
+            $table->decimal('contribution', 5, 2)->default(0);
             $table->date('date_decard')->nullable();
             $table->unsignedInteger('magic_1');
             $table->unsignedInteger('magic_2');
@@ -43,7 +43,7 @@ return new class extends Migration
             $table->char('labour_rates', 1)->nullable();
             $table->string('supplier_code', 20)->nullable();
             $table->unsignedTinyInteger('menu_link')->default(0);
-            $table->double('currency_price', 20, 2)->nullable();
+            $table->decimal('currency_price', 20, 2)->nullable();
             $table->enum('part_or_labour', ['P', 'L']);
             $table->unsignedBigInteger('created_by');
             $table->dateTime('created_date')->nullable()->useCurrent();

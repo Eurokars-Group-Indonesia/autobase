@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\TransactionBody;
 use App\Imports\TransactionBodyImport;
 use App\Jobs\LogSearchHistory;
+use App\Jobs\LogImportHistory;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -95,6 +96,9 @@ class TransactionBodyController extends Controller
 
     public function import(Request $request)
     {
+        // Start timing
+        $startTime = microtime(true);
+        
         $request->validate([
             'file' => [
                 'required',
@@ -150,6 +154,22 @@ class TransactionBodyController extends Controller
                     'error' => implode(', ', $failure->errors())
                 ];
             }
+            
+            // Calculate execution time
+            $endTime = microtime(true);
+            $executionTime = ($endTime - $startTime) * 1000;
+            
+            // Calculate total rows (success + errors)
+            $totalRows = $successCount + count($allErrors);
+            
+            // Log import history asynchronously
+            LogImportHistory::dispatch(
+                auth()->id(),
+                $totalRows,
+                $successCount,
+                count($allErrors),
+                $executionTime
+            );
             
             if (count($allErrors) > 0) {
                 // Clear cache after import (even with errors, some data might be imported)

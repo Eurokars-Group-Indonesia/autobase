@@ -1,10 +1,10 @@
 @extends('layouts.app')
 
-@section('title', 'Search History')
+@section('title', 'Import History')
 
 @php
     $breadcrumbs = [
-        ['title' => 'Search History', 'url' => '#']
+        ['title' => 'Import History', 'url' => '#']
     ];
 @endphp
 
@@ -81,10 +81,10 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <span><i class="bi bi-clock-history"></i> Search History</span>
+                <span><i class="bi bi-file-earmark-arrow-up"></i> Import History</span>
             </div>
             <div class="card-body">
-                <form action="{{ route('search-history.index') }}" method="GET" id="searchForm">
+                <form action="{{ route('import-history.index') }}" method="GET" id="searchForm">
                     <div class="row mb-3">
                         <div class="col-md-1">
                             <label class="form-label">Per Page</label>
@@ -96,11 +96,12 @@
                             </select>
                         </div>
                         <div class="col-md-2">
-                            <label class="form-label">Transaction Type</label>
-                            <select class="form-select form-select-sm" name="transaction_type">
+                            <label class="form-label">Status</label>
+                            <select class="form-select form-select-sm" name="status">
                                 <option value="">All</option>
-                                <option value="H" {{ request('transaction_type') == 'H' ? 'selected' : '' }}>Header</option>
-                                <option value="B" {{ request('transaction_type') == 'B' ? 'selected' : '' }}>Body</option>
+                                <option value="success" {{ request('status') == 'success' ? 'selected' : '' }}>Success</option>
+                                <option value="partial" {{ request('status') == 'partial' ? 'selected' : '' }}>Partial</option>
+                                <option value="failed" {{ request('status') == 'failed' ? 'selected' : '' }}>Failed</option>
                             </select>
                         </div>
                         <div class="col-md-2">
@@ -130,8 +131,8 @@
                             <button class="btn btn-primary btn-sm me-2" type="submit">
                                 <i class="bi bi-search"></i> Filter
                             </button>
-                            @if(request('transaction_type') || request('user_id') || request('date_from') || request('date_to'))
-                                <a href="{{ route('search-history.index') }}" class="btn btn-secondary btn-sm">
+                            @if(request('status') || request('user_id') || request('date_from') || request('date_to'))
+                                <a href="{{ route('import-history.index') }}" class="btn btn-secondary btn-sm">
                                     <i class="bi bi-x-circle"></i> Clear
                                 </a>
                             @endif
@@ -145,10 +146,10 @@
                             <tr>
                                 <th style="min-width: 80px;">ID</th>
                                 <th style="min-width: 150px;">User</th>
-                                <th style="min-width: 100px;">Type</th>
-                                <th style="min-width: 200px;">Search Query</th>
-                                <th style="min-width: 120px;">Date From</th>
-                                <th style="min-width: 120px;">Date To</th>
+                                <th style="min-width: 100px;">Total Rows</th>
+                                <th style="min-width: 100px;">Success</th>
+                                <th style="min-width: 100px;">Error</th>
+                                <th style="min-width: 120px;">Success Rate</th>
                                 <th style="min-width: 150px;">Executed Date</th>
                                 <th style="min-width: 120px;">Execution Time</th>
                             </tr>
@@ -158,24 +159,40 @@
                                 <tr>
                                     <td>{{ ($histories->currentPage() - 1) * $histories->perPage() + $loop->iteration }}</td>
                                     <td>{{ $history->user->full_name ?? '-' }}</td>
+                                    <td>{{ number_format($history->total_row) }}</td>
                                     <td>
-                                        <span class="badge bg-{{ $history->transaction_type === 'H' ? 'primary' : 'success' }}">
-                                            {{ $history->getTransactionTypeLabel() }}
+                                        <span class="badge bg-success">
+                                            {{ number_format($history->success_row) }}
                                         </span>
                                     </td>
-                                    <td>{{ $history->search ?? '-' }}</td>
-                                    <td>{{ $history->date_from ? $history->date_from->format('d M Y') : '-' }}</td>
-                                    <td>{{ $history->date_to ? $history->date_to->format('d M Y') : '-' }}</td>
+                                    <td>
+                                        @if($history->error_row > 0)
+                                            <span class="badge bg-danger">
+                                                {{ number_format($history->error_row) }}
+                                            </span>
+                                        @else
+                                            <span class="badge bg-secondary">0</span>
+                                        @endif
+                                    </td>
+                                    <td>
+                                        @php
+                                            $successRate = $history->success_rate;
+                                            $badgeClass = $successRate == 100 ? 'success' : ($successRate >= 50 ? 'warning' : 'danger');
+                                        @endphp
+                                        <span class="badge bg-{{ $badgeClass }}">
+                                            {{ number_format($successRate, 2) }}%
+                                        </span>
+                                    </td>
                                     <td>{{ $history->executed_date->format('d M Y H:i:s') }}</td>
                                     <td>
-                                        <span class="badge bg-{{ $history->execution_time < 500 ? 'success' : ($history->execution_time < 1500 ? 'warning' : 'danger') }}">
+                                        <span class="badge bg-{{ $history->execution_time < 1000 ? 'success' : ($history->execution_time < 3000 ? 'warning' : 'danger') }}">
                                             {{ number_format($history->execution_time, 2) }} ms
                                         </span>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center">No search history found</td>
+                                    <td colspan="8" class="text-center">No import history found</td>
                                 </tr>
                             @endforelse
                         </tbody>
