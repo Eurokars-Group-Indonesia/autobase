@@ -19,14 +19,22 @@ class TransactionHeaderController extends Controller
         // Start timing
         $startTime = microtime(true);
         
+        // Get user's brand IDs from session
+        $userBrandIds = session('user_brand_ids', []);
+        
         // Check if there's any search/filter parameter
         $hasSearch = $request->has('search') && $request->search != '';
         $hasDateFrom = $request->has('date_from') && $request->date_from != '';
         $hasDateTo = $request->has('date_to') && $request->date_to != '';
         $hasFilter = $hasSearch || $hasDateFrom || $hasDateTo;
         
-        // Base query with brand
-        $query = TransactionHeader::with('brand')->where('tx_header.is_active', '1')->orderBy('tx_header.invoice_date', 'desc');
+        // Base query with brand filter
+        $query = TransactionHeader::with('brand')
+            ->where('tx_header.is_active', '1')
+            ->orderBy('tx_header.invoice_date', 'desc');
+        
+        // Filter by user's brands
+        $query->whereIn('tx_header.brand_id', $userBrandIds);
         
         // Only use cache when there's search/filter
         if ($hasFilter) {
@@ -148,7 +156,15 @@ class TransactionHeaderController extends Controller
 
     public function showImport()
     {
-        $brands = Brand::where('is_active', '1')->orderBy('brand_name')->get();
+        // Get user's brand IDs from session
+        $userBrandIds = session('user_brand_ids', []);
+        
+        // Filter brands based on user's access
+        $brands = Brand::where('is_active', '1')
+            ->whereIn('brand_id', $userBrandIds)
+            ->orderBy('brand_name')
+            ->get();
+            
         return view('transactions.import', compact('brands'));
     }
 
@@ -544,6 +560,17 @@ class TransactionHeaderController extends Controller
             'brand_id' => 'required',
         ]);
 
+        // Get user's brand IDs from session
+        $userBrandIds = session('user_brand_ids', []);
+        
+        // Check if user has access to this brand
+        if (!empty($userBrandIds) && !in_array($request->brand_id, $userBrandIds)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have access to this brand.'
+            ], 403);
+        }
+
         $bodies = \App\Models\TransactionBody::where('wip_no', $request->wip_no)
             ->where('invoice_no', $request->invoice_no)
             ->where('is_active', '1')
@@ -571,11 +598,14 @@ class TransactionHeaderController extends Controller
                 ->with('error', 'Please apply search or date filter before exporting.');
         }
 
+        // Get user's brand IDs from session
+        $userBrandIds = session('user_brand_ids', []);
+
         $filename = 'transaction_headers_' . date('Y-m-d_His') . '.xlsx';
 
-        // Export with body details
+        // Export with body details and brand filter
         return Excel::download(
-            new TransactionHeaderExport($search, $dateFrom, $dateTo),
+            new TransactionHeaderExport($search, $dateFrom, $dateTo, $userBrandIds),
             $filename
         );
     }

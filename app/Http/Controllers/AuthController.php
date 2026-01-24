@@ -31,6 +31,10 @@ class AuthController extends Controller
             // Update last login
             Auth::user()->update(['last_login' => now()]);
 
+            // Get user's brand IDs and store in session
+            $brandIds = Auth::user()->brands()->pluck('ms_brand.brand_id')->toArray();
+            session(['user_brand_ids' => $brandIds]);
+
             return redirect()->intended(route('dashboard'));
         }
 
@@ -42,6 +46,10 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         Auth::logout();
+        
+        // Clear user brand IDs from session
+        $request->session()->forget('user_brand_ids');
+        
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
