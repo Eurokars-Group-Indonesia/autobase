@@ -17,7 +17,9 @@ use App\Http\Controllers\ImportHistoryController;
 // Guest Routes
 Route::middleware('guest')->group(function () {
     Route::get('/', [AuthController::class, 'showLogin'])->name('login');
-    Route::post('/', [AuthController::class, 'login'])->name('login.post');
+    Route::post('/', [AuthController::class, 'login'])
+        ->middleware('throttle:5,1') // 5 attempts per minute
+        ->name('login.post');
 });
 
 // Authenticated Routes
