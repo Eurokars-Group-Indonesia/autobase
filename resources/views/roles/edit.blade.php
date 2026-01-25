@@ -59,14 +59,19 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Permissions</label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label mb-0">Permissions</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllPermissions">
+                                <i class="bi bi-check-all"></i> Select All
+                            </button>
+                        </div>
                         <div class="card">
                             <div class="card-body">
                                 <div class="row">
                                     @foreach($permissions as $permission)
                                         <div class="col-md-4">
                                             <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="permissions[]" 
+                                                <input class="form-check-input permission-checkbox" type="checkbox" name="permissions[]" 
                                                        value="{{ $permission->permission_id }}" id="perm{{ $permission->permission_id }}"
                                                        {{ in_array($permission->permission_id, $rolePermissions) ? 'checked' : '' }}>
                                                 <label class="form-check-label" for="perm{{ $permission->permission_id }}">
@@ -82,14 +87,19 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Menus</label>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label mb-0">Menus</label>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllMenus">
+                                <i class="bi bi-check-all"></i> Select All
+                            </button>
+                        </div>
                         <div class="card">
                             <div class="card-body">
                                 <div class="row">
                                     @foreach($menus as $menu)
                                         <div class="col-md-6 mb-3">
                                             <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" name="menus[]" 
+                                                <input class="form-check-input menu-checkbox" type="checkbox" name="menus[]" 
                                                        value="{{ $menu->menu_id }}" id="menu{{ $menu->menu_id }}"
                                                        {{ in_array($menu->menu_id, $roleMenus) ? 'checked' : '' }}>
                                                 <label class="form-check-label fw-bold" for="menu{{ $menu->menu_id }}">
@@ -100,7 +110,7 @@
                                                 <div class="ms-4">
                                                     @foreach($menu->children as $child)
                                                         <div class="form-check">
-                                                            <input class="form-check-input" type="checkbox" name="menus[]" 
+                                                            <input class="form-check-input menu-checkbox" type="checkbox" name="menus[]" 
                                                                    value="{{ $child->menu_id }}" id="menu{{ $child->menu_id }}"
                                                                    {{ in_array($child->menu_id, $roleMenus) ? 'checked' : '' }}>
                                                             <label class="form-check-label" for="menu{{ $child->menu_id }}">
@@ -131,3 +141,72 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    // Select All Permissions
+    document.getElementById('selectAllPermissions').addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.permission-checkbox');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !allChecked;
+        });
+        
+        // Update button text and icon
+        if (allChecked) {
+            this.innerHTML = '<i class="bi bi-check-all"></i> Select All';
+            this.classList.remove('btn-outline-danger');
+            this.classList.add('btn-outline-primary');
+        } else {
+            this.innerHTML = '<i class="bi bi-x-circle"></i> Deselect All';
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-outline-danger');
+        }
+    });
+
+    // Select All Menus
+    document.getElementById('selectAllMenus').addEventListener('click', function() {
+        const checkboxes = document.querySelectorAll('.menu-checkbox');
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !allChecked;
+        });
+        
+        // Update button text and icon
+        if (allChecked) {
+            this.innerHTML = '<i class="bi bi-check-all"></i> Select All';
+            this.classList.remove('btn-outline-danger');
+            this.classList.add('btn-outline-primary');
+        } else {
+            this.innerHTML = '<i class="bi bi-x-circle"></i> Deselect All';
+            this.classList.remove('btn-outline-primary');
+            this.classList.add('btn-outline-danger');
+        }
+    });
+
+    // Initialize button state on page load
+    window.addEventListener('DOMContentLoaded', function() {
+        // Check permissions
+        const permCheckboxes = document.querySelectorAll('.permission-checkbox');
+        const allPermChecked = Array.from(permCheckboxes).every(cb => cb.checked);
+        if (allPermChecked && permCheckboxes.length > 0) {
+            const btn = document.getElementById('selectAllPermissions');
+            btn.innerHTML = '<i class="bi bi-x-circle"></i> Deselect All';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-outline-danger');
+        }
+
+        // Check menus
+        const menuCheckboxes = document.querySelectorAll('.menu-checkbox');
+        const allMenuChecked = Array.from(menuCheckboxes).every(cb => cb.checked);
+        if (allMenuChecked && menuCheckboxes.length > 0) {
+            const btn = document.getElementById('selectAllMenus');
+            btn.innerHTML = '<i class="bi bi-x-circle"></i> Deselect All';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-outline-danger');
+        }
+    });
+</script>
+@endpush

@@ -19,7 +19,7 @@ class UserRequest extends FormRequest
         $rules = [
             'name' => 'required|string|max:150',
             'full_name' => 'required|string|max:150',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|max:20|regex:/^[0-9+]+$/',
             'dealer_id' => 'nullable|exists:ms_dealers,dealer_id',
             'roles' => 'nullable|array',
             'roles.*' => 'exists:ms_role,role_id',
@@ -61,6 +61,8 @@ class UserRequest extends FormRequest
             'email.email' => 'Format email tidak valid.',
             'email.unique' => 'Email sudah terdaftar. Silakan gunakan email lain.',
             'email.max' => 'Email maksimal 150 karakter.',
+            'phone.regex' => 'Phone hanya boleh berisi angka dan simbol +.',
+            'phone.max' => 'Phone maksimal 20 karakter.',
         ];
     }
 }
