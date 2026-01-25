@@ -51,28 +51,12 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Phone</label>
                             <input type="text" class="form-control @error('phone') is-invalid @enderror" 
-                                   name="phone" value="{{ old('phone', $user->phone) }}" maxlength="20">
+                                   name="phone" id="phone" value="{{ old('phone', $user->phone) }}" maxlength="20"
+                                   placeholder="e.g. +628123456789">
+                            <small class="text-muted">Only numbers and + symbol allowed</small>
                             @error('phone')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Brands</label>
-                        <div class="row">
-                            @foreach($brands as $brand)
-                                <div class="col-md-4">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="brands[]" 
-                                               value="{{ $brand->brand_id }}" id="brand{{ $brand->brand_id }}"
-                                               {{ in_array($brand->brand_id, $userBrands) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="brand{{ $brand->brand_id }}">
-                                            {{ $brand->brand_name }}
-                                        </label>
-                                    </div>
-                                </div>
-                            @endforeach
                         </div>
                     </div>
 
@@ -125,6 +109,24 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label">Brands</label>
+                        <div class="row">
+                            @foreach($brands as $brand)
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="brands[]" 
+                                               value="{{ $brand->brand_id }}" id="brand{{ $brand->brand_id }}"
+                                               {{ in_array($brand->brand_id, $userBrands) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="brand{{ $brand->brand_id }}">
+                                            {{ $brand->brand_name }}
+                                        </label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label">Status <span class="text-danger">*</span></label>
                         <select class="form-select @error('is_active') is-invalid @enderror" name="is_active" required>
                             <option value="1" {{ old('is_active', $user->is_active) == '1' ? 'selected' : '' }}>Active</option>
@@ -149,3 +151,30 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    // Phone input validation - only allow numbers and + symbol
+    document.getElementById('phone').addEventListener('input', function(e) {
+        // Remove any character that is not a digit or +
+        this.value = this.value.replace(/[^0-9+]/g, '');
+    });
+
+    // Prevent paste of invalid characters
+    document.getElementById('phone').addEventListener('paste', function(e) {
+        e.preventDefault();
+        const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+        const cleanedText = pastedText.replace(/[^0-9+]/g, '');
+        
+        // Insert cleaned text at cursor position
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        const currentValue = this.value;
+        this.value = currentValue.substring(0, start) + cleanedText + currentValue.substring(end);
+        
+        // Set cursor position after inserted text
+        const newPosition = start + cleanedText.length;
+        this.setSelectionRange(newPosition, newPosition);
+    });
+</script>
+@endpush

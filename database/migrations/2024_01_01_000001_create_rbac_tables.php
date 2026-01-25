@@ -47,6 +47,7 @@ return new class extends Migration
 
         // Table ms_role_permissions
         Schema::create('ms_role_permissions', function (Blueprint $table) {
+            $table->id('role_permission_id');
             $table->unsignedBigInteger('role_id');
             $table->unsignedBigInteger('permission_id');
             $table->unsignedBigInteger('created_by');
@@ -56,10 +57,9 @@ return new class extends Migration
             $table->char('unique_id', 36)->unique();
             $table->enum('is_active', ['0', '1'])->default('1')->nullable();
 
-            // Primary key composite
-            $table->primary(['role_id', 'permission_id']);
-            
             // Indexes
+            $table->index('role_id');
+            $table->index('permission_id');
             $table->index('created_by');
             $table->index('updated_by');
             $table->index('is_active');
