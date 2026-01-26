@@ -36,11 +36,6 @@ class RoleRequest extends FormRequest
         } else {
             $rules['role_code'] = 'required|string|max:10|unique:ms_role,role_code';
         }
-
-        // is_active only for update
-        if ($this->isMethod('put') || $this->isMethod('patch')) {
-            $rules['is_active'] = 'nullable|in:0,1';
-        }
         
         return $rules;
     }
