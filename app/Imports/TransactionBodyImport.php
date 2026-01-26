@@ -27,6 +27,12 @@ class TransactionBodyImport implements
     protected $errors = [];
     protected $successCount = 0;
     public $currentRow = 1;
+    protected $brandId;
+
+    public function __construct($brandId)
+    {
+        $this->brandId = $brandId;
+    }
 
     public function getErrors()
     {
@@ -321,17 +327,19 @@ class TransactionBodyImport implements
                 return null;
             }
 
-            // Check if record exists: part_no + invoice_no + wip_no + line
+            // Check if record exists: part_no + invoice_no + wip_no + line + brand_id
             $existing = TransactionBody::where('part_no', $row['part'])
                 ->where('invoice_no', $invoiceNo)
                 ->where('wip_no', $wipNo)
                 ->where('line', $line)
+                ->where('brand_id', $this->brandId)
                 ->first();
 
             // Prepare data
             $data = [
                 'part_no' => $row['part'],
                 'invoice_no' => $invoiceNo,
+                'brand_id' => $this->brandId,
                 'wip_no' => $wipNo,
                 'line' => $line,
                 'description' => $row['desc'] ?? null,

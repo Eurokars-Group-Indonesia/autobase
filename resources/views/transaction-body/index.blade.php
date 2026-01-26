@@ -138,6 +138,7 @@
                             <tr>
                                 <th style="min-width: 120px;">Part No</th>
                                 <th style="min-width: 120px;">Invoice No</th>
+                                <th style="min-width: 150px;">Brand</th>
                                 <th style="min-width: 120px;">WIP No</th>
                                 <th style="min-width: 250px;">Description</th>
                                 <th style="min-width: 100px;">Date Decard</th>
@@ -155,6 +156,7 @@
                                 <tr>
                                     <td>{{ $transaction->part_no }}</td>
                                     <td>{{ $transaction->invoice_no }}</td>
+                                    <td>{{ $transaction->brand->brand_name ?? '-' }}</td>
                                     <td>{{ $transaction->wip_no }}</td>
                                     <td>{{ $transaction->description ?? '-' }}</td>
                                     <td>{{ $transaction->date_decard ? $transaction->date_decard->format('d M Y') : '-' }}</td>
@@ -176,7 +178,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="12" class="text-center">No transaction body found</td>
+                                    <td colspan="13" class="text-center">No transaction body found</td>
                                 </tr>
                             @endforelse
                         </tbody>

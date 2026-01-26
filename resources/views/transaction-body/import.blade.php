@@ -198,6 +198,22 @@
                         @csrf
 
                         <div class="mb-3">
+                            <label class="form-label">Brand <span class="text-danger">*</span></label>
+                            <select name="brand_id" class="form-select" required>
+                                <option value="">-- Select Brand --</option>
+                                @foreach($brands as $brand)
+                                    <option value="{{ $brand->brand_id }}" {{ old('brand_id') == $brand->brand_id ? 'selected' : '' }}>
+                                        {{ $brand->brand_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="form-text">Select the brand for this import. Only brands assigned to you are shown.</div>
+                            @error('brand_id')
+                                <div class="text-danger small mt-1">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
                             <label class="form-label">Excel File <span class="text-danger">*</span></label>
                             
                             <div class="drop-zone" id="dropZone">
