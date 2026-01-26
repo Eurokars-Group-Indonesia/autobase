@@ -25,7 +25,6 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'dealer_id',
-        'brand_id',
         'name',
         'email',
         'full_name',
@@ -67,11 +66,6 @@ class User extends Authenticatable
     /**
      * Relationships
      */
-    public function brand()
-    {
-        return $this->belongsTo(Brand::class, 'brand_id', 'brand_id');
-    }
-
     public function dealer()
     {
         return $this->belongsTo(Dealer::class, 'dealer_id', 'dealer_id');
