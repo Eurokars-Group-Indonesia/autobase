@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use App\Rules\StrongPassword;
 
 class UserRequest extends FormRequest
 {
@@ -44,11 +45,30 @@ class UserRequest extends FormRequest
             $rules['email'] = 'required|email|max:150|unique:ms_users,email';
         }
 
-        // Password validation
+        // Password validation with strong password rules
         if ($this->isMethod('post')) {
-            $rules['password'] = 'required|string|min:8|max:255|confirmed';
+            $rules['password'] = [
+                'required',
+                'string',
+                'min:8',
+                'max:255',
+                'confirmed',
+                new StrongPassword($this->input('full_name'))
+            ];
         } else {
-            $rules['password'] = 'nullable|string|min:8|max:255|confirmed';
+            // For update, only validate if password is provided
+            if ($this->filled('password')) {
+                $rules['password'] = [
+                    'nullable',
+                    'string',
+                    'min:8',
+                    'max:255',
+                    'confirmed',
+                    new StrongPassword($this->input('full_name'))
+                ];
+            } else {
+                $rules['password'] = 'nullable|string|min:8|max:255|confirmed';
+            }
         }
 
         return $rules;
@@ -57,12 +77,15 @@ class UserRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'email.required' => 'Email wajib diisi.',
-            'email.email' => 'Format email tidak valid.',
-            'email.unique' => 'Email sudah terdaftar. Silakan gunakan email lain.',
-            'email.max' => 'Email maksimal 150 karakter.',
-            'phone.regex' => 'Phone hanya boleh berisi angka dan simbol +.',
-            'phone.max' => 'Phone maksimal 20 karakter.',
+            'email.required' => 'Email is required.',
+            'email.email' => 'Invalid email format.',
+            'email.unique' => 'Email already registered. Please use another email.',
+            'email.max' => 'Email maximum 150 characters.',
+            'phone.regex' => 'Phone can only contain numbers and + symbol.',
+            'phone.max' => 'Phone maximum 20 characters.',
+            'password.required' => 'Password is required.',
+            'password.min' => 'Password must be at least 8 characters.',
+            'password.confirmed' => 'Password confirmation does not match.',
         ];
     }
 }
