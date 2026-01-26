@@ -33,11 +33,6 @@ class BrandRequest extends FormRequest
         } else {
             $rules['brand_code'] = 'required|string|max:50|unique:ms_brand,brand_code';
         }
-
-        // is_active only for update
-        if ($this->isMethod('put') || $this->isMethod('patch')) {
-            $rules['is_active'] = 'nullable|in:0,1';
-        }
         
         return $rules;
     }

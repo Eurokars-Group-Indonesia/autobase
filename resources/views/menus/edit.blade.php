@@ -59,7 +59,7 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Parent Menu</label>
                             <select class="form-select @error('parent_id') is-invalid @enderror" name="parent_id">
                                 <option value="">-- No Parent --</option>
@@ -73,21 +73,11 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Menu Order <span class="text-danger">*</span></label>
                             <input type="number" class="form-control @error('menu_order') is-invalid @enderror" 
                                    name="menu_order" value="{{ old('menu_order', $menu->menu_order) }}" required>
                             @error('menu_order')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Status <span class="text-danger">*</span></label>
-                            <select class="form-select @error('is_active') is-invalid @enderror" name="is_active" required>
-                                <option value="1" {{ old('is_active', $menu->is_active) == '1' ? 'selected' : '' }}>Active</option>
-                                <option value="0" {{ old('is_active', $menu->is_active) == '0' ? 'selected' : '' }}>Inactive</option>
-                            </select>
-                            @error('is_active')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

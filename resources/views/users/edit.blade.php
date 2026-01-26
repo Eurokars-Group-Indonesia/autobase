@@ -152,17 +152,6 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Status <span class="text-danger">*</span></label>
-                        <select class="form-select @error('is_active') is-invalid @enderror" name="is_active" required>
-                            <option value="1" {{ old('is_active', $user->is_active) == '1' ? 'selected' : '' }}>Active</option>
-                            <option value="0" {{ old('is_active', $user->is_active) == '0' ? 'selected' : '' }}>Inactive</option>
-                        </select>
-                        @error('is_active')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
                     <div class="d-flex justify-content-between">
                         <a href="{{ route('users.index') }}" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Back

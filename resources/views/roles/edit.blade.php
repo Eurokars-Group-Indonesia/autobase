@@ -21,7 +21,7 @@
                     @csrf
                     @method('PUT')
                     <div class="row">
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Role Code <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('role_code') is-invalid @enderror" 
                                    name="role_code" value="{{ old('role_code', $role->role_code) }}" required maxlength="10">
@@ -29,21 +29,11 @@
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
-                        <div class="col-md-4 mb-3">
+                        <div class="col-md-6 mb-3">
                             <label class="form-label">Role Name <span class="text-danger">*</span></label>
                             <input type="text" class="form-control @error('role_name') is-invalid @enderror" 
                                    name="role_name" value="{{ old('role_name', $role->role_name) }}" required maxlength="50">
                             @error('role_name')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            <label class="form-label">Status <span class="text-danger">*</span></label>
-                            <select class="form-select @error('is_active') is-invalid @enderror" name="is_active" required>
-                                <option value="1" {{ old('is_active', $role->is_active) == '1' ? 'selected' : '' }}>Active</option>
-                                <option value="0" {{ old('is_active', $role->is_active) == '0' ? 'selected' : '' }}>Inactive</option>
-                            </select>
-                            @error('is_active')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>

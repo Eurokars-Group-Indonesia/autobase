@@ -35,11 +35,6 @@ class MenuRequest extends FormRequest
         } else {
             $rules['menu_code'] = 'required|string|max:50|unique:ms_menus,menu_code';
         }
-
-        // is_active only for update
-        if ($this->isMethod('put') || $this->isMethod('patch')) {
-            $rules['is_active'] = 'nullable|in:0,1';
-        }
         
         return $rules;
     }
