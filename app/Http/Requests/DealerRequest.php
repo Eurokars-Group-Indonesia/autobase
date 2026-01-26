@@ -32,11 +32,6 @@ class DealerRequest extends FormRequest
         } else {
             $rules['dealer_code'] = 'required|string|max:50|unique:ms_dealers,dealer_code';
         }
-
-        // is_active only for update
-        if ($this->isMethod('put') || $this->isMethod('patch')) {
-            $rules['is_active'] = 'nullable|in:0,1';
-        }
         
         return $rules;
     }

@@ -27,11 +27,6 @@ class UserRequest extends FormRequest
             'brands.*' => 'exists:ms_brand,brand_id',
         ];
 
-        // is_active only for update
-        if ($this->isMethod('put') || $this->isMethod('patch')) {
-            $rules['is_active'] = 'nullable|in:0,1';
-        }
-
         // Email validation - using unique_id for database check
         if ($user) {
             $rules['email'] = [
