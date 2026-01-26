@@ -45,7 +45,6 @@
                                 <th>No</th>
                                 <th>Code</th>
                                 <th>Name</th>
-                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -55,11 +54,6 @@
                                     <td>{{ ($permissions->currentPage() - 1) * $permissions->perPage() + $loop->iteration }}</td>
                                     <td>{{ $permission->permission_code }}</td>
                                     <td>{{ $permission->permission_name }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ $permission->is_active == '1' ? 'success' : 'danger' }}">
-                                            {{ $permission->is_active == '1' ? 'Active' : 'Inactive' }}
-                                        </span>
-                                    </td>
                                     <td>
                                         @if(auth()->user()->hasPermission('permissions.edit'))
                                             <a href="{{ route('permissions.edit', $permission->unique_id) }}" class="btn btn-sm btn-warning">
@@ -79,7 +73,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center">No permissions found</td>
+                                    <td colspan="4" class="text-center">No permissions found</td>
                                 </tr>
                             @endforelse
                         </tbody>

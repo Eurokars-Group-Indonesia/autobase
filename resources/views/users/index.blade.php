@@ -50,7 +50,6 @@
                                 <th>Brand</th>
                                 <th>Dealer</th>
                                 <th>Roles</th>
-                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -74,11 +73,6 @@
                                         @foreach($user->roles as $role)
                                             <span class="badge bg-primary">{{ $role->role_name }}</span>
                                         @endforeach
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-{{ $user->is_active == '1' ? 'success' : 'danger' }}">
-                                            {{ $user->is_active == '1' ? 'Active' : 'Inactive' }}
-                                        </span>
                                     </td>
                                     <td>
                                         @if(auth()->user()->hasPermission('users.edit'))
@@ -105,7 +99,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="10" class="text-center">No users found</td>
+                                    <td colspan="9" class="text-center">No users found</td>
                                 </tr>
                             @endforelse
                         </tbody>
