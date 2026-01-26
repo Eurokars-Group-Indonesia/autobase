@@ -46,7 +46,6 @@
                                 <th>Code</th>
                                 <th>Name</th>
                                 <th>City</th>
-                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -57,11 +56,6 @@
                                     <td>{{ $dealer->dealer_code }}</td>
                                     <td>{{ $dealer->dealer_name }}</td>
                                     <td>{{ $dealer->city ?? '-' }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ $dealer->is_active == '1' ? 'success' : 'danger' }}">
-                                            {{ $dealer->is_active == '1' ? 'Active' : 'Inactive' }}
-                                        </span>
-                                    </td>
                                     <td>
                                         @if(auth()->user()->hasPermission('dealers.edit'))
                                             <a href="{{ route('dealers.edit', $dealer->unique_id) }}" class="btn btn-sm btn-warning">
@@ -81,7 +75,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="text-center">No dealers found</td>
+                                    <td colspan="5" class="text-center">No dealers found</td>
                                 </tr>
                             @endforelse
                         </tbody>

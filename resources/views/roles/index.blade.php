@@ -47,7 +47,6 @@
                                 <th>Name</th>
                                 <th>Description</th>
                                 <th>Permissions</th>
-                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -60,11 +59,6 @@
                                     <td>{{ $role->role_description }}</td>
                                     <td>
                                         <span class="badge bg-info">{{ $role->permissions_count }} permissions</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-{{ $role->is_active == '1' ? 'success' : 'danger' }}">
-                                            {{ $role->is_active == '1' ? 'Active' : 'Inactive' }}
-                                        </span>
                                     </td>
                                     <td>
                                         @if(auth()->user()->hasPermission('roles.edit'))
@@ -85,7 +79,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">No roles found</td>
+                                    <td colspan="6" class="text-center">No roles found</td>
                                 </tr>
                             @endforelse
                         </tbody>

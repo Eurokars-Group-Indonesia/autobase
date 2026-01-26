@@ -49,7 +49,6 @@
                                 <th>Icon</th>
                                 <th>Parent</th>
                                 <th>Order</th>
-                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -65,11 +64,6 @@
                                     <td><i class="bi {{ $menu->menu_icon }}"></i></td>
                                     <td>{{ $menu->parent ? $menu->parent->menu_name : '-' }}</td>
                                     <td>{{ $menu->menu_order }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ $menu->is_active == '1' ? 'success' : 'danger' }}">
-                                            {{ $menu->is_active == '1' ? 'Active' : 'Inactive' }}
-                                        </span>
-                                    </td>
                                     <td>
                                         @if(auth()->user()->hasPermission('menus.edit'))
                                             <a href="{{ route('menus.edit', $menu->unique_id) }}" class="btn btn-sm btn-warning">
@@ -89,7 +83,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="text-center">No menus found</td>
+                                    <td colspan="8" class="text-center">No menus found</td>
                                 </tr>
                             @endforelse
                         </tbody>

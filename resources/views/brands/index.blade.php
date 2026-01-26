@@ -47,7 +47,6 @@
                                 <th>Name</th>
                                 <th>Brand Group</th>
                                 <th>Country Origin</th>
-                                <th>Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -59,11 +58,6 @@
                                     <td>{{ $brand->brand_name }}</td>
                                     <td>{{ $brand->brand_group ?? '-' }}</td>
                                     <td>{{ $brand->country_origin ?? '-' }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ $brand->is_active == '1' ? 'success' : 'danger' }}">
-                                            {{ $brand->is_active == '1' ? 'Active' : 'Inactive' }}
-                                        </span>
-                                    </td>
                                     <td>
                                         @if(auth()->user()->hasPermission('brands.edit'))
                                             <a href="{{ route('brands.edit', $brand->unique_id) }}" class="btn btn-sm btn-warning">
@@ -83,7 +77,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center">No brands found</td>
+                                    <td colspan="6" class="text-center">No brands found</td>
                                 </tr>
                             @endforelse
                         </tbody>
