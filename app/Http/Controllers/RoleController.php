@@ -120,11 +120,48 @@ class RoleController extends Controller
         $data['updated_by'] = auth()->id();
         $role->update($data);
 
-        // Sync permissions
-        $role->permissions()->detach();
-        if ($request->has('permissions')) {
-            foreach ($request->permissions as $permissionId) {
-                $role->permissions()->attach($permissionId, [
+        // Sync permissions (soft delete approach)
+        $requestedPermissions = $request->has('permissions') ? $request->permissions : [];
+        
+        // Get existing permissions
+        $existingPermissions = \DB::table('ms_role_permissions')
+            ->where('role_id', $role->role_id)
+            ->get();
+        
+        // Deactivate unchecked permissions
+        foreach ($existingPermissions as $existing) {
+            if (!in_array($existing->permission_id, $requestedPermissions)) {
+                \DB::table('ms_role_permissions')
+                    ->where('role_permission_id', $existing->role_permission_id)
+                    ->update([
+                        'is_active' => '0',
+                        'updated_by' => auth()->id(),
+                        'updated_date' => now()
+                    ]);
+            }
+        }
+        
+        // Activate or insert checked permissions
+        foreach ($requestedPermissions as $permissionId) {
+            $existing = \DB::table('ms_role_permissions')
+                ->where('role_id', $role->role_id)
+                ->where('permission_id', $permissionId)
+                ->first();
+            
+            if ($existing) {
+                // Reactivate if exists
+                \DB::table('ms_role_permissions')
+                    ->where('role_permission_id', $existing->role_permission_id)
+                    ->update([
+                        'is_active' => '1',
+                        'updated_by' => auth()->id(),
+                        'updated_date' => now()
+                    ]);
+            } else {
+                // Insert new
+                \DB::table('ms_role_permissions')->insert([
+                    'role_id' => $role->role_id,
+                    'permission_id' => $permissionId,
                     'unique_id' => (string) Str::uuid(),
                     'created_by' => auth()->id(),
                     'created_date' => now(),
@@ -133,11 +170,48 @@ class RoleController extends Controller
             }
         }
 
-        // Sync menus
-        $role->menus()->detach();
-        if ($request->has('menus')) {
-            foreach ($request->menus as $menuId) {
-                $role->menus()->attach($menuId, [
+        // Sync menus (soft delete approach)
+        $requestedMenus = $request->has('menus') ? $request->menus : [];
+        
+        // Get existing menus
+        $existingMenus = \DB::table('ms_role_menus')
+            ->where('role_id', $role->role_id)
+            ->get();
+        
+        // Deactivate unchecked menus
+        foreach ($existingMenus as $existing) {
+            if (!in_array($existing->menu_id, $requestedMenus)) {
+                \DB::table('ms_role_menus')
+                    ->where('role_menu_id', $existing->role_menu_id)
+                    ->update([
+                        'is_active' => '0',
+                        'updated_by' => auth()->id(),
+                        'updated_date' => now()
+                    ]);
+            }
+        }
+        
+        // Activate or insert checked menus
+        foreach ($requestedMenus as $menuId) {
+            $existing = \DB::table('ms_role_menus')
+                ->where('role_id', $role->role_id)
+                ->where('menu_id', $menuId)
+                ->first();
+            
+            if ($existing) {
+                // Reactivate if exists
+                \DB::table('ms_role_menus')
+                    ->where('role_menu_id', $existing->role_menu_id)
+                    ->update([
+                        'is_active' => '1',
+                        'updated_by' => auth()->id(),
+                        'updated_date' => now()
+                    ]);
+            } else {
+                // Insert new
+                \DB::table('ms_role_menus')->insert([
+                    'role_id' => $role->role_id,
+                    'menu_id' => $menuId,
                     'unique_id' => (string) Str::uuid(),
                     'created_by' => auth()->id(),
                     'created_date' => now(),
