@@ -19,17 +19,13 @@ class TransactionBodyController extends Controller
         // Get user's brand IDs (realtime query)
         $userBrandIds = auth()->user()->getBrandIds();
         
-        $query = TransactionBody::where('tx_body.is_active', '1')
+        $query = TransactionBody::with('brand')
+            ->where('tx_body.is_active', '1')
             ->orderBy('tx_body.created_date', 'desc');
         
-        // Filter by user's brands - join with header to get brand_id
+        // Filter by user's brands
         if (!empty($userBrandIds)) {
-            $query->join('tx_header', function($join) {
-                $join->on('tx_body.wip_no', '=', 'tx_header.wip_no')
-                     ->on('tx_body.invoice_no', '=', 'tx_header.invoice_no');
-            })
-            ->whereIn('tx_header.brand_id', $userBrandIds)
-            ->select('tx_body.*'); // Select only body columns
+            $query->whereIn('tx_body.brand_id', $userBrandIds);
         }
         
         // Check if there's any search/filter parameter
@@ -105,7 +101,16 @@ class TransactionBodyController extends Controller
 
     public function showImport()
     {
-        return view('transaction-body.import');
+        // Get user's brand IDs
+        $userBrandIds = auth()->user()->getBrandIds();
+        
+        // Get brands that user has access to
+        $brands = \App\Models\Brand::whereIn('brand_id', $userBrandIds)
+            ->where('is_active', '1')
+            ->orderBy('brand_name')
+            ->get();
+        
+        return view('transaction-body.import', compact('brands'));
     }
 
     public function import(Request $request)
@@ -114,12 +119,15 @@ class TransactionBodyController extends Controller
         $startTime = microtime(true);
         
         $request->validate([
+            'brand_id' => 'required|exists:ms_brand,brand_id',
             'file' => [
                 'required',
                 'file',
                 'max:10240',
             ],
         ], [
+            'brand_id.required' => 'Please select a brand.',
+            'brand_id.exists' => 'Selected brand is invalid.',
             'file.required' => 'Please select a file to upload.',
             'file.max' => 'File size must not exceed 10MB.',
         ]);
@@ -136,7 +144,7 @@ class TransactionBodyController extends Controller
         }
 
         try {
-            $import = new TransactionBodyImport();
+            $import = new TransactionBodyImport($request->brand_id);
             Excel::import($import, $file);
 
             // Get custom errors from import class
@@ -338,6 +346,7 @@ class TransactionBodyController extends Controller
             'body_id' => 'Body ID',
             'part_no' => 'Part Number (Part)',
             'invoice_no' => 'Invoice Number (InvNo)',
+            'brand_id' => 'Brand',
             'description' => 'Description (Desc)',
             'qty' => 'Quantity (Qty)',
             'selling_price' => 'Selling Price (SellPrice)',
