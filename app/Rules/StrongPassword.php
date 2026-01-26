@@ -39,8 +39,16 @@ class StrongPassword implements ValidationRule
         }
 
         // 4. Minimal ada 1 simbol
-        if (!preg_match('/[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]/', $value)) {
-            $fail('Password must contain at least 1 symbol (!@#$%^&*(),.?":{}|<>_-+=[]\/~`).');
+        $symbols = '!@#$%^&*(),.?":{}|<>_+=[]\/`-';
+        $hasSymbol = false;
+        for ($i = 0; $i < strlen($value); $i++) {
+            if (strpos($symbols, $value[$i]) !== false) {
+                $hasSymbol = true;
+                break;
+            }
+        }
+        if (!$hasSymbol) {
+            $fail('Password must contain at least 1 symbol (!@#$%^&*(),.?":{}|<>_-+=[]\/`).');
             return;
         }
 
