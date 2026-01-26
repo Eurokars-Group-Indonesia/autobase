@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'AutoBase')</title>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}">
     <link rel="icon" type="image/png" sizes="16x16" href="{{ asset('favicon-16x16.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32x32.png') }}">
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="manifest" href="{{ asset('site.webmanifest') }}">
-    
+
     <!-- Google Fonts - Poppins -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -30,7 +30,7 @@
             --border-color: #dee2e6;
             --navbar-bg: #002856;
             --card-header-bg: #002856;
-            
+
             /* Override Bootstrap blue color */
             --bs-blue: #002856;
             --bs-primary: #002856;
@@ -42,7 +42,7 @@
             --bs-pagination-active-bg: #002856;
             --bs-pagination-active-border-color: #002856;
         }
-        
+
         [data-theme="dark"] {
             --bg-body: #1a1d20;
             --bg-card: #2b3035;
@@ -52,7 +52,7 @@
             --navbar-bg: #1a1d20;
             --card-header-bg: #2b3035;
         }
-        
+
         body {
             font-family: 'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
             background-color: var(--bg-body);
@@ -69,7 +69,7 @@
             height: var(--navbar-height);
             transition: background-color 0.3s ease;
         }
-        
+
         [data-theme="dark"] .navbar-custom {
             border-bottom: 1px solid var(--border-color);
         }
@@ -106,27 +106,27 @@
             border: none;
             box-shadow: 0 4px 6px rgba(0,0,0,.1);
         }
-        
+
         [data-theme="dark"] .navbar-custom .dropdown-menu {
             background-color: var(--bg-card);
             border: 1px solid var(--border-color);
         }
-        
+
         [data-theme="dark"] .navbar-custom .dropdown-item {
             color: var(--text-primary);
         }
-        
+
         [data-theme="dark"] .navbar-custom .dropdown-item:hover,
         [data-theme="dark"] .navbar-custom .dropdown-item:focus {
             background-color: rgba(255,255,255,0.1);
             color: white;
         }
-        
+
         /* Mobile Menu Styling */
         .navbar-collapse {
             background-color: var(--navbar-bg);
         }
-        
+
         @media (max-width: 991.98px) {
             .navbar-collapse {
                 background-color: white;
@@ -135,63 +135,63 @@
                 border-radius: 10px;
                 box-shadow: 0 4px 6px rgba(0,0,0,.1);
             }
-            
+
             [data-theme="dark"] .navbar-collapse {
                 background-color: var(--bg-card);
             }
-            
+
             .navbar-nav .nav-link {
                 color: #212529 !important;
                 padding: 0.75rem 1rem;
                 border-radius: 5px;
                 margin-bottom: 0.25rem;
             }
-            
+
             [data-theme="dark"] .navbar-nav .nav-link {
                 color: var(--text-primary) !important;
             }
-            
+
             .navbar-nav .nav-link:hover {
                 background-color: #f8f9fa;
                 color: #002856 !important;
             }
-            
+
             [data-theme="dark"] .navbar-nav .nav-link:hover {
                 background-color: var(--bg-body);
                 color: #6ea8fe !important;
             }
-            
+
             .navbar-nav .dropdown-menu {
                 background-color: #f8f9fa;
                 border: none;
                 box-shadow: none;
                 margin-left: 1rem;
             }
-            
+
             [data-theme="dark"] .navbar-nav .dropdown-menu {
                 background-color: var(--bg-body);
             }
-            
+
             .navbar-nav .dropdown-item {
                 color: #212529;
                 padding: 0.5rem 1rem;
                 border-radius: 5px;
             }
-            
+
             [data-theme="dark"] .navbar-nav .dropdown-item {
                 color: var(--text-primary);
             }
-            
+
             .navbar-nav .dropdown-item:hover {
                 background-color: white;
                 color: #002856;
             }
-            
+
             [data-theme="dark"] .navbar-nav .dropdown-item:hover {
                 background-color: var(--bg-card);
                 color: #6ea8fe;
             }
-            
+
             .theme-toggle {
                 background: #002856 !important;
                 color: white !important;
@@ -204,44 +204,44 @@
                 font-size: 1.2rem;
                 border-radius: 5px;
             }
-            
+
             .theme-toggle:hover,
             .theme-toggle:focus,
             .theme-toggle:active {
                 background: #001a3d !important;
                 color: white !important;
             }
-            
+
             [data-theme="dark"] .theme-toggle {
                 background: #495057 !important;
                 color: white !important;
             }
-            
+
             [data-theme="dark"] .theme-toggle:hover,
             [data-theme="dark"] .theme-toggle:focus,
             [data-theme="dark"] .theme-toggle:active {
                 background: #5a6268 !important;
                 color: white !important;
             }
-            
+
             .user-avatar {
                 display: inline-flex;
                 margin-right: 0.5rem;
             }
-            
+
             .navbar-nav .dropdown-toggle {
                 color: #212529 !important;
             }
-            
+
             [data-theme="dark"] .navbar-nav .dropdown-toggle {
                 color: var(--text-primary) !important;
             }
         }
-        
+
         .navbar-toggler {
             border-color: rgba(255,255,255,0.5);
         }
-        
+
         .navbar-toggler-icon {
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
         }
@@ -266,7 +266,7 @@
             padding: 1rem 1.5rem;
             font-weight: 600;
         }
-        
+
         [data-theme="dark"] .card-header {
             border-bottom: 1px solid var(--border-color);
         }
@@ -362,7 +362,7 @@
             color: white;
             font-weight: 600;
         }
-        
+
         .theme-toggle {
             background: rgba(255,255,255,0.1);
             border: none;
@@ -383,7 +383,7 @@
         .theme-toggle i {
             font-size: 1.1rem;
         }
-        
+
         .form-control, .form-select {
             background-color: var(--bg-card);
             color: var(--text-primary);
@@ -392,179 +392,179 @@
             font-size: 0.875rem;
             padding: 0.25rem 0.5rem;
         }
-        
+
         .form-control:focus, .form-select:focus {
             background-color: var(--bg-card);
             color: var(--text-primary);
             border-color: #002856;
         }
-        
+
         .btn {
             font-size: 0.875rem;
             padding: 0.25rem 0.5rem;
         }
-        
+
         [data-theme="dark"] .form-control::placeholder {
             color: var(--text-secondary);
         }
-        
+
         .form-label, label {
             color: var(--text-primary);
             transition: color 0.3s ease;
         }
-        
+
         .form-check-label {
             color: var(--text-primary);
             transition: color 0.3s ease;
         }
-        
+
         .text-muted, small.text-muted {
             color: var(--text-secondary) !important;
         }
-        
+
         .card-body {
             color: var(--text-primary);
         }
-        
+
         .invalid-feedback {
             color: #dc3545;
         }
-        
+
         .text-danger {
             color: #dc3545 !important;
         }
-        
+
         [data-theme="dark"] .dropdown-menu {
             background-color: var(--bg-card);
             border-color: var(--border-color);
         }
-        
+
         [data-theme="dark"] .dropdown-item {
             color: var(--text-primary);
         }
-        
+
         [data-theme="dark"] .dropdown-item:hover {
             background-color: var(--bg-body);
             color: var(--text-primary);
         }
-        
+
         [data-theme="dark"] .dropdown-divider {
             border-color: var(--border-color);
         }
-        
+
         [data-theme="dark"] .alert {
             background-color: var(--bg-card);
             border-color: var(--border-color);
             color: var(--text-primary);
         }
-        
+
         [data-theme="dark"] .btn-light {
             background-color: var(--bg-card);
             border-color: var(--border-color);
             color: var(--text-primary);
         }
-        
+
         [data-theme="dark"] .btn-light:hover {
             background-color: var(--bg-body);
             color: var(--text-primary);
         }
-        
+
         [data-theme="dark"] .btn-secondary {
             background-color: #495057;
             border-color: #495057;
         }
-        
+
         [data-theme="dark"] .btn-secondary:hover {
             background-color: #5a6268;
             border-color: #5a6268;
         }
-        
+
         [data-theme="dark"] code {
             background-color: var(--bg-body);
             color: #f8f9fa;
         }
-        
+
         .fw-bold {
             color: var(--text-primary);
         }
-        
+
         [data-theme="dark"] .pagination .page-link {
             background-color: var(--bg-card);
             border-color: var(--border-color);
             color: var(--text-primary);
         }
-        
+
         [data-theme="dark"] .pagination .page-link:hover {
             background-color: var(--bg-body);
             color: var(--text-primary);
         }
-        
+
         [data-theme="dark"] .pagination .page-item.active .page-link {
             background-color: #FA891A;
             border-color: #FA891A;
             color: black;
         }
-        
+
         [data-theme="dark"] .pagination .page-item.disabled .page-link {
             background-color: var(--bg-card);
             border-color: var(--border-color);
             color: var(--text-secondary);
         }
-        
+
         .pagination .page-link svg {
             width: 0.875rem;
             height: 0.875rem;
             vertical-align: middle;
         }
-        
+
         .pagination {
             margin-bottom: 0;
         }
-        
+
         .pagination .page-link {
             padding: 0.375rem 0.75rem;
             font-size: 0.875rem;
             min-width: 40px;
             text-align: center;
         }
-        
+
         .pagination .page-item:first-child .page-link,
         .pagination .page-item:last-child .page-link {
             min-width: 60px;
             font-weight: 500;
         }
-        
+
         .pagination .page-item.active .page-link {
             font-weight: 600;
             background-color: #002856;
             border-color: #002856;
             color: white;
         }
-        
+
         h1, h2, h3, h4, h5, h6 {
             color: var(--text-primary);
         }
-        
+
         p {
             color: var(--text-primary);
         }
-        
+
         a {
             color: #002856;
         }
-        
+
         [data-theme="dark"] a:not(.btn):not(.nav-link):not(.dropdown-item):not(.page-link) {
             color: #FA891A;
         }
-        
+
         .input-group .btn {
             border-radius: 0 5px 5px 0;
         }
-        
+
         .input-group .form-control {
             border-radius: 5px 0 0 5px;
         }
-        
+
         .input-group .btn:not(:last-child) {
             border-radius: 0;
         }
@@ -576,7 +576,7 @@
         [data-theme="dark"] .breadcrumb-item+.breadcrumb-item::before {
             color: white;
         }
-        
+
         /* Footer */
         footer {
             background-color: var(--bg-card);
@@ -584,11 +584,11 @@
             transition: background-color 0.3s ease, color 0.3s ease;
             margin-top: auto;
         }
-        
+
         footer .border-top {
             border-color: var(--border-color) !important;
         }
-        
+
         /* Prevent horizontal scroll on mobile */
         @media (max-width: 767.98px) {
             html, body {
@@ -667,8 +667,8 @@
                             {{ auth()->user()->name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Profile</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Settings</a></li>
+                            {{-- <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Profile</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Settings</a></li> --}}
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form action="{{ route('logout') }}" method="POST">
@@ -735,21 +735,21 @@
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
         const htmlElement = document.documentElement;
-        
+
         // Check for saved theme preference or default to 'light'
         const currentTheme = localStorage.getItem('theme') || 'light';
         htmlElement.setAttribute('data-theme', currentTheme);
         updateThemeIcon(currentTheme);
-        
+
         themeToggle.addEventListener('click', function() {
             const currentTheme = htmlElement.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-            
+
             htmlElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateThemeIcon(newTheme);
         });
-        
+
         function updateThemeIcon(theme) {
             if (theme === 'dark') {
                 themeIcon.className = 'bi bi-sun';
