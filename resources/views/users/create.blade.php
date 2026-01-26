@@ -78,10 +78,36 @@
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Password <span class="text-danger">*</span></label>
                             <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                   name="password" required maxlength="255">
+                                   name="password" id="password" required maxlength="255">
                             @error('password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+                            
+                            <!-- Password Strength Indicator -->
+                            <div class="mt-2" id="password-requirements">
+                                <small class="d-block mb-1 fw-bold text-muted">Password Requirements:</small>
+                                <small class="d-block password-req" id="req-length">
+                                    <i class="bi bi-circle"></i> Minimum 8 characters
+                                </small>
+                                <small class="d-block password-req" id="req-uppercase">
+                                    <i class="bi bi-circle"></i> At least 1 uppercase letter
+                                </small>
+                                <small class="d-block password-req" id="req-lowercase">
+                                    <i class="bi bi-circle"></i> At least 1 lowercase letter
+                                </small>
+                                <small class="d-block password-req" id="req-symbol">
+                                    <i class="bi bi-circle"></i> At least 1 symbol (!@#$%^&*...)
+                                </small>
+                                <small class="d-block password-req" id="req-number">
+                                    <i class="bi bi-circle"></i> At least 1 number
+                                </small>
+                                <small class="d-block password-req" id="req-sequential">
+                                    <i class="bi bi-circle"></i> No sequential numbers (123, 234, 321, etc)
+                                </small>
+                                <small class="d-block password-req" id="req-name">
+                                    <i class="bi bi-circle"></i> Must not contain part of your name
+                                </small>
+                            </div>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
@@ -138,6 +164,24 @@
 </div>
 @endsection
 
+@push('styles')
+<style>
+    .password-req {
+        color: #6c757d;
+        transition: color 0.3s ease;
+    }
+    .password-req.valid {
+        color: #198754;
+    }
+    .password-req.valid i {
+        color: #198754;
+    }
+    .password-req i {
+        font-size: 0.7rem;
+    }
+</style>
+@endpush
+
 @push('scripts')
 <script>
     // Phone input validation - only allow numbers and + symbol
@@ -162,5 +206,117 @@
         const newPosition = start + cleanedText.length;
         this.setSelectionRange(newPosition, newPosition);
     });
+
+    // Password strength validation
+    const passwordInput = document.getElementById('password');
+    const fullNameInput = document.querySelector('input[name="full_name"]');
+    
+    function checkPasswordStrength() {
+        const password = passwordInput.value;
+        const fullName = fullNameInput.value;
+        
+        // 1. Minimum 8 characters
+        const hasLength = password.length >= 8;
+        updateRequirement('req-length', hasLength);
+        
+        // 2. At least 1 uppercase letter
+        const hasUppercase = /[A-Z]/.test(password);
+        updateRequirement('req-uppercase', hasUppercase);
+        
+        // 3. At least 1 lowercase letter
+        const hasLowercase = /[a-z]/.test(password);
+        updateRequirement('req-lowercase', hasLowercase);
+        
+        // 4. At least 1 symbol
+        const hasSymbol = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]/.test(password);
+        updateRequirement('req-symbol', hasSymbol);
+        
+        // 5. At least 1 number
+        const hasNumber = /[0-9]/.test(password);
+        updateRequirement('req-number', hasNumber);
+        
+        // 6. No sequential numbers
+        const hasNoSequential = !hasSequentialNumbers(password);
+        updateRequirement('req-sequential', hasNoSequential);
+        
+        // 7. Must not contain part of name
+        const hasNoName = !containsNamePart(password, fullName);
+        updateRequirement('req-name', hasNoName);
+    }
+    
+    function updateRequirement(elementId, isValid) {
+        const element = document.getElementById(elementId);
+        if (isValid) {
+            element.classList.add('valid');
+            element.querySelector('i').className = 'bi bi-check-circle-fill';
+        } else {
+            element.classList.remove('valid');
+            element.querySelector('i').className = 'bi bi-circle';
+        }
+    }
+    
+    function hasSequentialNumbers(password) {
+        const numbers = password.match(/\d/g);
+        if (!numbers || numbers.length < 3) return false;
+        
+        // Check ascending sequences
+        for (let i = 0; i < numbers.length - 2; i++) {
+            if (parseInt(numbers[i + 1]) === parseInt(numbers[i]) + 1 &&
+                parseInt(numbers[i + 2]) === parseInt(numbers[i]) + 2) {
+                return true;
+            }
+        }
+        
+        // Check descending sequences
+        for (let i = 0; i < numbers.length - 2; i++) {
+            if (parseInt(numbers[i + 1]) === parseInt(numbers[i]) - 1 &&
+                parseInt(numbers[i + 2]) === parseInt(numbers[i]) - 2) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    function containsNamePart(password, fullName) {
+        if (!fullName || fullName.length < 3) return false;
+        
+        const passwordLower = password.toLowerCase();
+        const passwordNormalized = convertLeetSpeak(passwordLower);
+        const nameParts = fullName.toLowerCase().split(/\s+/);
+        
+        for (const namePart of nameParts) {
+            if (namePart.length < 3) continue;
+            
+            // Check substrings of name (minimum 3 characters)
+            for (let i = 0; i <= namePart.length - 3; i++) {
+                const substring = namePart.substring(i);
+                if (substring.length < 3) continue;
+                
+                // Direct match
+                if (passwordLower.includes(substring)) return true;
+                
+                // Leet speak match
+                if (passwordNormalized.includes(substring)) return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    function convertLeetSpeak(text) {
+        const leetMap = {
+            '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's',
+            '7': 't', '8': 'b', '@': 'a', '$': 's', '!': 'i', '+': 't'
+        };
+        
+        return text.split('').map(char => leetMap[char] || char).join('');
+    }
+    
+    // Add event listeners
+    passwordInput.addEventListener('input', checkPasswordStrength);
+    passwordInput.addEventListener('keyup', checkPasswordStrength);
+    fullNameInput.addEventListener('input', checkPasswordStrength);
+    fullNameInput.addEventListener('keyup', checkPasswordStrength);
 </script>
 @endpush
