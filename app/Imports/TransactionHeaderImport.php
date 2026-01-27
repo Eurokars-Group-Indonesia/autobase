@@ -103,7 +103,7 @@ class TransactionHeaderImport implements
                     'row' => $this->currentRow,
                     'field' => 'MAGICH',
                     'value' => $row['magich'] ?? 'empty',
-                    'error' => 'Vehicle ID (MAGICH) is required and must be a valid number'
+                    'error' => '(MAGICH) is required and must be a valid number'
                 ];
             }
 

@@ -53,7 +53,7 @@ return [
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_0900_ai_ci'),
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
@@ -62,21 +62,7 @@ return [
                 (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
                 PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => false,
                 PDO::MYSQL_ATTR_LOCAL_INFILE => true,
-                // Enable persistent connections for connection pooling
-                PDO::ATTR_PERSISTENT => env('DB_PERSISTENT', false),
-                // Set connection timeout
-                PDO::ATTR_TIMEOUT => env('DB_TIMEOUT', 5),
-                // Enable emulated prepares for better performance
-                PDO::ATTR_EMULATE_PREPARES => env('DB_EMULATE_PREPARES', true),
             ]) : [],
-            // Connection pool settings
-            'pool' => [
-                'min_connections' => env('DB_POOL_MIN', 2),
-                'max_connections' => env('DB_POOL_MAX', 10),
-            ],
-            // Reconnect settings
-            'sticky' => env('DB_STICKY', false),
-            'read_write_timeout' => env('DB_READ_WRITE_TIMEOUT', 60),
         ],
 
         'mariadb' => [
@@ -89,28 +75,14 @@ return [
             'password' => env('DB_PASSWORD', ''),
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
-            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_0900_ai_ci'),
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? \Pdo\Mysql::ATTR_SSL_CA : \PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
-                // Enable persistent connections for connection pooling
-                PDO::ATTR_PERSISTENT => env('DB_PERSISTENT', false),
-                // Set connection timeout
-                PDO::ATTR_TIMEOUT => env('DB_TIMEOUT', 5),
-                // Enable emulated prepares for better performance
-                PDO::ATTR_EMULATE_PREPARES => env('DB_EMULATE_PREPARES', true),
             ]) : [],
-            // Connection pool settings
-            'pool' => [
-                'min_connections' => env('DB_POOL_MIN', 2),
-                'max_connections' => env('DB_POOL_MAX', 10),
-            ],
-            // Reconnect settings
-            'sticky' => env('DB_STICKY', false),
-            'read_write_timeout' => env('DB_READ_WRITE_TIMEOUT', 60),
         ],
 
         'pgsql' => [

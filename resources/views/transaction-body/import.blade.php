@@ -367,7 +367,7 @@
 
                     <h6 class="mt-3">Notes</h6>
                     <ul class="small text-muted">
-                        <li>The import uses <strong>updateOrCreate</strong> based on Part + InvNo + WIPNo + Line</li>
+                        <li>The import uses <strong>updateOrCreate</strong> based on Part + InvNo + WIPNo + HMagic2 + Line</li>
                         <li>Existing records will be updated</li>
                         <li>New records will be created</li>
                         <li>Date format: YYYY-MM-DD or Excel date</li>

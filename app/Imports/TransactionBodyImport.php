@@ -152,6 +152,16 @@ class TransactionBodyImport implements
                 ];
             }
 
+            // Validate required numeric fields
+            if ($magic2 === null || $magic2 === '') {
+                $rowErrors[] = [
+                    'row' => $this->currentRow,
+                    'field' => 'HMagic2',
+                    'value' => $row['hmagic2'] ?? 'empty',
+                    'error' => '(HMagic2) is required and must be a valid number'
+                ];
+            }
+
             // Validate analysis_code (required, 1 char)
             $analysisCode = strtoupper($row['analcode'] ?? '');
             if (empty($analysisCode) || strlen($analysisCode) > 1) {
@@ -332,6 +342,7 @@ class TransactionBodyImport implements
                 ->where('invoice_no', $invoiceNo)
                 ->where('wip_no', $wipNo)
                 ->where('line', $line)
+                ->where('magic_2', $magic2)
                 ->where('brand_id', $this->brandId)
                 ->first();
 
@@ -496,17 +507,20 @@ class TransactionBodyImport implements
 
     private function parseNumeric($value)
     {
+       // Check if value is null or empty string (but allow 0)
         if ($value === null || $value === '') {
             return null;
         }
         
+        // If value is already 0, return 0
         if ($value === 0 || $value === '0') {
             return 0;
         }
         
-        $cleaned = preg_replace('/[^0-9\-]/', '', $value);
+        // Remove any non-numeric characters except decimal point and minus
+        //$cleaned = preg_replace('/[^0-9\-]/', '', $value);
         
-        return is_numeric($cleaned) ? (int)$cleaned : null;
+        return is_numeric($value) ? (int)$value : null;
     }
 
     private function parseDecimal($value)
