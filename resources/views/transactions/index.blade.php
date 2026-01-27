@@ -396,7 +396,8 @@
                 <div id="modalContent" style="display: none;">
                     <div class="mb-3">
                         <strong>WIP No:</strong> <span id="modalWipNo"></span> | 
-                        <strong>Invoice No:</strong> <span id="modalInvNo"></span>
+                        <strong>Invoice No:</strong> <span id="modalInvNo"></span> | 
+                        <strong>Magic ID:</strong> <span id="modalMagicId"></span>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-sm table-bordered table-hover">
@@ -565,6 +566,7 @@
             // Set header info
             $('#modalWipNo').text(wipNo);
             $('#modalInvNo').text(invNo);
+            $('#modalMagicId').text(magicId);
             
             // Fetch data via AJAX
             $.ajax({
