@@ -77,11 +77,18 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control @error('password') is-invalid @enderror" 
-                                   name="password" id="password" required maxlength="255">
+                            <div class="input-group">
+                                <input type="password" class="form-control @error('password') is-invalid @enderror" 
+                                       name="password" id="password" required maxlength="255">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                    <i class="bi bi-eye" id="passwordIcon"></i>
+                                </button>
+                            </div>
                             @error('password')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
+
+                            <br/>
                             
                             <!-- Password Strength Indicator -->
                             <div class="mt-2" id="password-requirements">
@@ -111,7 +118,15 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Confirm Password <span class="text-danger">*</span></label>
-                            <input type="password" class="form-control" name="password_confirmation" required maxlength="255">
+                            <div class="input-group">
+                                <input type="password" class="form-control" name="password_confirmation" id="passwordConfirmation" required maxlength="255">
+                                <button class="btn btn-outline-secondary" type="button" id="togglePasswordConfirmation">
+                                    <i class="bi bi-eye" id="passwordConfirmationIcon"></i>
+                                </button>
+                            </div>
+                            <div id="passwordMatchError" class="text-danger mt-1" style="display: none;">
+                                <small><i class="bi bi-exclamation-circle"></i> Password and confirm password not equal</small>
+                            </div>
                         </div>
                     </div>
 
@@ -153,7 +168,7 @@
                         <a href="{{ route('users.index') }}" class="btn btn-secondary">
                             <i class="bi bi-arrow-left"></i> Back
                         </a>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" id="submitButton">
                             <i class="bi bi-save"></i> Save User
                         </button>
                     </div>
@@ -176,8 +191,20 @@
     .password-req.valid i {
         color: #198754;
     }
+    .password-req.invalid {
+        color: #dc3545;
+    }
+    .password-req.invalid i {
+        color: #dc3545;
+    }
     .password-req i {
         font-size: 0.7rem;
+    }
+    
+    /* Style for disabled submit button */
+    .btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
     }
 </style>
 @endpush
@@ -228,7 +255,14 @@
         updateRequirement('req-lowercase', hasLowercase);
         
         // 4. At least 1 symbol
-        const hasSymbol = /[!@#$%^&*(),.?":{}|<>_\-+=\[\]\\\/~`]/.test(password);
+        const symbols = '!@#$%^&*(),.?":{}|<>_+=[]\/`-';
+        let hasSymbol = false;
+        for (let i = 0; i < password.length; i++) {
+            if (symbols.includes(password[i])) {
+                hasSymbol = true;
+                break;
+            }
+        }
         updateRequirement('req-symbol', hasSymbol);
         
         // 5. At least 1 number
@@ -242,16 +276,21 @@
         // 7. Must not contain part of name
         const hasNoName = !containsNamePart(password, fullName);
         updateRequirement('req-name', hasNoName);
+        
+        // Check all requirements and update submit button
+        checkAllRequirements();
     }
     
     function updateRequirement(elementId, isValid) {
         const element = document.getElementById(elementId);
         if (isValid) {
             element.classList.add('valid');
+            element.classList.remove('invalid');
             element.querySelector('i').className = 'bi bi-check-circle-fill';
         } else {
             element.classList.remove('valid');
-            element.querySelector('i').className = 'bi bi-circle';
+            element.classList.add('invalid');
+            element.querySelector('i').className = 'bi bi-x-circle-fill';
         }
     }
     
@@ -304,6 +343,81 @@
         return false;
     }
     
+    function checkPasswordMatch() {
+        const password = passwordInput.value;
+        const passwordConfirmation = document.getElementById('passwordConfirmation').value;
+        const errorElement = document.getElementById('passwordMatchError');
+        const confirmPasswordField = document.getElementById('passwordConfirmation');
+        
+        if (passwordConfirmation.length > 0) {
+            if (password !== passwordConfirmation) {
+                errorElement.style.display = 'block';
+                confirmPasswordField.classList.add('is-invalid');
+                return false;
+            } else {
+                errorElement.style.display = 'none';
+                confirmPasswordField.classList.remove('is-invalid');
+                return true;
+            }
+        } else {
+            errorElement.style.display = 'none';
+            confirmPasswordField.classList.remove('is-invalid');
+            return passwordConfirmation.length === 0; // Return true if empty (not required to match when empty)
+        }
+    }
+    
+    function checkAllRequirements() {
+        const password = passwordInput.value;
+        const fullName = document.querySelector('input[name="full_name"]').value;
+        
+        // Check all password requirements
+        const hasLength = password.length >= 8;
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasLowercase = /[a-z]/.test(password);
+        const symbols = '!@#$%^&*(),.?":{}|<>_+=[]\/`-';
+        let hasSymbol = false;
+        for (let i = 0; i < password.length; i++) {
+            if (symbols.includes(password[i])) {
+                hasSymbol = true;
+                break;
+            }
+        }
+        const hasNumber = /[0-9]/.test(password);
+        const hasNoSequential = !hasSequentialNumbers(password);
+        const hasNoName = !containsNamePart(password, fullName);
+        
+        // Check password match
+        const passwordsMatch = checkPasswordMatch();
+        
+        // All requirements must be met
+        const allValid = hasLength && hasUppercase && hasLowercase && hasSymbol && 
+                        hasNumber && hasNoSequential && hasNoName && passwordsMatch;
+        
+        // Enable/disable submit button
+        const submitButton = document.getElementById('submitButton');
+        if (password.length > 0) { // Only check if password is not empty
+            if (allValid) {
+                submitButton.disabled = false;
+                submitButton.classList.remove('btn-secondary');
+                submitButton.classList.add('btn-primary');
+                submitButton.title = '';
+            } else {
+                submitButton.disabled = true;
+                submitButton.classList.remove('btn-primary');
+                submitButton.classList.add('btn-secondary');
+                submitButton.title = 'Please meet all password requirements and ensure passwords match';
+            }
+        } else {
+            // If password is empty, enable submit (for edit form where password is optional)
+            submitButton.disabled = false;
+            submitButton.classList.remove('btn-secondary');
+            submitButton.classList.add('btn-primary');
+            submitButton.title = '';
+        }
+        
+        return allValid;
+    }
+    
     function convertLeetSpeak(text) {
         const leetMap = {
             '0': 'o', '1': 'i', '3': 'e', '4': 'a', '5': 's',
@@ -313,10 +427,58 @@
         return text.split('').map(char => leetMap[char] || char).join('');
     }
     
-    // Add event listeners
-    passwordInput.addEventListener('input', checkPasswordStrength);
-    passwordInput.addEventListener('keyup', checkPasswordStrength);
-    fullNameInput.addEventListener('input', checkPasswordStrength);
-    fullNameInput.addEventListener('keyup', checkPasswordStrength);
+    // Add event listeners - hanya untuk password field dan password confirmation
+    passwordInput.addEventListener('input', function() {
+        checkPasswordStrength();
+        checkAllRequirements();
+    });
+    passwordInput.addEventListener('keyup', function() {
+        checkPasswordStrength();
+        checkAllRequirements();
+    });
+    
+    // Tambahkan event listener untuk password confirmation
+    const passwordConfirmationInput = document.getElementById('passwordConfirmation');
+    if (passwordConfirmationInput) {
+        passwordConfirmationInput.addEventListener('input', function() {
+            checkPasswordStrength();
+            checkAllRequirements();
+        });
+        passwordConfirmationInput.addEventListener('keyup', function() {
+            checkPasswordStrength();
+            checkAllRequirements();
+        });
+    }
+
+    // Password toggle functionality
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordField = document.getElementById('password');
+        const passwordIcon = document.getElementById('passwordIcon');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            passwordIcon.classList.remove('bi-eye');
+            passwordIcon.classList.add('bi-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            passwordIcon.classList.remove('bi-eye-slash');
+            passwordIcon.classList.add('bi-eye');
+        }
+    });
+
+    document.getElementById('togglePasswordConfirmation').addEventListener('click', function() {
+        const passwordConfirmationField = document.getElementById('passwordConfirmation');
+        const passwordConfirmationIcon = document.getElementById('passwordConfirmationIcon');
+        
+        if (passwordConfirmationField.type === 'password') {
+            passwordConfirmationField.type = 'text';
+            passwordConfirmationIcon.classList.remove('bi-eye');
+            passwordConfirmationIcon.classList.add('bi-eye-slash');
+        } else {
+            passwordConfirmationField.type = 'password';
+            passwordConfirmationIcon.classList.remove('bi-eye-slash');
+            passwordConfirmationIcon.classList.add('bi-eye');
+        }
+    });
 </script>
 @endpush
