@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Role;
 use App\Http\Requests\UserRequest;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 
 class UserController extends Controller
@@ -85,6 +86,9 @@ class UserController extends Controller
             }
         }
 
+        // Flush cache
+        Cache::flush();
+
         return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
@@ -152,6 +156,9 @@ class UserController extends Controller
             }
         }
 
+        // Flush cache
+        Cache::flush();
+
         return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
 
@@ -173,6 +180,10 @@ class UserController extends Controller
         }
         
         $user->update(['is_active' => '0', 'updated_by' => auth()->id()]);
+        
+        // Flush cache
+        Cache::flush();
+        
         return redirect()->route('users.index')->with('success', 'User deleted successfully.');
     }
 }
