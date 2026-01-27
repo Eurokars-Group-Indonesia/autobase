@@ -99,24 +99,25 @@ class TransactionHeaderController extends Controller
             if ($transactions->count() > 0) {
                 // Get all transaction keys
                 $transactionKeys = $transactions->map(function($t) {
-                    return $t->wip_no . '|' . $t->invoice_no . '|' . $t->magic_id;
+                    return $t->brand_id . '|' . $t->wip_no . '|' . $t->invoice_no . '|' . $t->magic_id;
                 })->toArray();
                 
                 // Fetch all bodies at once
                 $allBodies = \DB::table('tx_body')
                     ->where('is_active', '1')
-                    ->whereIn(\DB::raw("CONCAT(wip_no, '|', invoice_no, '|', magic_2)"), $transactionKeys)
+                    ->whereIn(\DB::raw("CONCAT(brand_id, '|', wip_no, '|', invoice_no, '|', magic_2)"), $transactionKeys)
+                    ->orderBy('brand_id')
                     ->orderBy('wip_no')
                     ->orderBy('invoice_no')
                     ->orderBy('line')
                     ->get()
                     ->groupBy(function($body) {
-                        return $body->wip_no . '|' . $body->invoice_no . '|' . $body->magic_2;
+                        return $body->brand_id . '|' . $body->wip_no . '|' . $body->invoice_no . '|' . $body->magic_2;
                     });
                 
                 // Assign bodies to each transaction
                 foreach ($transactions as $transaction) {
-                    $key = $transaction->wip_no . '|' . $transaction->invoice_no . '|' . $transaction->magic_id;
+                    $key = $transaction->brand_id . '|' . $transaction->wip_no . '|' . $transaction->invoice_no . '|' . $transaction->magic_id;
                     $bodies = $allBodies->get($key, collect());
                     
                     $transaction->bodies = $bodies->map(function($body) {
