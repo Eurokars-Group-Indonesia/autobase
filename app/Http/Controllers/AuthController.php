@@ -49,7 +49,10 @@ class AuthController extends Controller
             Cache::forget($key);
             
             // Update last login
-            Auth::user()->update(['last_login' => now()]);
+            Auth::user()->update([
+                'last_login' => now(),
+                'updated_by' => Auth::id()
+            ]);
             
             // Log successful login
             Log::info('User logged in successfully', [
