@@ -53,21 +53,28 @@ class TransactionHeaderController extends Controller
                 // Search by text - search in header and body
                 if ($request->has('search') && $request->search != '') {
                     $search = $request->search;
-                    $query->where(function($q) use ($search) {
+                    $query->where(function($q) use ($search, $userBrandIds) {
                         // Search in header fields
-                        $q->where('tx_header.customer_name', 'like', $search . '%')
-                          ->orWhere('tx_header.chassis', 'like', $search . '%')
-                          ->orWhere('tx_header.invoice_no', 'like', $search . '%')
-                          ->orWhere('tx_header.wip_no', 'like', $search . '%')
-                          ->orWhere('tx_header.registration_no', 'like', $search . '%')
-                          ->orWhereDate('tx_header.invoice_date', '=', $search)
+                        $q->where(function($headerWhere) use ($search, $userBrandIds) {
+                            $headerWhere->whereIn('tx_header.brand_id', $userBrandIds)
+                                        ->where(function($searchWhere) use ($search) {
+                                            $searchWhere->where('tx_header.customer_name', 'like', $search . '%')
+                                                        ->orWhere('tx_header.chassis', 'like', $search . '%')
+                                                        ->orWhere('tx_header.invoice_no', 'like', $search . '%')
+                                                        ->orWhere('tx_header.wip_no', 'like', $search . '%')
+                                                        ->orWhere('tx_header.registration_no', 'like', $search . '%')
+                                                        ->orWhereDate('tx_header.invoice_date', '=', $search);
+                                        });
+                          })
                           // Search in body fields using whereExists
-                          ->orWhereExists(function($existsQuery) use ($search) {
+                          ->orWhereExists(function($existsQuery) use ($search, $userBrandIds) {
                               $existsQuery->select(\DB::raw(1))
                                           ->from('tx_body')
                                           ->whereColumn('tx_body.wip_no', 'tx_header.wip_no')
                                           ->whereColumn('tx_body.invoice_no', 'tx_header.invoice_no')
                                           ->whereColumn('tx_body.magic_2', 'tx_header.magic_id')
+                                          ->whereColumn('tx_body.brand_id', 'tx_header.brand_id')
+                                          ->whereIn('tx_body.brand_id', $userBrandIds)
                                           ->where('tx_body.is_active', '1')
                                           ->where(function($bodyWhere) use ($search) {
                                               $bodyWhere->where('tx_body.part_no', 'like', $search . '%')
