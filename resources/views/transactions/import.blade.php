@@ -102,10 +102,68 @@
         border-radius: 3px;
         color: #721c24;
     }
+    
+    /* Loading Overlay */
+    .loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        z-index: 9999;
+        justify-content: center;
+        align-items: center;
+    }
+    
+    .loading-overlay.show {
+        display: flex;
+    }
+    
+    .loading-content {
+        text-align: center;
+        color: white;
+    }
+    
+    .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid #FA891A;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 10px;
+    }
+    
+    .loading-subtext {
+        font-size: 14px;
+        opacity: 0.8;
+    }
 </style>
 @endpush
 
 @section('content')
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-content">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Processing Import...</div>
+        <div class="loading-subtext">Please wait, this may take a few moments</div>
+    </div>
+</div>
+
 <div class="container-fluid">
     <div class="row mb-3">
         <div class="col-12">
@@ -316,6 +374,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const fileName = document.getElementById('fileName');
     const fileSize = document.getElementById('fileSize');
     const submitBtn = document.getElementById('submitBtn');
+    const importForm = document.getElementById('importForm');
+    const loadingOverlay = document.getElementById('loadingOverlay');
     
     // Allowed file types
     const allowedTypes = [
@@ -413,6 +473,23 @@ document.addEventListener('DOMContentLoaded', function() {
         fileInfo.classList.remove('show');
         submitBtn.disabled = false;
     };
+    
+    // Show loading overlay on form submit
+    importForm.addEventListener('submit', function(e) {
+        // Validate form before showing overlay
+        if (!importForm.checkValidity()) {
+            return;
+        }
+        
+        // Show loading overlay
+        loadingOverlay.classList.add('show');
+        
+        // Disable submit button to prevent double submission
+        submitBtn.disabled = true;
+        
+        // Prevent any clicks on the page
+        document.body.style.pointerEvents = 'none';
+    });
 });
 </script>
 @endpush
