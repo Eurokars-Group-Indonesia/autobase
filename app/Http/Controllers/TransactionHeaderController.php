@@ -49,7 +49,7 @@ class TransactionHeaderController extends Controller
             $cacheKey = "header:{$userId}:{$search}:{$dateFrom}:{$dateTo}:{$perPage}:{$page}";
             
             // Try to get from cache (1 hour)
-            $transactions = cache()->remember($cacheKey, now()->addHour(), function () use ($request, $query) {
+            $transactions = cache()->remember($cacheKey, now()->addHour(), function () use ($request, $query, $userBrandIds) {
                 // Search by text - search in header and body
                 if ($request->has('search') && $request->search != '') {
                     $search = $request->search;
