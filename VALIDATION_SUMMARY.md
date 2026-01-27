@@ -18,7 +18,7 @@
 ### Validasi Integer:
 - **wip_no** - Harus integer, tidak boleh text seperti "WIP000001"
 - **invoice_no** - Harus integer
-- **vehicle_id (MAGICH)** - Harus integer
+- **magic_id (MAGICH)** - Harus integer
 - **mileage** - Harus integer (0 diperbolehkan)
 
 ### Validasi Enum:
@@ -27,7 +27,7 @@
 ### Validasi Required:
 - **wip_no** - Required
 - **invoice_date** - Required
-- **vehicle_id** - Required
+- **magic_id** - Required
 - **invoice_no** - Required
 - **mileage** - Required
 - **currency_code** - Required

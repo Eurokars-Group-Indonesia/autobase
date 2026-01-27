@@ -67,6 +67,7 @@ class TransactionHeaderController extends Controller
                                           ->from('tx_body')
                                           ->whereColumn('tx_body.wip_no', 'tx_header.wip_no')
                                           ->whereColumn('tx_body.invoice_no', 'tx_header.invoice_no')
+                                          ->whereColumn('tx_body.magic_2', 'tx_header.magic_id')
                                           ->where('tx_body.is_active', '1')
                                           ->where(function($bodyWhere) use ($search) {
                                               $bodyWhere->where('tx_body.part_no', 'like', $search . '%')
@@ -98,24 +99,24 @@ class TransactionHeaderController extends Controller
             if ($transactions->count() > 0) {
                 // Get all transaction keys
                 $transactionKeys = $transactions->map(function($t) {
-                    return $t->wip_no . '|' . $t->invoice_no;
+                    return $t->wip_no . '|' . $t->invoice_no . '|' . $t->magic_id;
                 })->toArray();
                 
                 // Fetch all bodies at once
                 $allBodies = \DB::table('tx_body')
                     ->where('is_active', '1')
-                    ->whereIn(\DB::raw("CONCAT(wip_no, '|', invoice_no)"), $transactionKeys)
+                    ->whereIn(\DB::raw("CONCAT(wip_no, '|', invoice_no, '|', magic_2)"), $transactionKeys)
                     ->orderBy('wip_no')
                     ->orderBy('invoice_no')
                     ->orderBy('line')
                     ->get()
                     ->groupBy(function($body) {
-                        return $body->wip_no . '|' . $body->invoice_no;
+                        return $body->wip_no . '|' . $body->invoice_no . '|' . $body->magic_2;
                     });
                 
                 // Assign bodies to each transaction
                 foreach ($transactions as $transaction) {
-                    $key = $transaction->wip_no . '|' . $transaction->invoice_no;
+                    $key = $transaction->wip_no . '|' . $transaction->invoice_no . '|' . $transaction->magic_id;
                     $bodies = $allBodies->get($key, collect());
                     
                     $transaction->bodies = $bodies->map(function($body) {
@@ -483,7 +484,7 @@ class TransactionHeaderController extends Controller
             'address_5' => 'Address 5 (Add5)',
             'department' => 'Department (Dept)',
             'invoice_date' => 'Invoice Date (InvDate)',
-            'vehicle_id' => 'Vehicle ID (MAGICH)',
+            'magic_id' => 'Magic ID (MAGICH)',
             'document_type' => 'Document Type (DocType)',
             'exchange_rate' => 'Exchange Rate',
             'registration_no' => 'Registration Number (RegNo)',
@@ -558,6 +559,7 @@ class TransactionHeaderController extends Controller
             'wip_no' => 'required',
             'invoice_no' => 'required',
             'brand_id' => 'required',
+            'magic_id' => 'required',
         ]);
 
         // Get user's brand IDs (realtime query)
@@ -573,6 +575,8 @@ class TransactionHeaderController extends Controller
 
         $bodies = \App\Models\TransactionBody::where('wip_no', $request->wip_no)
             ->where('invoice_no', $request->invoice_no)
+            ->where('brand_id', $request->brand_id)
+            ->where('magic_2', $request->magic_id)
             ->where('is_active', '1')
             ->orderBy('line')
             ->get();

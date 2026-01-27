@@ -27,7 +27,7 @@ class TransactionHeader extends Model
         'address_5',
         'department',
         'invoice_date',
-        'vehicle_id',
+        'magic_id',
         'document_type',
         'exchange_rate',
         'registration_no',

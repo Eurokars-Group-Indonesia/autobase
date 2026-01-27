@@ -22,7 +22,7 @@ return new class extends Migration
             $table->text('address_5')->nullable();
             $table->string('department', 50)->nullable();
             $table->date('invoice_date');
-            $table->unsignedInteger('vehicle_id');
+            $table->unsignedInteger('magic_id');
             $table->enum('document_type', ['I', 'C'])->comment('I = Invoice, C = Credit Note');
             $table->decimal('exchange_rate', 10, 2)->nullable();
             $table->string('registration_no', 20)->nullable();

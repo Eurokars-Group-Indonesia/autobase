@@ -51,6 +51,7 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
                                   ->from('tx_body')
                                   ->whereColumn('tx_body.wip_no', 'tx_header.wip_no')
                                   ->whereColumn('tx_body.invoice_no', 'tx_header.invoice_no')
+                                  ->whereColumn('tx_body.magic_2', 'tx_header.magic_id')
                                   ->where('tx_body.is_active', '1')
                                   ->where(function($bodyWhere) use ($search) {
                                       $bodyWhere->where('tx_body.part_no', 'like', $search . '%')
@@ -74,26 +75,26 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
         
         // Get all bodies in one query using whereIn
         $transactionKeys = $transactions->map(function($t) {
-            return $t->wip_no . '|' . $t->invoice_no;
+            return $t->wip_no . '|' . $t->invoice_no . '|' . $t->magic_id;
         })->toArray();
         
         // Fetch all bodies at once
         $allBodies = \DB::table('tx_body')
             ->where('is_active', '1')
-            ->whereIn(\DB::raw("CONCAT(wip_no, '|', invoice_no)"), $transactionKeys)
+            ->whereIn(\DB::raw("CONCAT(wip_no, '|', invoice_no, '|', magic_2)"), $transactionKeys)
             ->orderBy('wip_no')
             ->orderBy('invoice_no')
             ->orderBy('line')
             ->get()
             ->groupBy(function($body) {
-                return $body->wip_no . '|' . $body->invoice_no;
+                return $body->wip_no . '|' . $body->invoice_no . '|' . $body->magic_2;
             });
         
         // Transform data to flat structure with 2 separate tables
         $rows = collect();
         
         foreach ($transactions as $transaction) {
-            $key = $transaction->wip_no . '|' . $transaction->invoice_no;
+            $key = $transaction->wip_no . '|' . $transaction->invoice_no . '|' . $transaction->magic_id;
             $bodies = $allBodies->get($key, collect());
             
             // Add empty row for spacing (except first transaction)

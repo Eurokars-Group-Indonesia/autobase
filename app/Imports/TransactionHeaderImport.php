@@ -90,7 +90,7 @@ class TransactionHeaderImport implements
             }
 
             // Parse numeric fields
-            $vehicleId = $this->parseNumeric($row['magich'] ?? null);
+            $magicId = $this->parseNumeric($row['magich'] ?? null);
             $mileage = $this->parseNumeric($row['mileage'] ?? null);
             $invoiceNo = $this->parseNumeric($row['invno'] ?? null);
             $exchangeRate = $this->parseDecimal($row['exchangerate'] ?? null);
@@ -98,7 +98,7 @@ class TransactionHeaderImport implements
             $netValue = $this->parseDecimal($row['netvalue'] ?? null);
 
             // Validate required numeric fields
-            if ($vehicleId === null || $vehicleId === '') {
+            if ($magicId === null || $magicId === '') {
                 $rowErrors[] = [
                     'row' => $this->currentRow,
                     'field' => 'MAGICH',
@@ -256,10 +256,11 @@ class TransactionHeaderImport implements
                 return null;
             }
 
-            // Check if record exists: wipno + invno + brand
+            // Check if record exists: wipno + invno + brand + magic_id
             $existing = TransactionHeader::where('wip_no', $wipNo)
                 ->where('invoice_no', $invoiceNo)
                 ->where('brand_id', $this->brandId)
+                ->where('magic_id', $magicId)
                 ->first();
 
             // Prepare data
@@ -276,7 +277,7 @@ class TransactionHeaderImport implements
                 'address_5' => $row['add5'] ?? null,
                 'department' => $row['dept'] ?? null,
                 'invoice_date' => $invoiceDate,
-                'vehicle_id' => $vehicleId,
+                'magic_id' => $magicId,
                 'document_type' => $docType,
                 'exchange_rate' => $exchangeRate,
                 'registration_no' => $row['regno'] ?? null,

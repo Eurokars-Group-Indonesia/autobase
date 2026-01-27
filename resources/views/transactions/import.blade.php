@@ -334,7 +334,7 @@
                         <li><strong>Dept</strong> - Department</li>
                         <li><strong>InvNo</strong> - Invoice Number</li>
                         <li><strong>InvDate</strong> - Invoice Date</li>
-                        <li><strong>MAGICH</strong> - Vehicle ID</li>
+                        <li><strong>MAGICH</strong> - Magic ID</li>
                         <li><strong>DocType</strong> - Document Type</li>
                         <li><strong>ExchangeRate</strong> - Exchange Rate</li>
                         <li><strong>RegNo</strong> - Registration Number</li>

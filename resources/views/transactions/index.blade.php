@@ -333,6 +333,7 @@
                                                     data-wipno="{{ $transaction->wip_no }}" 
                                                     data-invno="{{ $transaction->invoice_no }}" 
                                                     data-brandid="{{ $transaction->brand_id }}"
+                                                    data-magicid="{{ $transaction->magic_id }}"
                                                     title="View Details">
                                                 <i class="bi bi-eye"></i>
                                             </button>
@@ -547,8 +548,9 @@
             const wipNo = $(this).data('wipno');
             const invNo = $(this).data('invno');
             const brandId = $(this).data('brandid');
+            const magicId = $(this).data('magicid');
             
-            console.log('View details clicked:', wipNo, invNo);
+            console.log('View details clicked:', wipNo, invNo, magicId);
             
             // Show modal
             const modal = new bootstrap.Modal(document.getElementById('detailsModal'));
@@ -571,7 +573,8 @@
                 data: {
                     wip_no: wipNo,
                     invoice_no: invNo,
-                    brand_id: brandId
+                    brand_id: brandId,
+                    magic_id: magicId
                 },
                 success: function(response) {
                     $('#modalLoading').hide();

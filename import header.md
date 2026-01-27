@@ -41,7 +41,7 @@ diatas adalah nama header di excel nya, nah nanti dari header di atas insert ke 
 9. Dept	-> department
 10. InvNo -> invoice_no
 11. InvDate	-> invoice_date
-12. MAGICH	-> vehicle_id
+12. MAGICH	-> magic_id
 13. DocType	-> document_type
 14. ExchangeRate -> exchange_rate
 15. RegNo -> registration_no
