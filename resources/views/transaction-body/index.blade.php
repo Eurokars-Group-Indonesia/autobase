@@ -51,7 +51,7 @@
     }
 
     .form-label, label {
-        font-size: 12px;
+        font-size: 13px;
     }
     
     /* Prevent horizontal scroll on mobile */
