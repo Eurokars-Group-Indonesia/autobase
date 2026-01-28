@@ -36,16 +36,27 @@ class TransactionHeaderController extends Controller
         // hasFilter untuk tampilan body details (hanya jika ada search atau date, bukan brand saja)
         $hasFilter = $hasSearch || $hasDateFrom || $hasDateTo;
         
+        // Get brand_code if brand_id is selected
+        $brandCode = null;
+        if ($hasBrandFilter) {
+            $selectedBrand = Brand::where('brand_id', $request->brand_id)->first();
+            $brandCode = $selectedBrand ? $selectedBrand->brand_code : null;
+        }
+        
         // Base query with brand filter
         $query = TransactionHeader::with('brand')
             ->where('tx_header.is_active', '1')
             ->orderBy('tx_header.invoice_date', 'desc');
         
         // Filter by user's brands or specific brand if selected
-        if ($hasBrandFilter) {
-            $query->where('tx_header.brand_id', $request->brand_id);
+        if ($hasBrandFilter && $brandCode) {
+            $query->where('tx_header.brand_code', $brandCode);
         } else {
-            $query->whereIn('tx_header.brand_id', $userBrandIds);
+            // Get brand codes for user's brands
+            $userBrandCodes = Brand::whereIn('brand_id', $userBrandIds)
+                ->pluck('brand_code')
+                ->toArray();
+            $query->whereIn('tx_header.brand_code', $userBrandCodes);
         }
         
         // Only use cache when there's search/filter (including brand filter for query optimization)
@@ -87,13 +98,13 @@ class TransactionHeaderController extends Controller
                             }
                         })
                         // Search in body fields using whereExists - optimized with limit
-                        ->orWhereExists(function($existsQuery) use ($search, $userBrandIds, $isDate) {
+                        ->orWhereExists(function($existsQuery) use ($search, $isDate) {
                             $existsQuery->select(\DB::raw(1))
                                         ->from('tx_body')
                                         ->whereColumn('tx_body.wip_no', 'tx_header.wip_no')
                                         ->whereColumn('tx_body.invoice_no', 'tx_header.invoice_no')
                                         ->whereColumn('tx_body.magic_2', 'tx_header.magic_id')
-                                        ->whereColumn('tx_body.brand_id', 'tx_header.brand_id')
+                                        ->whereColumn('tx_body.brand_code', 'tx_header.brand_code')
                                         ->where('tx_body.is_active', '1')
                                         ->where(function($bodyWhere) use ($search, $isDate) {
                                             $bodyWhere->where('tx_body.part_no', 'like', $search . '%')
@@ -131,28 +142,28 @@ class TransactionHeaderController extends Controller
                 // Build WHERE IN conditions for better performance than CONCAT
                 $wipNos = $transactions->pluck('wip_no')->unique()->toArray();
                 $invoiceNos = $transactions->pluck('invoice_no')->unique()->toArray();
-                $brandIds = $transactions->pluck('brand_id')->unique()->toArray();
+                $brandCodes = $transactions->pluck('brand_code')->unique()->toArray();
                 $magicIds = $transactions->pluck('magic_id')->unique()->toArray();
                 
                 // Fetch all bodies at once with optimized query
                 $allBodies = \DB::table('tx_body')
-                    ->select('brand_id', 'wip_no', 'invoice_no', 'magic_2', 'line', 'part_no', 'description', 
+                    ->select('brand_code', 'wip_no', 'invoice_no', 'magic_2', 'line', 'part_no', 'description', 
                              'qty', 'selling_price', 'discount', 'extended_price', 'date_decard', 'body_id',
                              'account_code', 'department', 'invoice_status', 'unit', 'part_or_labour')
                     ->where('is_active', '1')
                     ->whereIn('wip_no', $wipNos)
                     ->whereIn('invoice_no', $invoiceNos)
-                    ->whereIn('brand_id', $brandIds)
+                    ->whereIn('brand_code', $brandCodes)
                     ->whereIn('magic_2', $magicIds)
                     ->orderBy('line')
                     ->get()
                     ->groupBy(function($body) {
-                        return $body->brand_id . '|' . $body->wip_no . '|' . $body->invoice_no . '|' . $body->magic_2;
+                        return $body->brand_code . '|' . $body->wip_no . '|' . $body->invoice_no . '|' . $body->magic_2;
                     });
                 
                 // Assign bodies to each transaction
                 foreach ($transactions as $transaction) {
-                    $key = $transaction->brand_id . '|' . $transaction->wip_no . '|' . $transaction->invoice_no . '|' . $transaction->magic_id;
+                    $key = $transaction->brand_code . '|' . $transaction->wip_no . '|' . $transaction->invoice_no . '|' . $transaction->magic_id;
                     $bodies = $allBodies->get($key, collect());
                     
                     // Direct assignment without model conversion for better performance

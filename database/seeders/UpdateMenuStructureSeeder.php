@@ -16,7 +16,7 @@ class UpdateMenuStructureSeeder extends Seeder
      */
     public function run(): void
     {
-        $adminUserId = 1; // Assuming admin user ID is 1
+        $adminUserId = DB::table('ms_users')->where('email', 'admin@example.com')->value('user_id');
 
         // ========================================
         // 1. Tambahkan Permission Baru
@@ -90,7 +90,10 @@ class UpdateMenuStructureSeeder extends Seeder
             ]);
             echo "✅ Created menu: Master\n";
         } else {
-            $masterMenu->update(['menu_order' => 2]);
+            $masterMenu->update([
+                'menu_order' => 2,
+                'updated_by' => $adminUserId
+            ]);
             echo "ℹ️  Menu already exists: Master\n";
         }
 
@@ -100,6 +103,7 @@ class UpdateMenuStructureSeeder extends Seeder
             $brandsMenu->update([
                 'parent_id' => $masterMenu->menu_id,
                 'menu_order' => 1,
+                'updated_by' => $adminUserId
             ]);
             echo "✅ Updated menu: Brands (moved under Master)\n";
         } else {
@@ -123,6 +127,7 @@ class UpdateMenuStructureSeeder extends Seeder
             $dealersMenu->update([
                 'parent_id' => $masterMenu->menu_id,
                 'menu_order' => 2,
+                'updated_by' => $adminUserId
             ]);
             echo "✅ Updated menu: Dealers (moved under Master)\n";
         } else {
@@ -161,6 +166,7 @@ class UpdateMenuStructureSeeder extends Seeder
             $transactionsMenu->update([
                 'menu_url' => null, // Make it parent menu
                 'menu_order' => 3,
+                'updated_by' => $adminUserId
             ]);
             echo "✅ Updated menu: Transactions (converted to parent menu)\n";
         }
@@ -230,6 +236,7 @@ class UpdateMenuStructureSeeder extends Seeder
             $searchHistoryMenu->update([
                 'parent_id' => $historyMenu->menu_id,
                 'menu_order' => 1,
+                'updated_by' => $adminUserId
             ]);
             echo "✅ Updated menu: Search History (moved under History)\n";
         } else {
@@ -253,6 +260,7 @@ class UpdateMenuStructureSeeder extends Seeder
             $importHistoryMenu->update([
                 'parent_id' => $historyMenu->menu_id,
                 'menu_order' => 2,
+                'updated_by' => $adminUserId
             ]);
             echo "✅ Updated menu: Import History (moved under History)\n";
         } else {

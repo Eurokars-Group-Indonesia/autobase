@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('tx_header', function (Blueprint $table) {
             $table->unsignedInteger('header_id')->primary()->autoIncrement();
-            $table->unsignedInteger('brand_id');
+            $table->string('brand_code', 50);
             $table->unsignedInteger('invoice_no');
             $table->unsignedInteger('wip_no');
             $table->string('account_code', 20)->nullable();
@@ -44,6 +44,7 @@ return new class extends Migration
             $table->enum('is_active', ['0', '1'])->nullable()->default('1');
             
             // Indexes
+            $table->index('brand_code', 'idx_brand_code');
             $table->index('customer_name', 'idx_customer_name');
             $table->index('chassis', 'idx_chassis');
             $table->index('invoice_date', 'idx_invoice_date');

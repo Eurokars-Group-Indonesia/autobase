@@ -18,13 +18,17 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RBACSeeder::class,
             BrandSeeder::class,
+            AddRollsRoyceBrandSeeder::class,
             DealerSeeder::class,
+            ImportHistoryMenuSeeder::class,
+            ImportHistoryPermissionSeeder::class,
             SearchHistoryMenuSeeder::class,
             SearchHistoryPermissionSeeder::class,
             TransactionBodyImportPermissionSeeder::class,
-            TransactionBodySeeder::class,
+            // TransactionBodySeeder::class,
             TransactionHeaderSeeder::class,
             TransactionImportPermissionSeeder::class,
+            UpdateMenuStructureSeeder::class
         ]);
     }
 }

@@ -12,15 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tx_body', function (Blueprint $table) {
-            $table->unsignedBigInteger('brand_id')->after('invoice_no');
-            $table->index('brand_id', 'idx_brand_id');
-            
-            // Foreign key
-            $table->foreign('brand_id', 'fk_tx_body_brand_id')
-                ->references('brand_id')
-                ->on('ms_brand')
-                ->onDelete('restrict')
-                ->onUpdate('restrict');
+            $table->string('brand_code', 50)->after('invoice_no');
+            $table->index('brand_code', 'idx_brand_code');
         });
     }
 
@@ -30,9 +23,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tx_body', function (Blueprint $table) {
-            $table->dropForeign('fk_tx_body_brand_id');
-            $table->dropIndex('idx_brand_id');
-            $table->dropColumn('brand_id');
+            $table->dropIndex('idx_brand_code');
+            $table->dropColumn('brand_code');
         });
     }
 };

@@ -15,7 +15,7 @@ class TransactionHeader extends Model
     const UPDATED_AT = 'updated_date';
 
     protected $fillable = [
-        'brand_id',
+        'brand_code',
         'invoice_no',
         'wip_no',
         'account_code',
@@ -42,6 +42,7 @@ class TransactionHeader extends Model
         'description',
         'engine_no',
         'account_company',
+        'dealer_code',
         'created_by',
         'updated_by',
         'unique_id',
@@ -71,7 +72,7 @@ class TransactionHeader extends Model
 
     public function brand()
     {
-        return $this->belongsTo(Brand::class, 'brand_id', 'brand_id');
+        return $this->belongsTo(Brand::class, 'brand_code', 'brand_code');
     }
 
     /**

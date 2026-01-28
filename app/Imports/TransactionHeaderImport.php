@@ -25,6 +25,7 @@ class TransactionHeaderImport implements
     use SkipsFailures;
 
     protected $brandId;
+    protected $brandCode;
     protected $errors = [];
     protected $successCount = 0;
     public $currentRow = 1; // Start from 1 (header row) - public agar bisa diakses dari controller
@@ -32,6 +33,14 @@ class TransactionHeaderImport implements
     public function __construct($brandId)
     {
         $this->brandId = $brandId;
+        
+        // Get brand_code from brand_id
+        $brand = \App\Models\Brand::where('brand_id', $brandId)->first();
+        $this->brandCode = $brand ? $brand->brand_code : null;
+        
+        if (!$this->brandCode) {
+            throw new \Exception('Brand not found or brand_code is missing');
+        }
     }
 
     public function getErrors()
@@ -256,10 +265,10 @@ class TransactionHeaderImport implements
                 return null;
             }
 
-            // Check if record exists: wipno + invno + brand + magic_id
+            // Check if record exists: wipno + invno + brand_code + magic_id
             $existing = TransactionHeader::where('wip_no', $wipNo)
                 ->where('invoice_no', $invoiceNo)
-                ->where('brand_id', $this->brandId)
+                ->where('brand_code', $this->brandCode)
                 ->where('magic_id', $magicId)
                 ->first();
 
@@ -267,7 +276,7 @@ class TransactionHeaderImport implements
             $data = [
                 'wip_no' => $wipNo,
                 'invoice_no' => $invoiceNo,
-                'brand_id' => $this->brandId,
+                'brand_code' => $this->brandCode,
                 'account_code' => $row['account'] ?? null,
                 'customer_name' => $row['custname'] ?? null,
                 'address_1' => $row['add1'] ?? null,

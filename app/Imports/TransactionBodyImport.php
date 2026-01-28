@@ -28,10 +28,19 @@ class TransactionBodyImport implements
     protected $successCount = 0;
     public $currentRow = 1;
     protected $brandId;
+    protected $brandCode;
 
     public function __construct($brandId)
     {
         $this->brandId = $brandId;
+        
+        // Get brand_code from brand_id
+        $brand = \App\Models\Brand::where('brand_id', $brandId)->first();
+        $this->brandCode = $brand ? $brand->brand_code : null;
+        
+        if (!$this->brandCode) {
+            throw new \Exception('Brand not found or brand_code is missing');
+        }
     }
 
     public function getErrors()
@@ -337,20 +346,20 @@ class TransactionBodyImport implements
                 return null;
             }
 
-            // Check if record exists: part_no + invoice_no + wip_no + line + brand_id
+            // Check if record exists: part_no + invoice_no + wip_no + line + brand_code
             $existing = TransactionBody::where('part_no', $row['part'])
                 ->where('invoice_no', $invoiceNo)
                 ->where('wip_no', $wipNo)
                 ->where('line', $line)
                 ->where('magic_2', $magic2)
-                ->where('brand_id', $this->brandId)
+                ->where('brand_code', $this->brandCode)
                 ->first();
 
             // Prepare data
             $data = [
                 'part_no' => $row['part'],
                 'invoice_no' => $invoiceNo,
-                'brand_id' => $this->brandId,
+                'brand_code' => $this->brandCode,
                 'wip_no' => $wipNo,
                 'line' => $line,
                 'description' => $row['desc'] ?? null,

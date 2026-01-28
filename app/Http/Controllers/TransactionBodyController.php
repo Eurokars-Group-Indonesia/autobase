@@ -36,11 +36,22 @@ class TransactionBodyController extends Controller
         $hasBrandFilter = $request->has('brand_id') && $request->brand_id != '';
         $hasFilter = $hasSearch || $hasDateFrom || $hasDateTo;
         
-        // Filter by user's brands or specific brand if selected
+        // Get brand_code if brand_id is selected
+        $brandCode = null;
         if ($hasBrandFilter) {
-            $query->where('tx_body.brand_id', $request->brand_id);
+            $selectedBrand = \App\Models\Brand::where('brand_id', $request->brand_id)->first();
+            $brandCode = $selectedBrand ? $selectedBrand->brand_code : null;
+        }
+        
+        // Filter by user's brands or specific brand if selected
+        if ($hasBrandFilter && $brandCode) {
+            $query->where('tx_body.brand_code', $brandCode);
         } elseif (!empty($userBrandIds)) {
-            $query->whereIn('tx_body.brand_id', $userBrandIds);
+            // Get brand codes for user's brands
+            $userBrandCodes = \App\Models\Brand::whereIn('brand_id', $userBrandIds)
+                ->pluck('brand_code')
+                ->toArray();
+            $query->whereIn('tx_body.brand_code', $userBrandCodes);
         }
         
         // Only use cache when there's search/filter (including brand filter for query optimization)
