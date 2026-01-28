@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TransactionBody;
 use App\Imports\TransactionBodyImport;
+use App\Exports\TransactionBodyExport;
 use App\Jobs\LogSearchHistory;
 use App\Jobs\LogImportHistory;
 use Illuminate\Http\Request;
@@ -464,5 +465,45 @@ class TransactionBodyController extends Controller
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ]);
+    }
+
+    public function export(Request $request)
+    {
+        $search = $request->get('search');
+        $dateFrom = $request->get('date_from');
+        $dateTo = $request->get('date_to');
+        $brandId = $request->get('brand_id');
+
+        // Check if there's any filter (search or date, not just brand)
+        $hasFilter = !empty($search) || !empty($dateFrom) || !empty($dateTo);
+
+        // Only allow export when there's search or date filter
+        if (!$hasFilter) {
+            return redirect()->route('transaction-body.index')
+                ->with('error', 'Please apply search or date filter before exporting.');
+        }
+
+        // Get user's brand IDs (realtime query)
+        $userBrandIds = auth()->user()->getBrandIds();
+        
+        // Get brand codes for user's brands
+        $userBrandCodes = \App\Models\Brand::whereIn('brand_id', $userBrandIds)
+            ->pluck('brand_code')
+            ->toArray();
+        
+        // Get selected brand code if brand_id is provided
+        $selectedBrandCode = null;
+        if ($brandId) {
+            $selectedBrand = \App\Models\Brand::where('brand_id', $brandId)->first();
+            $selectedBrandCode = $selectedBrand ? $selectedBrand->brand_code : null;
+        }
+
+        $filename = 'transaction_bodies_' . date('Y-m-d_His') . '.xlsx';
+
+        // Export with brand filter
+        return Excel::download(
+            new TransactionBodyExport($search, $dateFrom, $dateTo, $userBrandCodes, $selectedBrandCode),
+            $filename
+        );
     }
 }

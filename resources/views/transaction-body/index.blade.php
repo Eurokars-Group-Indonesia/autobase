@@ -82,11 +82,18 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-list-ul"></i> Transaction Body</span>
-                @if(auth()->user()->hasPermission('transaction-body.import'))
-                <a href="{{ route('transaction-body.import') }}" class="btn btn-light btn-sm">
-                    <i class="bi bi-upload"></i> Import Excel
-                </a>
-                @endif
+                <div>
+                    @if(request('search') || request('date_from') || request('date_to'))
+                    <a href="{{ route('transaction-body.export', request()->all()) }}" class="btn btn-success btn-sm me-2">
+                        <i class="bi bi-file-earmark-excel"></i> Export Excel
+                    </a>
+                    @endif
+                    @if(auth()->user()->hasPermission('transaction-body.import'))
+                    <a href="{{ route('transaction-body.import') }}" class="btn btn-light btn-sm">
+                        <i class="bi bi-upload"></i> Import Excel
+                    </a>
+                    @endif
+                </div>
             </div>
             <div class="card-body">
                 <form action="{{ route('transaction-body.index') }}" method="GET" id="searchForm">
