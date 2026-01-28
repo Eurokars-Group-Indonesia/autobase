@@ -176,7 +176,7 @@
             <p><strong>AutoBase</strong> - Autoline Database</p>
             <p>This is an automated email. Please do not reply to this message.</p>
             <p style="margin-top: 15px; font-size: 12px; color: #aaa;">
-                © 2026 AutoBase. All rights reserved.
+                © 2026 IT Team Eurokars Group Indonesia. All rights reserved.
             </p>
         </div>
     </div>

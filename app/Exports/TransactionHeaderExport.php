@@ -103,13 +103,13 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
             
             // Add empty row for spacing (except first transaction)
             if ($rows->count() > 0) {
-                $rows->push(['', '', '', '', '', '', '', '', '', '', '', '', '']);
+                $rows->push(['', '', '', '', '', '', '', '', '', '', '', '']);
             }
             
             // Add HEADER TABLE TITLE with WIP No and Invoice No
             $rows->push([
-                'WIP No: ' . $transaction->wip_no . ' | Invoice No: ' . $transaction->invoice_no,
-                '', '', '', '', '', '', '', '', '', '', '', ''
+                'WIP No: ' . $transaction->wip_no . ' | Invoice No: ' . $transaction->invoice_no. ' | Magic ID: ' . $transaction->magic_id,
+                '', '', '', '', '', '', '', '', '', '', ''
             ]);
             
             // Add header table headers
@@ -125,8 +125,7 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
                 'Document Type',
                 'Brand',
                 'Gross Value',
-                'Net Value',
-                ''
+                'Net Value'
             ]);
             
             // Add header data
@@ -142,12 +141,11 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
                 $transaction->getDocumentTypeLabel(),
                 $transaction->brand->brand_name ?? '',
                 $transaction->gross_value,
-                $transaction->net_value,
-                ''
+                $transaction->net_value
             ]);
             
             // Add empty row between tables
-            $rows->push(['', '', '', '', '', '', '', '', '', '', '', '', '']);
+            $rows->push(['', '', '', '', '', '', '', '', '', '', '', '']);
             
             // Add body table headers (no title, just headers)
             $rows->push([
@@ -161,7 +159,7 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
                 'Discount %',
                 'Extended Price',
                 'Part/Labour',
-                '', '', ''
+                '', ''
             ]);
             
             // Add body rows
@@ -179,13 +177,13 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
                         $body->discount,
                         $body->extended_price,
                         $body->part_or_labour === 'P' ? 'Part' : 'Labour',
-                        '', '', ''
+                        '', ''
                     ]);
                 }
             } else {
                 $rows->push([
                     'No body details available',
-                    '', '', '', '', '', '', '', '', '', '', '', ''
+                    '', '', '', '', '', '', '', '', '', '', ''
                 ]);
             }
         }
@@ -199,7 +197,7 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
         
         // Default style for all cells
         $highestRow = $sheet->getHighestRow();
-        $sheet->getStyle('A1:M' . $highestRow)->applyFromArray([
+        $sheet->getStyle('A1:L' . $highestRow)->applyFromArray([
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
@@ -227,8 +225,8 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
                     
                     // Style for "WIP No: ... | Invoice No: ..." title
                     if (strpos($cellValue, 'WIP No:') !== false && strpos($cellValue, 'Invoice No:') !== false) {
-                        $sheet->mergeCells('A' . $row . ':M' . $row);
-                        $sheet->getStyle('A' . $row . ':M' . $row)->applyFromArray([
+                        $sheet->mergeCells('A' . $row . ':L' . $row);
+                        $sheet->getStyle('A' . $row . ':L' . $row)->applyFromArray([
                             'font' => [
                                 'bold' => true,
                                 'size' => 12,
@@ -252,7 +250,7 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
                     
                     // Style for header table column headers (Invoice No)
                     if ($cellValue === 'Invoice No') {
-                        $sheet->getStyle('A' . $row . ':M' . $row)->applyFromArray([
+                        $sheet->getStyle('A' . $row . ':L' . $row)->applyFromArray([
                             'font' => [
                                 'bold' => true,
                                 'color' => ['rgb' => 'FFFFFF']
@@ -270,7 +268,7 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
                     
                     // Style for body table column headers (No)
                     if ($cellValue === 'No' && $sheet->getCell('B' . $row)->getValue() === 'Part No') {
-                        $sheet->getStyle('A' . $row . ':M' . $row)->applyFromArray([
+                        $sheet->getStyle('A' . $row . ':L' . $row)->applyFromArray([
                             'font' => [
                                 'bold' => true,
                                 'color' => ['rgb' => 'FFFFFF']
@@ -328,7 +326,7 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
                 }
                 
                 // Apply thin borders to all cells
-                $sheet->getStyle('A1:M' . $highestRow)->applyFromArray([
+                $sheet->getStyle('A1:L' . $highestRow)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
