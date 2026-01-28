@@ -86,11 +86,12 @@ class TransactionHeaderController extends Controller
                     $query->where(function($q) use ($search, $userBrandIds, $isDate) {
                         // Search in header fields - already filtered by brand in base query
                         $q->where(function($searchWhere) use ($search, $isDate) {
-                            $searchWhere->where('tx_header.customer_name', 'like', $search . '%')
+                            // Use FULLTEXT search for customer_name and registration_no
+                            $searchWhere->whereRaw('MATCH(tx_header.customer_name) AGAINST(? IN BOOLEAN MODE)', [$search . '*'])
+                                        ->orWhereRaw('MATCH(tx_header.registration_no) AGAINST(? IN BOOLEAN MODE)', [$search . '*'])
                                         ->orWhere('tx_header.chassis', 'like', $search . '%')
                                         ->orWhere('tx_header.invoice_no', 'like', $search . '%')
-                                        ->orWhere('tx_header.wip_no', 'like', $search . '%')
-                                        ->orWhere('tx_header.registration_no', 'like', $search . '%');
+                                        ->orWhere('tx_header.wip_no', 'like', $search . '%');
                             
                             // Only add date search if format matches
                             if ($isDate) {

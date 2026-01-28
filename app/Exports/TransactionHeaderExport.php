@@ -44,11 +44,12 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
         if ($this->search) {
             $search = $this->search;
             $query->where(function($q) use ($search) {
-                $q->where('tx_header.customer_name', 'like', $search . '%')
+                // Use FULLTEXT search for customer_name and registration_no
+                $q->whereRaw('MATCH(tx_header.customer_name) AGAINST(? IN BOOLEAN MODE)', [$search . '*'])
+                  ->orWhereRaw('MATCH(tx_header.registration_no) AGAINST(? IN BOOLEAN MODE)', [$search . '*'])
                   ->orWhere('tx_header.chassis', 'like', $search . '%')
                   ->orWhere('tx_header.invoice_no', 'like', $search . '%')
                   ->orWhere('tx_header.wip_no', 'like', $search . '%')
-                  ->orWhere('tx_header.registration_no', 'like', $search . '%')
                   ->orWhereDate('tx_header.invoice_date', '=', $search)
                   ->orWhereExists(function($existsQuery) use ($search) {
                       $existsQuery->select(\DB::raw(1))
