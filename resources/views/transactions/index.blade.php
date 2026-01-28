@@ -260,7 +260,7 @@
                                                                 <th class="text-center">Selling Price</th>
                                                                 <th class="text-center">Discount %</th>
                                                                 <th class="text-center">Extended Price</th>
-                                                                <th class="text-center">Type</th>
+                                                                <th class="text-center">Part/Labour</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>

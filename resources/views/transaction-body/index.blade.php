@@ -158,7 +158,7 @@
                                 <th style="min-width: 120px;">Selling Price</th>
                                 <th style="min-width: 100px;">Discount</th>
                                 <th style="min-width: 130px;">Extended Price</th>
-                                <th style="min-width: 100px;">Type</th>
+                                <th style="min-width: 100px;">Part/Labour</th>
                                 <th style="min-width: 100px;">Status</th>
                             </tr>
                         </thead>
