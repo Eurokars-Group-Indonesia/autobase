@@ -94,16 +94,16 @@
                         <h5 class="mb-0"><i class="bi bi-bar-chart-line"></i> Transaction Statistics</h5>
                     </div>
                     <div class="col-md-6">
-                        <form method="GET" action="{{ route('dashboard') }}" class="d-flex justify-content-md-end">
+                        <div class="d-flex justify-content-md-end">
                             <label class="me-2 align-self-center mb-0">Select Year:</label>
-                            <select name="year" class="form-select form-select-sm" style="width: 120px;" onchange="this.form.submit()">
+                            <select id="yearSelect" class="form-select form-select-sm" style="width: 120px;">
                                 @for($year = date('Y'); $year >= 2007; $year--)
                                     <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
                                         {{ $year }}
                                     </option>
                                 @endfor
                             </select>
-                        </form>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -116,7 +116,7 @@
     <div class="col-12 mb-4">
         <div class="card shadow">
             <div class="card-header text-white" style="background-color: #002856;">
-                <i class="bi bi-receipt"></i> Transaction Header by Invoice Date - {{ $selectedYear }}
+                <i class="bi bi-receipt"></i> Transaction Header by Invoice Date - <span id="headerChartYear">{{ $selectedYear }}</span>
             </div>
             <div class="card-body">
                 <canvas id="transactionHeaderChart" style="max-height: 400px;"></canvas>
@@ -128,7 +128,7 @@
     <div class="col-12 mb-4">
         <div class="card shadow">
             <div class="card-header text-white" style="background-color: #002856;">
-                <i class="bi bi-list-ul"></i> Transaction Body by Decard Date - {{ $selectedYear }}
+                <i class="bi bi-list-ul"></i> Transaction Body by Decard Date - <span id="bodyChartYear">{{ $selectedYear }}</span>
             </div>
             <div class="card-body">
                 <canvas id="transactionBodyChart" style="max-height: 400px;"></canvas>
@@ -140,167 +140,211 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-    // Transaction Header Chart
-    const ctxHeader = document.getElementById('transactionHeaderChart').getContext('2d');
-    
-    const headerChartData = {
-        labels: @json($chartLabels),
-        datasets: [
-            {
-                label: 'Transaction Count',
-                data: @json($chartHeaderData),
-                borderColor: '#28a745',
-                backgroundColor: 'rgba(40, 167, 69, 0.2)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                pointBackgroundColor: '#28a745',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
-            }
-        ]
-    };
+    let transactionHeaderChart;
+    let transactionBodyChart;
 
-    const headerConfig = {
-        type: 'line',
-        data: headerChartData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
-                    },
-                    bodyFont: {
-                        size: 13
-                    },
-                    callbacks: {
-                        title: function(context) {
-                            return context[0].label + ' {{ $selectedYear }}';
-                        },
-                        label: function(context) {
-                            return 'Total: ' + context.parsed.y.toLocaleString() + ' transactions';
-                        }
-                    }
+    // Initialize charts
+    function initCharts(labels, headerData, bodyData, year) {
+        // Transaction Header Chart
+        const ctxHeader = document.getElementById('transactionHeaderChart').getContext('2d');
+        
+        const headerChartData = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Transaction Count',
+                    data: headerData,
+                    borderColor: '#28a745',
+                    backgroundColor: 'rgba(40, 167, 69, 0.2)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: '#28a745',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
                 }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1,
-                        callback: function(value) {
-                            return Number.isInteger(value) ? value.toLocaleString() : '';
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
+            ]
+        };
+
+        const headerConfig = {
+            type: 'line',
+            data: headerChartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
                 },
-                x: {
-                    grid: {
+                plugins: {
+                    legend: {
                         display: false
-                    }
-                }
-            }
-        }
-    };
-
-    const transactionHeaderChart = new Chart(ctxHeader, headerConfig);
-
-    // Transaction Body Chart
-    const ctxBody = document.getElementById('transactionBodyChart').getContext('2d');
-    
-    const bodyChartData = {
-        labels: @json($chartLabels),
-        datasets: [
-            {
-                label: 'Transaction Count',
-                data: @json($chartBodyData),
-                borderColor: '#17a2b8',
-                backgroundColor: 'rgba(23, 162, 184, 0.2)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointRadius: 5,
-                pointHoverRadius: 7,
-                pointBackgroundColor: '#17a2b8',
-                pointBorderColor: '#fff',
-                pointBorderWidth: 2
-            }
-        ]
-    };
-
-    const bodyConfig = {
-        type: 'line',
-        data: bodyChartData,
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            interaction: {
-                mode: 'index',
-                intersect: false,
-            },
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                    padding: 12,
-                    titleFont: {
-                        size: 14,
-                        weight: 'bold'
                     },
-                    bodyFont: {
-                        size: 13
-                    },
-                    callbacks: {
-                        title: function(context) {
-                            return context[0].label + ' {{ $selectedYear }}';
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
                         },
-                        label: function(context) {
-                            return 'Total: ' + context.parsed.y.toLocaleString() + ' transactions';
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label + ' ' + year;
+                            },
+                            label: function(context) {
+                                return 'Total: ' + context.parsed.y.toLocaleString() + ' transactions';
+                            }
                         }
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        stepSize: 1,
-                        callback: function(value) {
-                            return Number.isInteger(value) ? value.toLocaleString() : '';
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
                     }
                 },
-                x: {
-                    grid: {
-                        display: false
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value.toLocaleString() : '';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
                     }
                 }
             }
-        }
-    };
+        };
 
-    const transactionBodyChart = new Chart(ctxBody, bodyConfig);
+        if (transactionHeaderChart) {
+            transactionHeaderChart.destroy();
+        }
+        transactionHeaderChart = new Chart(ctxHeader, headerConfig);
+
+        // Transaction Body Chart
+        const ctxBody = document.getElementById('transactionBodyChart').getContext('2d');
+        
+        const bodyChartData = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Transaction Count',
+                    data: bodyData,
+                    borderColor: '#17a2b8',
+                    backgroundColor: 'rgba(23, 162, 184, 0.2)',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: '#17a2b8',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }
+            ]
+        };
+
+        const bodyConfig = {
+            type: 'line',
+            data: bodyChartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        padding: 12,
+                        titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                        },
+                        bodyFont: {
+                            size: 13
+                        },
+                        callbacks: {
+                            title: function(context) {
+                                return context[0].label + ' ' + year;
+                            },
+                            label: function(context) {
+                                return 'Total: ' + context.parsed.y.toLocaleString() + ' transactions';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            callback: function(value) {
+                                return Number.isInteger(value) ? value.toLocaleString() : '';
+                            }
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        };
+
+        if (transactionBodyChart) {
+            transactionBodyChart.destroy();
+        }
+        transactionBodyChart = new Chart(ctxBody, bodyConfig);
+    }
+
+    // Load chart data via AJAX
+    function loadChartData(year) {
+        fetch('{{ route('dashboard.chart-data') }}?year=' + year)
+            .then(response => response.json())
+            .then(data => {
+                // Update chart year labels
+                document.getElementById('headerChartYear').textContent = data.year;
+                document.getElementById('bodyChartYear').textContent = data.year;
+                
+                // Update charts
+                initCharts(data.labels, data.headerData, data.bodyData, data.year);
+            })
+            .catch(error => {
+                console.error('Error loading chart data:', error);
+            });
+    }
+
+    // Initialize charts on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const initialLabels = @json($chartLabels);
+        const initialHeaderData = @json($chartHeaderData);
+        const initialBodyData = @json($chartBodyData);
+        const initialYear = {{ $selectedYear }};
+        
+        initCharts(initialLabels, initialHeaderData, initialBodyData, initialYear);
+        
+        // Year select change event
+        document.getElementById('yearSelect').addEventListener('change', function() {
+            loadChartData(this.value);
+        });
+    });
 </script>
 @endpush
 @endsection
