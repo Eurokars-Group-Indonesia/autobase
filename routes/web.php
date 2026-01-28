@@ -13,6 +13,7 @@ use App\Http\Controllers\TransactionHeaderController;
 use App\Http\Controllers\TransactionBodyController;
 use App\Http\Controllers\SearchHistoryController;
 use App\Http\Controllers\ImportHistoryController;
+use App\Http\Controllers\PasswordResetController;
 
 // Guest Routes
 Route::middleware('guest')->group(function () {
@@ -20,6 +21,12 @@ Route::middleware('guest')->group(function () {
     Route::post('/', [AuthController::class, 'login'])
         ->middleware('throttle:5,1') // 5 attempts per minute
         ->name('login.post');
+    
+    // Password Reset Routes
+    Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
+    Route::post('/forgot-password', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
 });
 
 // Authenticated Routes
@@ -160,5 +167,11 @@ Route::middleware('auth')->group(function () {
     // Import History
     Route::middleware('permission:import-history.view')->group(function () {
         Route::get('/import-history', [ImportHistoryController::class, 'index'])->name('import-history.index');
+    });
+    
+    // Test Email (Admin only)
+    Route::middleware('role:ADMIN')->group(function () {
+        Route::get('/test-email', [\App\Http\Controllers\TestEmailController::class, 'index'])->name('test-email.index');
+        Route::post('/test-email/send', [\App\Http\Controllers\TestEmailController::class, 'send'])->name('test-email.send');
     });
 });
