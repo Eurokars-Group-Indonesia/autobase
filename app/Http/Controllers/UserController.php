@@ -50,46 +50,55 @@ class UserController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
-        $data = $request->validated();
-        $data['password'] = Hash::make($data['password']);
-        $data['unique_id'] = (string) Str::uuid();
-        $data['created_by'] = auth()->id();
-        $data['is_active'] = '1'; // Default active
+        try {
+            $data = $request->validated();
+            $data['password'] = Hash::make($data['password']);
+            $data['unique_id'] = (string) Str::uuid();
+            $data['created_by'] = auth()->id();
+            $data['is_active'] = '1'; // Default active
 
-        // Remove brand_id from data since we'll use many-to-many
-        unset($data['brand_id']);
+            // Remove brand_id from data since we'll use many-to-many
+            unset($data['brand_id']);
 
-        $user = User::create($data);
+            $user = User::create($data);
 
-        // Attach roles
-        if ($request->has('roles')) {
-            foreach ($request->roles as $roleId) {
-                $user->roles()->attach($roleId, [
-                    'unique_id' => (string) Str::uuid(),
-                    'assigned_date' => now(),
-                    'created_by' => auth()->id(),
-                    'created_date' => now(),
-                    'is_active' => '1',
-                ]);
+            // Attach roles
+            if ($request->has('roles')) {
+                foreach ($request->roles as $roleId) {
+                    $user->roles()->attach($roleId, [
+                        'unique_id' => (string) Str::uuid(),
+                        'assigned_date' => now(),
+                        'created_by' => auth()->id(),
+                        'created_date' => now(),
+                        'is_active' => '1',
+                    ]);
+                }
             }
-        }
 
-        // Attach brands
-        if ($request->has('brands')) {
-            foreach ($request->brands as $brandId) {
-                $user->brands()->attach($brandId, [
-                    'unique_id' => (string) Str::uuid(),
-                    'created_by' => auth()->id(),
-                    'created_date' => now(),
-                    'is_active' => '1',
-                ]);
+            // Attach brands
+            if ($request->has('brands')) {
+                foreach ($request->brands as $brandId) {
+                    $user->brands()->attach($brandId, [
+                        'unique_id' => (string) Str::uuid(),
+                        'created_by' => auth()->id(),
+                        'created_date' => now(),
+                        'is_active' => '1',
+                    ]);
+                }
             }
+
+            // Flush cache
+            Cache::flush();
+
+            return redirect()->route('users.index')->with('success', 'User created successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Validation error akan otomatis di-handle oleh Laravel dan redirect back dengan errors
+            throw $e;
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to create user: ' . $e->getMessage());
         }
-
-        // Flush cache
-        Cache::flush();
-
-        return redirect()->route('users.index')->with('success', 'User created successfully.');
     }
 
     public function edit(User $user)
@@ -115,51 +124,60 @@ class UserController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
-        $data = $request->validated();
-        
-        if ($request->filled('password')) {
-            $data['password'] = Hash::make($data['password']);
-        } else {
-            unset($data['password']);
-        }
-        
-        // Remove brand_id from data since we'll use many-to-many
-        unset($data['brand_id']);
-        
-        $data['updated_by'] = auth()->id();
-        $user->update($data);
-
-        // Sync roles
-        $user->roles()->detach();
-        if ($request->has('roles')) {
-            foreach ($request->roles as $roleId) {
-                $user->roles()->attach($roleId, [
-                    'unique_id' => (string) Str::uuid(),
-                    'assigned_date' => now(),
-                    'created_by' => auth()->id(),
-                    'created_date' => now(),
-                    'is_active' => '1',
-                ]);
+        try {
+            $data = $request->validated();
+            
+            if ($request->filled('password')) {
+                $data['password'] = Hash::make($data['password']);
+            } else {
+                unset($data['password']);
             }
-        }
+            
+            // Remove brand_id from data since we'll use many-to-many
+            unset($data['brand_id']);
+            
+            $data['updated_by'] = auth()->id();
+            $user->update($data);
 
-        // Sync brands
-        $user->brands()->detach();
-        if ($request->has('brands')) {
-            foreach ($request->brands as $brandId) {
-                $user->brands()->attach($brandId, [
-                    'unique_id' => (string) Str::uuid(),
-                    'created_by' => auth()->id(),
-                    'created_date' => now(),
-                    'is_active' => '1',
-                ]);
+            // Sync roles
+            $user->roles()->detach();
+            if ($request->has('roles')) {
+                foreach ($request->roles as $roleId) {
+                    $user->roles()->attach($roleId, [
+                        'unique_id' => (string) Str::uuid(),
+                        'assigned_date' => now(),
+                        'created_by' => auth()->id(),
+                        'created_date' => now(),
+                        'is_active' => '1',
+                    ]);
+                }
             }
+
+            // Sync brands
+            $user->brands()->detach();
+            if ($request->has('brands')) {
+                foreach ($request->brands as $brandId) {
+                    $user->brands()->attach($brandId, [
+                        'unique_id' => (string) Str::uuid(),
+                        'created_by' => auth()->id(),
+                        'created_date' => now(),
+                        'is_active' => '1',
+                    ]);
+                }
+            }
+
+            // Flush cache
+            Cache::flush();
+
+            return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Validation error akan otomatis di-handle oleh Laravel dan redirect back dengan errors
+            throw $e;
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to update user: ' . $e->getMessage());
         }
-
-        // Flush cache
-        Cache::flush();
-
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
     }
 
     public function destroy(User $user)

@@ -12,6 +12,25 @@
 @section('content')
 <div class="row">
     <div class="col-md-8 offset-md-2">
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        
+        @if($errors->any())
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill"></i> <strong>Validation Error:</strong>
+                <ul class="mb-0 mt-2">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        
         <div class="card">
             <div class="card-header">
                 <i class="bi bi-pencil"></i> Edit User
@@ -86,7 +105,9 @@
                                 </button>
                             </div>
                             @error('password')
-                                <div class="invalid-feedback">{{ $message }}</div>
+                                <div class="text-danger mt-1">
+                                    <small><i class="bi bi-exclamation-circle"></i> {{ $message }}</small>
+                                </div>
                             @enderror
                             
                             <!-- Password Strength Indicator -->
@@ -109,6 +130,9 @@
                                 </small>
                                 <small class="d-block password-req" id="req-sequential">
                                     <i class="bi bi-circle"></i> No sequential numbers (123, 234, 321, etc)
+                                </small>
+                                <small class="d-block password-req" id="req-sequential-alpha">
+                                    <i class="bi bi-circle"></i> No sequential alphabet (abc, xyz, cba, etc)
                                 </small>
                                 <small class="d-block password-req" id="req-name">
                                     <i class="bi bi-circle"></i> Must not contain part of your name
@@ -207,11 +231,32 @@
         opacity: 0.6;
         cursor: not-allowed;
     }
+    
+    /* Style for error message */
+    .text-danger {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .text-danger i {
+        margin-right: 4px;
+    }
 </style>
 @endpush
 
 @push('scripts')
 <script>
+    // Scroll to error message if exists
+    @error('password')
+        document.addEventListener('DOMContentLoaded', function() {
+            const passwordField = document.getElementById('password');
+            if (passwordField) {
+                passwordField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                passwordField.focus();
+            }
+        });
+    @enderror
+
     // Phone input validation - only allow numbers and + symbol
     document.getElementById('phone').addEventListener('input', function(e) {
         // Remove any character that is not a digit or +
@@ -274,7 +319,11 @@
         const hasNoSequential = !hasSequentialNumbers(password);
         updateRequirement('req-sequential', hasNoSequential);
         
-        // 7. Must not contain part of name
+        // 7. No sequential alphabet
+        const hasNoSequentialAlpha = !hasSequentialAlphabet(password);
+        updateRequirement('req-sequential-alpha', hasNoSequentialAlpha);
+        
+        // 8. Must not contain part of name
         const hasNoName = !containsNamePart(password, fullName);
         updateRequirement('req-name', hasNoName);
         
@@ -318,6 +367,35 @@
         return false;
     }
     
+    function hasSequentialAlphabet(password) {
+        const passwordLower = password.toLowerCase();
+        
+        // Check ascending sequences (abc, bcd, cde, etc)
+        for (let i = 0; i < passwordLower.length - 2; i++) {
+            const char1 = passwordLower.charCodeAt(i);
+            const char2 = passwordLower.charCodeAt(i + 1);
+            const char3 = passwordLower.charCodeAt(i + 2);
+            
+            // Check if all are letters
+            if ((char1 >= 97 && char1 <= 122) && 
+                (char2 >= 97 && char2 <= 122) && 
+                (char3 >= 97 && char3 <= 122)) {
+                
+                // Check ascending sequence
+                if (char2 === char1 + 1 && char3 === char2 + 1) {
+                    return true;
+                }
+                
+                // Check descending sequence
+                if (char2 === char1 - 1 && char3 === char2 - 1) {
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    }
+    
     function containsNamePart(password, fullName) {
         if (!fullName || fullName.length < 3) return false;
         
@@ -326,18 +404,85 @@
         const nameParts = fullName.toLowerCase().split(/\s+/);
         
         for (const namePart of nameParts) {
-            if (namePart.length < 3) continue;
+            const trimmedNamePart = namePart.trim();
+            
+            // Skip very short name parts (less than 3 characters)
+            if (trimmedNamePart.length < 3) continue;
             
             // Check substrings of name (minimum 3 characters)
-            for (let i = 0; i <= namePart.length - 3; i++) {
-                const substring = namePart.substring(i);
-                if (substring.length < 3) continue;
+            for (let i = 0; i <= trimmedNamePart.length - 3; i++) {
+                // Get substring with proper length (same as backend logic)
+                const substringLength = Math.max(3, trimmedNamePart.length - i);
+                const substring = trimmedNamePart.substring(i, i + substringLength);
                 
                 // Direct match
                 if (passwordLower.includes(substring)) return true;
                 
                 // Leet speak match
                 if (passwordNormalized.includes(substring)) return true;
+                
+                // Check similarity using Levenshtein distance
+                if (isSimilar(passwordNormalized, substring)) return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * Calculate Levenshtein distance between two strings
+     */
+    function levenshteinDistance(str1, str2) {
+        const len1 = str1.length;
+        const len2 = str2.length;
+        const matrix = [];
+        
+        // Initialize matrix
+        for (let i = 0; i <= len1; i++) {
+            matrix[i] = [i];
+        }
+        for (let j = 0; j <= len2; j++) {
+            matrix[0][j] = j;
+        }
+        
+        // Fill matrix
+        for (let i = 1; i <= len1; i++) {
+            for (let j = 1; j <= len2; j++) {
+                if (str1[i - 1] === str2[j - 1]) {
+                    matrix[i][j] = matrix[i - 1][j - 1];
+                } else {
+                    matrix[i][j] = Math.min(
+                        matrix[i - 1][j - 1] + 1, // substitution
+                        matrix[i][j - 1] + 1,     // insertion
+                        matrix[i - 1][j] + 1      // deletion
+                    );
+                }
+            }
+        }
+        
+        return matrix[len1][len2];
+    }
+    
+    /**
+     * Check if a substring is similar to any part of the password
+     * Using similarity threshold of 0.25 (25%) - more strict, need 75% similarity to match
+     */
+    function isSimilar(password, substring) {
+        const similarityThreshold = 0.25; // Changed from 0.4 to 0.25 for stricter matching
+        const subLen = substring.length;
+        
+        // Check all substrings of password with same length
+        for (let i = 0; i <= password.length - subLen; i++) {
+            const passwordPart = password.substring(i, i + subLen);
+            
+            // Calculate similarity
+            const levenshtein = levenshteinDistance(passwordPart, substring);
+            const maxLen = Math.max(passwordPart.length, substring.length);
+            const similarity = 1 - (levenshtein / maxLen);
+            
+            // If similarity is above threshold, consider it too similar
+            if (similarity >= (1 - similarityThreshold)) {
+                return true;
             }
         }
         
@@ -403,6 +548,7 @@
         }
         const hasNumber = /[0-9]/.test(password);
         const hasNoSequential = !hasSequentialNumbers(password);
+        const hasNoSequentialAlpha = !hasSequentialAlphabet(password);
         const hasNoName = !containsNamePart(password, fullName);
         
         // Check password match
@@ -410,7 +556,7 @@
         
         // All requirements must be met
         const allValid = hasLength && hasUppercase && hasLowercase && hasSymbol && 
-                        hasNumber && hasNoSequential && hasNoName && passwordsMatch;
+                        hasNumber && hasNoSequential && hasNoSequentialAlpha && hasNoName && passwordsMatch;
         
         // Enable/disable submit button
         const submitButton = document.getElementById('submitButton');

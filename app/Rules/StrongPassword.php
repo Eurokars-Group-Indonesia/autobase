@@ -8,7 +8,7 @@ use Illuminate\Contracts\Validation\ValidationRule;
 class StrongPassword implements ValidationRule
 {
     protected $fullName;
-    protected $similarityThreshold = 0.4; // 40% threshold untuk kesamaan
+    protected $similarityThreshold = 0.25; // 25% threshold - need 75% similarity to match
 
     public function __construct(?string $fullName = null)
     {
@@ -64,7 +64,13 @@ class StrongPassword implements ValidationRule
             return;
         }
 
-        // 7. Tidak boleh mengandung sebagian nama (dengan leet speak detection)
+        // 7. Tidak boleh huruf berurutan (abc, bcd, xyz, cba, dst)
+        if ($this->hasSequentialAlphabet($value)) {
+            $fail('Password must not contain sequential alphabet (e.g., abc, xyz, cba, etc).');
+            return;
+        }
+
+        // 8. Tidak boleh mengandung sebagian nama (dengan leet speak detection)
         if ($this->fullName && $this->containsNamePart($value, $this->fullName)) {
             $fail('Password must not contain part of your name.');
             return;
@@ -107,6 +113,39 @@ class StrongPassword implements ValidationRule
         return false;
     }
 
+    /**
+     * Check if password contains sequential alphabet
+     */
+    protected function hasSequentialAlphabet(string $password): bool
+    {
+        $passwordLower = strtolower($password);
+        $length = strlen($passwordLower);
+
+        // Check for sequences of 3 consecutive letters
+        for ($i = 0; $i < $length - 2; $i++) {
+            $char1 = ord($passwordLower[$i]);
+            $char2 = ord($passwordLower[$i + 1]);
+            $char3 = ord($passwordLower[$i + 2]);
+
+            // Check if all are letters (a-z)
+            if ($char1 >= 97 && $char1 <= 122 && 
+                $char2 >= 97 && $char2 <= 122 && 
+                $char3 >= 97 && $char3 <= 122) {
+                
+                // Check ascending sequence (abc, bcd, cde, etc)
+                if ($char2 === $char1 + 1 && $char3 === $char2 + 1) {
+                    return true;
+                }
+                
+                // Check descending sequence (cba, dcb, zyx, etc)
+                if ($char2 === $char1 - 1 && $char3 === $char2 - 1) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
     /**
      * Check if password contains part of the name (with leet speak detection)
      */
