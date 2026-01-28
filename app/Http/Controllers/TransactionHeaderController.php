@@ -22,10 +22,18 @@ class TransactionHeaderController extends Controller
         // Get user's brand IDs (realtime query)
         $userBrandIds = auth()->user()->getBrandIds();
         
+        // Get brands for dropdown filter
+        $brands = Brand::where('is_active', '1')
+            ->whereIn('brand_id', $userBrandIds)
+            ->orderBy('brand_name')
+            ->get();
+        
         // Check if there's any search/filter parameter
         $hasSearch = $request->has('search') && $request->search != '';
         $hasDateFrom = $request->has('date_from') && $request->date_from != '';
         $hasDateTo = $request->has('date_to') && $request->date_to != '';
+        $hasBrandFilter = $request->has('brand_id') && $request->brand_id != '';
+        // hasFilter untuk tampilan body details (hanya jika ada search atau date, bukan brand saja)
         $hasFilter = $hasSearch || $hasDateFrom || $hasDateTo;
         
         // Base query with brand filter
@@ -33,20 +41,27 @@ class TransactionHeaderController extends Controller
             ->where('tx_header.is_active', '1')
             ->orderBy('tx_header.invoice_date', 'desc');
         
-        // Filter by user's brands
-        $query->whereIn('tx_header.brand_id', $userBrandIds);
+        // Filter by user's brands or specific brand if selected
+        if ($hasBrandFilter) {
+            $query->where('tx_header.brand_id', $request->brand_id);
+        } else {
+            $query->whereIn('tx_header.brand_id', $userBrandIds);
+        }
         
-        // Only use cache when there's search/filter
-        if ($hasFilter) {
+        // Only use cache when there's search/filter (including brand filter for query optimization)
+        $shouldUseCache = $hasFilter || $hasBrandFilter;
+        
+        if ($shouldUseCache) {
             // Generate cache key based on user and search parameters
             $userId = auth()->id();
             $search = $request->get('search', '');
             $dateFrom = $request->get('date_from', '');
             $dateTo = $request->get('date_to', '');
+            $brandId = $request->get('brand_id', '');
             $perPage = $request->get('per_page', 10);
             $page = $request->get('page', 1);
             
-            $cacheKey = "header:{$userId}:{$search}:{$dateFrom}:{$dateTo}:{$perPage}:{$page}";
+            $cacheKey = "header:{$userId}:{$search}:{$dateFrom}:{$dateTo}:{$brandId}:{$perPage}:{$page}";
             
             // Try to get from cache (1 hour)
             $transactions = cache()->remember($cacheKey, now()->addHour(), function () use ($request, $query, $userBrandIds) {
@@ -167,7 +182,7 @@ class TransactionHeaderController extends Controller
             );
         }
         
-        return view('transactions.index', compact('transactions', 'hasFilter'));
+        return view('transactions.index', compact('transactions', 'hasFilter', 'brands'));
     }
 
     public function showImport()
@@ -607,11 +622,12 @@ class TransactionHeaderController extends Controller
         $search = $request->get('search');
         $dateFrom = $request->get('date_from');
         $dateTo = $request->get('date_to');
+        $brandId = $request->get('brand_id');
 
-        // Check if there's any filter
+        // Check if there's any filter (search or date, not just brand)
         $hasFilter = !empty($search) || !empty($dateFrom) || !empty($dateTo);
 
-        // Only allow export when there's filter
+        // Only allow export when there's search or date filter
         if (!$hasFilter) {
             return redirect()->route('transactions.index')
                 ->with('error', 'Please apply search or date filter before exporting.');
@@ -624,7 +640,7 @@ class TransactionHeaderController extends Controller
 
         // Export with body details and brand filter
         return Excel::download(
-            new TransactionHeaderExport($search, $dateFrom, $dateTo, $userBrandIds),
+            new TransactionHeaderExport($search, $dateFrom, $dateTo, $userBrandIds, $brandId),
             $filename
         );
     }
