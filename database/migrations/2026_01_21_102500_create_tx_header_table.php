@@ -45,12 +45,12 @@ return new class extends Migration
             
             // Indexes
             $table->index('brand_code', 'idx_brand_code');
-            $table->index('customer_name', 'idx_customer_name');
+            // $table->index('customer_name', 'idx_customer_name');
             $table->index('chassis', 'idx_chassis');
             $table->index('invoice_date', 'idx_invoice_date');
             $table->index('invoice_no', 'idx_invoice_no');
             $table->index('wip_no', 'idx_wip_no');
-            $table->index('registration_no', 'idx_registration_no');
+            // $table->index('registration_no', 'idx_registration_no');
             $table->index('created_by', 'idx_created_by');
             $table->index('updated_by', 'idx_updated_by');
             $table->index('unique_id', 'idx_unique_id');
