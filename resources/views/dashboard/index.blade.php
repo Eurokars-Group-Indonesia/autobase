@@ -382,16 +382,18 @@
         const initialYear = {{ $selectedYear }};
         
         initCharts(initialLabels, initialHeaderData, initialBodyData, initialYear);
-        
-        // Year select change event
-        document.getElementById('yearSelect').addEventListener('change', function() {
+    });
+    
+    // Year select change event (after Select2 initialized)
+    $(document).ready(function() {
+        $('#yearSelect').on('select2:select', function() {
             const brandId = document.getElementById('brandSelect').value;
             loadChartData(this.value, brandId);
         });
         
         // Brand select change event
         document.getElementById('brandSelect').addEventListener('change', function() {
-            const year = document.getElementById('yearSelect').value;
+            const year = $('#yearSelect').val();
             loadChartData(year, this.value);
         });
     });
