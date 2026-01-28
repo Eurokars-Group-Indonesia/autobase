@@ -651,12 +651,24 @@ class TransactionHeaderController extends Controller
 
         // Get user's brand IDs (realtime query)
         $userBrandIds = auth()->user()->getBrandIds();
+        
+        // Get brand codes for user's brands
+        $userBrandCodes = Brand::whereIn('brand_id', $userBrandIds)
+            ->pluck('brand_code')
+            ->toArray();
+        
+        // Get selected brand code if brand_id is provided
+        $selectedBrandCode = null;
+        if ($brandId) {
+            $selectedBrand = Brand::where('brand_id', $brandId)->first();
+            $selectedBrandCode = $selectedBrand ? $selectedBrand->brand_code : null;
+        }
 
         $filename = 'transaction_headers_' . date('Y-m-d_His') . '.xlsx';
 
         // Export with body details and brand filter
         return Excel::download(
-            new TransactionHeaderExport($search, $dateFrom, $dateTo, $userBrandIds, $brandId),
+            new TransactionHeaderExport($search, $dateFrom, $dateTo, $userBrandCodes, $selectedBrandCode),
             $filename
         );
     }
