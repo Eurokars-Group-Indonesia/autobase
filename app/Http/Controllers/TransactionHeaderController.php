@@ -121,8 +121,9 @@ class TransactionHeaderController extends Controller
                 
                 // Fetch all bodies at once with optimized query
                 $allBodies = \DB::table('tx_body')
-                    ->select('brand_id', 'wip_no', 'invoice_no', 'magic_2', 'line', 'part_no', 'part_description', 
-                             'qty', 'unit_price', 'discount', 'amount', 'date_decard', 'body_id')
+                    ->select('brand_id', 'wip_no', 'invoice_no', 'magic_2', 'line', 'part_no', 'description', 
+                             'qty', 'selling_price', 'discount', 'extended_price', 'date_decard', 'body_id',
+                             'account_code', 'department', 'invoice_status', 'unit', 'part_or_labour')
                     ->where('is_active', '1')
                     ->whereIn('wip_no', $wipNos)
                     ->whereIn('invoice_no', $invoiceNos)
