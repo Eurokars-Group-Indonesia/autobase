@@ -9,7 +9,22 @@
     [data-theme="dark"] .text-primary {
         color: #FA891A !important;
     }
+    
+    /* Limit Select2 dropdown height */
+    .select2-results__options {
+        max-height: 200px !important;
+        overflow-y: auto !important;
+    }
+    
+    /* Match Select2 with Bootstrap form-select-sm */
+    .select2-container--bootstrap-5 .select2-selection {
+        min-height: 31px !important;
+        padding: 0.25rem 0.5rem !important;
+        font-size: 0.875rem !important;
+    }
 </style>
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 @endpush
 <div class="row">
     <div class="col-12">
@@ -21,11 +36,10 @@
     <div class="col-12">
         <div class="card">
             <div class="card-header">
-                <i class="bi bi-info-circle"></i> Welcome to AutoBase
+                <i class="bi bi-info-circle"></i> Welcome to AutoBase (Autoline Database)
             </div>
             <div class="card-body">
                 <h5>Hello, {{ auth()->user()->full_name }}!</h5>
-                <p>Welcome to AutoBase, Autoline DataBase Here you can search the Transactions.</p>
                 <p class="mb-0"><strong>Last Login:</strong> {{ auth()->user()->last_login ? auth()->user()->last_login->format('d M Y H:i:s') : 'First time login' }}</p>
             </div>
         </div>
@@ -90,19 +104,32 @@
         <div class="card shadow mb-3">
             <div class="card-body">
                 <div class="row align-items-center">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <h5 class="mb-0"><i class="bi bi-bar-chart-line"></i> Transaction Statistics</h5>
                     </div>
-                    <div class="col-md-6">
-                        <div class="d-flex justify-content-md-end">
-                            <label class="me-2 align-self-center mb-0">Select Year:</label>
-                            <select id="yearSelect" class="form-select form-select-sm" style="width: 120px;">
-                                @for($year = date('Y'); $year >= 2007; $year--)
-                                    <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
-                                        {{ $year }}
-                                    </option>
-                                @endfor
-                            </select>
+                    <div class="col-md-8">
+                        <div class="d-flex align-items-center justify-content-md-end gap-3">
+                            <div class="d-flex align-items-center">
+                                <label class="me-2 mb-0">Brand:</label>
+                                <select id="brandSelect" class="form-select form-select-sm" style="width: 200px;">
+                                    <option value="">All Brands</option>
+                                    @foreach($brands as $brand)
+                                        <option value="{{ $brand->brand_id }}" {{ $selectedBrandId == $brand->brand_id ? 'selected' : '' }}>
+                                            {{ $brand->brand_name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <label class="me-2 mb-0">Year:</label>
+                                <select id="yearSelect" class="form-select form-select-sm" style="width: 120px;">
+                                    @for($year = date('Y'); $year >= 2007; $year--)
+                                        <option value="{{ $year }}" {{ $selectedYear == $year ? 'selected' : '' }}>
+                                            {{ $year }}
+                                        </option>
+                                    @endfor
+                                </select>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -138,10 +165,21 @@
 </div>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
     let transactionHeaderChart;
     let transactionBodyChart;
+
+    // Initialize Select2 for year dropdown
+    $(document).ready(function() {
+        $('#yearSelect').select2({
+            theme: 'bootstrap-5',
+            dropdownAutoWidth: true,
+            width: '120px',
+            placeholder: 'Select Year'
+        });
+    });
 
     // Initialize charts
     function initCharts(labels, headerData, bodyData, year) {
@@ -315,8 +353,13 @@
     }
 
     // Load chart data via AJAX
-    function loadChartData(year) {
-        fetch('{{ route('dashboard.chart-data') }}?year=' + year)
+    function loadChartData(year, brandId) {
+        let url = '{{ route('dashboard.chart-data') }}?year=' + year;
+        if (brandId) {
+            url += '&brand_id=' + brandId;
+        }
+        
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 // Update chart year labels
@@ -342,7 +385,14 @@
         
         // Year select change event
         document.getElementById('yearSelect').addEventListener('change', function() {
-            loadChartData(this.value);
+            const brandId = document.getElementById('brandSelect').value;
+            loadChartData(this.value, brandId);
+        });
+        
+        // Brand select change event
+        document.getElementById('brandSelect').addEventListener('change', function() {
+            const year = document.getElementById('yearSelect').value;
+            loadChartData(year, this.value);
         });
     });
 </script>
