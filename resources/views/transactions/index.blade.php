@@ -334,7 +334,7 @@
                                             <button class="btn btn-sm btn-info view-details" 
                                                     data-wipno="{{ $transaction->wip_no }}" 
                                                     data-invno="{{ $transaction->invoice_no }}" 
-                                                    data-brandid="{{ $transaction->brand_id }}"
+                                                    data-brandcode="{{ $transaction->brand_code }}"
                                                     data-magicid="{{ $transaction->magic_id }}"
                                                     title="View Details">
                                                 <i class="bi bi-eye"></i>
@@ -550,7 +550,7 @@
             e.preventDefault();
             const wipNo = $(this).data('wipno');
             const invNo = $(this).data('invno');
-            const brandId = $(this).data('brandid');
+            const brandCode = $(this).data('brandcode');
             const magicId = $(this).data('magicid');
             
             console.log('View details clicked:', wipNo, invNo, magicId);
@@ -577,7 +577,7 @@
                 data: {
                     wip_no: wipNo,
                     invoice_no: invNo,
-                    brand_id: brandId,
+                    brand_code: brandCode,
                     magic_id: magicId
                 },
                 success: function(response) {

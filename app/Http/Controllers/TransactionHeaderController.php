@@ -599,15 +599,20 @@ class TransactionHeaderController extends Controller
         $request->validate([
             'wip_no' => 'required',
             'invoice_no' => 'required',
-            'brand_id' => 'required',
+            'brand_code' => 'required',
             'magic_id' => 'required',
         ]);
 
         // Get user's brand IDs (realtime query)
         $userBrandIds = auth()->user()->getBrandIds();
         
+        // Get brand codes for user's brands
+        $userBrandCodes = \App\Models\Brand::whereIn('brand_id', $userBrandIds)
+            ->pluck('brand_code')
+            ->toArray();
+        
         // Check if user has access to this brand
-        if (!empty($userBrandIds) && !in_array($request->brand_id, $userBrandIds)) {
+        if (!empty($userBrandCodes) && !in_array($request->brand_code, $userBrandCodes)) {
             return response()->json([
                 'success' => false,
                 'message' => 'You do not have access to this brand.'
@@ -616,7 +621,7 @@ class TransactionHeaderController extends Controller
 
         $bodies = \App\Models\TransactionBody::where('wip_no', $request->wip_no)
             ->where('invoice_no', $request->invoice_no)
-            ->where('brand_id', $request->brand_id)
+            ->where('brand_code', $request->brand_code)
             ->where('magic_2', $request->magic_id)
             ->where('is_active', '1')
             ->orderBy('line')
