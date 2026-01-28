@@ -38,7 +38,7 @@
     </div>
     
     <div style="text-align: center; margin-top: 20px; font-size: 12px; color: #999;">
-        <p>© {{ date('Y') }} AutoBase. All rights reserved.</p>
+        <p>© 2026 AutoBase. All rights reserved.</p>
         <p>This is an automated email. Please do not reply.</p>
     </div>
 </body>

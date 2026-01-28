@@ -15,16 +15,16 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
     protected $search;
     protected $dateFrom;
     protected $dateTo;
-    protected $userBrandIds;
-    protected $brandId;
+    protected $userBrandCodes;
+    protected $brandCode;
 
-    public function __construct($search = null, $dateFrom = null, $dateTo = null, $userBrandIds = [], $brandId = null)
+    public function __construct($search = null, $dateFrom = null, $dateTo = null, $userBrandCodes = [], $brandCode = null)
     {
         $this->search = $search;
         $this->dateFrom = $dateFrom;
         $this->dateTo = $dateTo;
-        $this->userBrandIds = $userBrandIds;
-        $this->brandId = $brandId;
+        $this->userBrandCodes = $userBrandCodes;
+        $this->brandCode = $brandCode;
     }
 
     public function collection()
@@ -34,10 +34,10 @@ class TransactionHeaderExport implements FromCollection, WithStyles, WithEvents,
             ->orderBy('tx_header.invoice_date', 'desc');
 
         // Filter by user's brands or specific brand if selected
-        if (!empty($this->brandId)) {
-            $query->where('tx_header.brand_id', $this->brandId);
-        } elseif (!empty($this->userBrandIds)) {
-            $query->whereIn('tx_header.brand_id', $this->userBrandIds);
+        if (!empty($this->brandCode)) {
+            $query->where('tx_header.brand_code', $this->brandCode);
+        } elseif (!empty($this->userBrandCodes)) {
+            $query->whereIn('tx_header.brand_code', $this->userBrandCodes);
         }
 
         // Apply filters
