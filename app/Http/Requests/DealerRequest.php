@@ -27,10 +27,22 @@ class DealerRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('ms_dealers', 'dealer_code')->ignore($dealer->dealer_id, 'dealer_id')
+                Rule::unique('ms_dealers', 'dealer_code')
+                    ->ignore($dealer->dealer_id, 'dealer_id')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
             ];
         } else {
-            $rules['dealer_code'] = 'required|string|max:50|unique:ms_dealers,dealer_code';
+            $rules['dealer_code'] = [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('ms_dealers', 'dealer_code')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
+            ];
         }
         
         return $rules;

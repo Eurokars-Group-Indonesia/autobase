@@ -26,10 +26,22 @@ class PermissionRequest extends FormRequest
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('ms_permissions', 'permission_code')->ignore($permission->permission_id, 'permission_id')
+                Rule::unique('ms_permissions', 'permission_code')
+                    ->ignore($permission->permission_id, 'permission_id')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
             ];
         } else {
-            $rules['permission_code'] = 'required|string|max:100|unique:ms_permissions,permission_code';
+            $rules['permission_code'] = [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('ms_permissions', 'permission_code')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
+            ];
         }
         
         return $rules;

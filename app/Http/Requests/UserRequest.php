@@ -34,10 +34,22 @@ class UserRequest extends FormRequest
                 'required',
                 'email',
                 'max:150',
-                Rule::unique('ms_users', 'email')->ignore($user->user_id, 'user_id')
+                Rule::unique('ms_users', 'email')
+                    ->ignore($user->user_id, 'user_id')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
             ];
         } else {
-            $rules['email'] = 'required|email|max:150|unique:ms_users,email';
+            $rules['email'] = [
+                'required',
+                'email',
+                'max:150',
+                Rule::unique('ms_users', 'email')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
+            ];
         }
 
         // Password validation with strong password rules

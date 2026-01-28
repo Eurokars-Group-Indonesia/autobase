@@ -28,10 +28,22 @@ class BrandRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('ms_brand', 'brand_code')->ignore($brand->brand_id, 'brand_id')
+                Rule::unique('ms_brand', 'brand_code')
+                    ->ignore($brand->brand_id, 'brand_id')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
             ];
         } else {
-            $rules['brand_code'] = 'required|string|max:50|unique:ms_brand,brand_code';
+            $rules['brand_code'] = [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('ms_brand', 'brand_code')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
+            ];
         }
         
         return $rules;

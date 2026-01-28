@@ -30,10 +30,22 @@ class MenuRequest extends FormRequest
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('ms_menus', 'menu_code')->ignore($menu->menu_id, 'menu_id')
+                Rule::unique('ms_menus', 'menu_code')
+                    ->ignore($menu->menu_id, 'menu_id')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
             ];
         } else {
-            $rules['menu_code'] = 'required|string|max:50|unique:ms_menus,menu_code';
+            $rules['menu_code'] = [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('ms_menus', 'menu_code')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
+            ];
         }
         
         return $rules;

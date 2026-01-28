@@ -31,10 +31,22 @@ class RoleRequest extends FormRequest
                 'required',
                 'string',
                 'max:10',
-                Rule::unique('ms_role', 'role_code')->ignore($role->role_id, 'role_id')
+                Rule::unique('ms_role', 'role_code')
+                    ->ignore($role->role_id, 'role_id')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
             ];
         } else {
-            $rules['role_code'] = 'required|string|max:10|unique:ms_role,role_code';
+            $rules['role_code'] = [
+                'required',
+                'string',
+                'max:10',
+                Rule::unique('ms_role', 'role_code')
+                    ->where(function ($query) {
+                        return $query->where('is_active', '1');
+                    })
+            ];
         }
         
         return $rules;
