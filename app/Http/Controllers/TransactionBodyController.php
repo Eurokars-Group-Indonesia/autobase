@@ -19,32 +19,44 @@ class TransactionBodyController extends Controller
         // Get user's brand IDs (realtime query)
         $userBrandIds = auth()->user()->getBrandIds();
         
+        // Get brands for dropdown filter
+        $brands = \App\Models\Brand::where('is_active', '1')
+            ->whereIn('brand_id', $userBrandIds)
+            ->orderBy('brand_name')
+            ->get();
+        
         $query = TransactionBody::with('brand')
             ->where('tx_body.is_active', '1')
             ->orderBy('tx_body.created_date', 'desc');
-        
-        // Filter by user's brands
-        if (!empty($userBrandIds)) {
-            $query->whereIn('tx_body.brand_id', $userBrandIds);
-        }
         
         // Check if there's any search/filter parameter
         $hasSearch = $request->has('search') && $request->search != '';
         $hasDateFrom = $request->has('date_from') && $request->date_from != '';
         $hasDateTo = $request->has('date_to') && $request->date_to != '';
+        $hasBrandFilter = $request->has('brand_id') && $request->brand_id != '';
         $hasFilter = $hasSearch || $hasDateFrom || $hasDateTo;
         
-        // Only use cache when there's search/filter
-        if ($hasFilter) {
+        // Filter by user's brands or specific brand if selected
+        if ($hasBrandFilter) {
+            $query->where('tx_body.brand_id', $request->brand_id);
+        } elseif (!empty($userBrandIds)) {
+            $query->whereIn('tx_body.brand_id', $userBrandIds);
+        }
+        
+        // Only use cache when there's search/filter (including brand filter for query optimization)
+        $shouldUseCache = $hasFilter || $hasBrandFilter;
+        
+        if ($shouldUseCache) {
             // Generate cache key based on user and search parameters
             $userId = auth()->id();
             $search = $request->get('search', '');
             $dateFrom = $request->get('date_from', '');
             $dateTo = $request->get('date_to', '');
+            $brandId = $request->get('brand_id', '');
             $perPage = $request->get('per_page', 10);
             $page = $request->get('page', 1);
             
-            $cacheKey = "body:{$userId}:{$search}:{$dateFrom}:{$dateTo}:{$perPage}:{$page}";
+            $cacheKey = "body:{$userId}:{$search}:{$dateFrom}:{$dateTo}:{$brandId}:{$perPage}:{$page}";
             
             // Try to get from cache (1 hour)
             $transactions = cache()->remember($cacheKey, now()->addHour(), function () use ($request, $query) {
@@ -96,7 +108,7 @@ class TransactionBodyController extends Controller
             );
         }
         
-        return view('transaction-body.index', compact('transactions'));
+        return view('transaction-body.index', compact('transactions', 'brands'));
     }
 
     public function showImport()

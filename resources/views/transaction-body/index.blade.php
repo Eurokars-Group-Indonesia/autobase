@@ -100,7 +100,18 @@
                                 <option value="100" {{ request('per_page') == 100 ? 'selected' : '' }}>100</option>
                             </select>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-2">
+                            <label class="form-label">Brand</label>
+                            <select class="form-select form-select-sm" name="brand_id">
+                                <option value="">All Brands</option>
+                                @foreach($brands as $brand)
+                                    <option value="{{ $brand->brand_id }}" {{ request('brand_id') == $brand->brand_id ? 'selected' : '' }}>
+                                        {{ $brand->brand_name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-3">
                             <label class="form-label">Search</label>
                             <input type="text" class="form-control form-control-sm" name="search" 
                                    placeholder="Part No, Invoice No, WIP No..." 
@@ -118,11 +129,11 @@
                                    placeholder="Select date to" readonly>
                             <input type="hidden" name="date_to" id="date_to" value="{{ request('date_to') }}">
                         </div>
-                        <div class="col-md-3 d-flex align-items-end">
+                        <div class="col-md-2 d-flex align-items-end">
                             <button class="btn btn-primary btn-sm me-2" type="submit">
                                 <i class="bi bi-search"></i> Search
                             </button>
-                            @if(request('search') || request('date_from') || request('date_to'))
+                            @if(request('search') || request('date_from') || request('date_to') || request('brand_id'))
                                 <a href="{{ route('transaction-body.index') }}" class="btn btn-secondary btn-sm">
                                     <i class="bi bi-x-circle"></i> Clear
                                 </a>
