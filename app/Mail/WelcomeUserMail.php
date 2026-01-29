@@ -25,7 +25,7 @@ class WelcomeUserMail extends Mailable implements ShouldQueue
     {
         $this->user = $user;
         $this->password = $password;
-        $this->loginUrl = url('/login');
+        $this->loginUrl = url('/');
     }
 
     /**
