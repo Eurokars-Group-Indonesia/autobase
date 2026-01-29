@@ -54,37 +54,77 @@ class RoleController extends Controller
         }
         
         $data = $request->validated();
-        $data['unique_id'] = (string) Str::uuid();
-        $data['created_by'] = auth()->id();
-        $data['is_active'] = '1'; // Default active
+        $uniqueId = (string) Str::uuid();
+        $userId = auth()->id();        
 
-        $role = Role::create($data);
+        // Call stored procedure sp_add_ms_role
+        $result = \DB::select('CALL sp_add_ms_role(?, ?, ?, ?, ?)', [
+            $data['role_code'],
+            $data['role_name'],
+            $data['role_description'],
+            $userId,
+            $uniqueId
+        ]);
 
-        // Attach permissions
-        if ($request->has('permissions')) {
-            foreach ($request->permissions as $permissionId) {
-                $role->permissions()->attach($permissionId, [
-                    'unique_id' => (string) Str::uuid(),
-                    'created_by' => auth()->id(),
-                    'created_date' => now(),
-                    'is_active' => '1',
-                ]);
+
+        // Check result from stored procedure
+        if (empty($result)) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Failed to create role. No response from database.');
+        }
+        
+        $response = $result[0];
+
+        // Handle response based on return_code
+        if ($response->return_code == 200) 
+        {
+            // Get the created user by unique_id
+            $role = Role::where('unique_id', $uniqueId)->first();
+
+            if ($role) {
+
+                // Attach permissions
+                if ($request->has('permissions')) {
+
+                    foreach ($request->permissions as $permissionId) {
+                        \DB::select('CALL sp_add_ms_role_permission(?, ?, ?, ?)', [
+                            $role->role_id,
+                            $permissionId,
+                            $userId,
+                            (string) Str::uuid(),
+                        ]);
+                    }
+                }
+
+                // Attach menus
+                if ($request->has('menus')) {
+                    foreach ($request->menus as $menuId) {
+                        \DB::select('CALL sp_add_ms_role_menu(?, ?, ?, ?)', [
+                            $role->role_id,
+                            $menuId,
+                            $userId,
+                            (string) Str::uuid(),
+                        ]);
+                    }
+                }
+
+                return redirect()->route('roles.index')
+                    ->with('success', 'Role Menu created successfully.');
+            } elseif ($response->return_code == 404) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message);
+            } elseif ($response->return_code == 409) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['email' => $response->return_message]);
+            } else {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message ?? 'An error occurred while creating role menu.');
             }
         }
-
-        // Attach menus
-        if ($request->has('menus')) {
-            foreach ($request->menus as $menuId) {
-                $role->menus()->attach($menuId, [
-                    'unique_id' => (string) Str::uuid(),
-                    'created_by' => auth()->id(),
-                    'created_date' => now(),
-                    'is_active' => '1',
-                ]);
-            }
-        }
-
-        return redirect()->route('roles.index')->with('success', 'Role created successfully.');
     }
 
     public function edit(Role $role)

@@ -52,52 +52,89 @@ class UserController extends Controller
         
         try {
             $data = $request->validated();
-            $data['password'] = Hash::make($data['password']);
-            $data['unique_id'] = (string) Str::uuid();
-            $data['created_by'] = auth()->id();
-            $data['is_active'] = '1'; // Default active
+            $uniqueId = (string) Str::uuid();
+            $userId = auth()->id();
+            $hashedPassword = Hash::make($data['password']);
 
-            // Remove brand_id from data since we'll use many-to-many
-            unset($data['brand_id']);
+            // Call stored procedure sp_add_ms_user
+            $result = \DB::select('CALL sp_add_ms_user(?, ?, ?, ?, ?, ?, ?, ?)', [
+                $userId,
+                $data['dealer_id'] ?? null,
+                $data['name'],
+                $data['email'],
+                $data['full_name'],
+                $hashedPassword,
+                $data['phone'] ?? null,
+                $uniqueId
+            ]);
 
-            $user = User::create($data);
-
-            // Attach roles
-            if ($request->has('roles')) {
-                foreach ($request->roles as $roleId) {
-                    $user->roles()->attach($roleId, [
-                        'unique_id' => (string) Str::uuid(),
-                        'assigned_date' => now(),
-                        'created_by' => auth()->id(),
-                        'created_date' => now(),
-                        'is_active' => '1',
-                    ]);
-                }
+            // Check result from stored procedure
+            if (empty($result)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Failed to create user. No response from database.');
             }
 
-            // Attach brands
-            if ($request->has('brands')) {
-                foreach ($request->brands as $brandId) {
-                    $user->brands()->attach($brandId, [
-                        'unique_id' => (string) Str::uuid(),
-                        'created_by' => auth()->id(),
-                        'created_date' => now(),
-                        'is_active' => '1',
-                    ]);
+            $response = $result[0];
+
+            // Handle response based on return_code
+            if ($response->return_code == 200) {
+                // Get the created user by unique_id
+                $user = User::where('unique_id', $uniqueId)->first();
+
+                if ($user) {
+                    // Attach roles
+                    if ($request->has('roles')) {
+                        foreach ($request->roles as $roleId) {
+                            \DB::select('CALL sp_add_ms_user_role(?, ?, ?, ?)', [
+                                $user->user_id,
+                                $roleId,
+                                $userId,
+                                (string) Str::uuid(),
+                            ]);
+                        }
+                    }
+
+                    // Attach brands
+                    if ($request->has('brands')) {
+                        foreach ($request->brands as $brandId) {
+                            \DB::select('CALL sp_add_ms_user_brand(?, ?, ?, ?)', [
+                                $user->user_id,
+                                $brandId,
+                                $userId,
+                                (string) Str::uuid(),
+                            ]);
+                        }
+                    }
                 }
+
+                // Flush cache
+                Cache::flush();
+
+                return redirect()->route('users.index')->with('success', 'User created successfully.');
+            } elseif ($response->return_code == 404) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message);
+            } elseif ($response->return_code == 409) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['email' => $response->return_message]);
+            } else {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message ?? 'An error occurred while creating user.');
             }
-
-            // Flush cache
-            Cache::flush();
-
-            return redirect()->route('users.index')->with('success', 'User created successfully.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Validation error akan otomatis di-handle oleh Laravel dan redirect back dengan errors
-            throw $e;
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database error in UserController@store: ' . $e->getMessage());
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to create user: ' . $e->getMessage());
+                ->with('error', 'Database error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error in UserController@store: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred. Please try again.');
         }
     }
 
@@ -126,57 +163,127 @@ class UserController extends Controller
         
         try {
             $data = $request->validated();
+            $userId = auth()->id();
             
+            // Prepare password if provided
             if ($request->filled('password')) {
-                $data['password'] = Hash::make($data['password']);
+                $hashedPassword = Hash::make($data['password']);
             } else {
-                unset($data['password']);
+                $hashedPassword = $user->password; // Keep existing password
             }
-            
-            // Remove brand_id from data since we'll use many-to-many
-            unset($data['brand_id']);
-            
-            $data['updated_by'] = auth()->id();
-            $user->update($data);
 
-            // Sync roles
-            $user->roles()->detach();
-            if ($request->has('roles')) {
-                foreach ($request->roles as $roleId) {
-                    $user->roles()->attach($roleId, [
-                        'unique_id' => (string) Str::uuid(),
-                        'assigned_date' => now(),
-                        'created_by' => auth()->id(),
-                        'created_date' => now(),
-                        'is_active' => '1',
+            // Call stored procedure sp_update_ms_user
+            $result = \DB::select('CALL sp_update_ms_user(?, ?, ?, ?, ?, ?, ?, ?)', [
+                $userId,
+                $data['dealer_id'] ?? null,
+                $data['name'],
+                $data['email'],
+                $data['full_name'],
+                $hashedPassword,
+                $data['phone'] ?? null,
+                $user->unique_id
+            ]);
+
+            // Check result from stored procedure
+            if (empty($result)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Failed to update user. No response from database.');
+            }
+
+            $response = $result[0];
+
+            // Handle response based on return_code
+            if ($response->return_code == 200) {
+                // Soft delete existing roles (set is_active = '0')
+                \DB::table('ms_user_roles')
+                    ->where('user_id', $user->user_id)
+                    ->where('is_active', '1')
+                    ->update([
+                        'is_active' => '0',
+                        'updated_by' => $userId,
+                        'updated_date' => now()
                     ]);
-                }
-            }
 
-            // Sync brands
-            $user->brands()->detach();
-            if ($request->has('brands')) {
-                foreach ($request->brands as $brandId) {
-                    $user->brands()->attach($brandId, [
-                        'unique_id' => (string) Str::uuid(),
-                        'created_by' => auth()->id(),
-                        'created_date' => now(),
-                        'is_active' => '1',
+                // Add new roles
+                if ($request->has('roles')) {
+                    foreach ($request->roles as $roleId) {
+                        try {
+                            $roleResult = \DB::select('CALL sp_add_ms_user_role(?, ?, ?, ?)', [
+                                $user->user_id,
+                                $roleId,
+                                $userId,
+                                (string) Str::uuid(),
+                            ]);
+                            
+                            // Check if role assignment failed (duplicate will return 409, which is ok to ignore)
+                            if (!empty($roleResult) && $roleResult[0]->return_code != 200 && $roleResult[0]->return_code != 409) {
+                                \Log::warning("Failed to assign role {$roleId} to user {$user->user_id}: " . $roleResult[0]->return_message);
+                            }
+                        } catch (\Exception $e) {
+                            \Log::error("Error assigning role {$roleId} to user {$user->user_id}: " . $e->getMessage());
+                        }
+                    }
+                }
+
+                // Soft delete existing brands (set is_active = '0')
+                \DB::table('ms_user_brand')
+                    ->where('user_id', $user->user_id)
+                    ->where('is_active', '1')
+                    ->update([
+                        'is_active' => '0',
+                        'updated_by' => $userId,
+                        'updated_date' => now()
                     ]);
+
+                // Add new brands
+                if ($request->has('brands')) {
+                    foreach ($request->brands as $brandId) {
+                        try {
+                            $brandResult = \DB::select('CALL sp_add_ms_user_brand(?, ?, ?, ?)', [
+                                $user->user_id,
+                                $brandId,
+                                $userId,
+                                (string) Str::uuid(),
+                            ]);
+                            
+                            // Check if brand assignment failed (duplicate will return 409, which is ok to ignore)
+                            if (!empty($brandResult) && $brandResult[0]->return_code != 200 && $brandResult[0]->return_code != 409) {
+                                \Log::warning("Failed to assign brand {$brandId} to user {$user->user_id}: " . $brandResult[0]->return_message);
+                            }
+                        } catch (\Exception $e) {
+                            \Log::error("Error assigning brand {$brandId} to user {$user->user_id}: " . $e->getMessage());
+                        }
+                    }
                 }
+
+                // Flush cache
+                Cache::flush();
+
+                return redirect()->route('users.index')->with('success', 'User updated successfully.');
+            } elseif ($response->return_code == 404) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message);
+            } elseif ($response->return_code == 409) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['email' => $response->return_message]);
+            } else {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message ?? 'An error occurred while updating user.');
             }
-
-            // Flush cache
-            Cache::flush();
-
-            return redirect()->route('users.index')->with('success', 'User updated successfully.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            // Validation error akan otomatis di-handle oleh Laravel dan redirect back dengan errors
-            throw $e;
-        } catch (\Exception $e) {
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database error in UserController@update: ' . $e->getMessage());
             return redirect()->back()
                 ->withInput()
-                ->with('error', 'Failed to update user: ' . $e->getMessage());
+                ->with('error', 'Database error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error in UserController@update: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred. Please try again.');
         }
     }
 

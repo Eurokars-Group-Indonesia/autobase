@@ -43,14 +43,58 @@ class DealerController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
-        $data = $request->validated();
-        $data['unique_id'] = (string) Str::uuid();
-        $data['created_by'] = auth()->id();
-        $data['is_active'] = '1'; // Default active
-
-        Dealer::create($data);
-
-        return redirect()->route('dealers.index')->with('success', 'Dealer created successfully.');
+        try {
+            $data = $request->validated();
+            $uniqueId = (string) Str::uuid();
+            $userId = auth()->id();
+            
+            // Call stored procedure sp_add_ms_dealer
+            $result = \DB::select('CALL sp_add_ms_dealer(?, ?, ?, ?, ?)', [
+                $userId,
+                $data['dealer_name'],
+                $data['dealer_code'],
+                $data['city'] ?? null,
+                $uniqueId
+            ]);
+            
+            // Check result from stored procedure
+            if (empty($result)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Failed to create dealer. No response from database.');
+            }
+            
+            $response = $result[0];
+            
+            // Handle response based on return_code
+            if ($response->return_code == 200) {
+                return redirect()->route('dealers.index')
+                    ->with('success', 'Dealer created successfully.');
+            } elseif ($response->return_code == 404) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message);
+            } elseif ($response->return_code == 409) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['dealer_name' => $response->return_message]);
+            } else {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message ?? 'An error occurred while creating dealer.');
+            }
+            
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database error in DealerController@store: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Database error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error in DealerController@store: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred. Please try again.');
+        }
     }
 
     public function edit(Dealer $dealer)
@@ -70,11 +114,57 @@ class DealerController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
-        $data = $request->validated();
-        $data['updated_by'] = auth()->id();
-        $dealer->update($data);
-
-        return redirect()->route('dealers.index')->with('success', 'Dealer updated successfully.');
+        try {
+            $data = $request->validated();
+            $userId = auth()->id();
+            
+            // Call stored procedure sp_update_ms_dealer
+            $result = \DB::select('CALL sp_update_ms_dealer(?, ?, ?, ?, ?)', [
+                $userId,
+                $data['dealer_name'],
+                $data['dealer_code'],
+                $data['city'] ?? null,
+                $dealer->unique_id
+            ]);
+            
+            // Check result from stored procedure
+            if (empty($result)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Failed to update dealer. No response from database.');
+            }
+            
+            $response = $result[0];
+            
+            // Handle response based on return_code
+            if ($response->return_code == 200) {
+                return redirect()->route('dealers.index')
+                    ->with('success', 'Dealer updated successfully.');
+            } elseif ($response->return_code == 404) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message);
+            } elseif ($response->return_code == 409) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['dealer_name' => $response->return_message]);
+            } else {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message ?? 'An error occurred while updating dealer.');
+            }
+            
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database error in DealerController@update: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Database error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error in DealerController@update: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred. Please try again.');
+        }
     }
 
     public function destroy(Dealer $dealer)
