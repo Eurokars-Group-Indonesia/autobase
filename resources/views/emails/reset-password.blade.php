@@ -140,11 +140,6 @@
             
             <p>Click the button below to reset your password:</p>
 
-            <div class="info-box">
-                <p><strong>⏰ This link will expire in 1 hour</strong></p>
-                <p>Expires at: <strong>{{ $expiresAt->format('d M Y, H:i:s') }}</strong></p>
-            </div>
-
             <div class="button-container">
                 <a href="{{ $resetLink }}" class="reset-button">Reset Password</a>
             </div>
@@ -153,6 +148,12 @@
 
             <p><strong>If the button doesn't work, copy and paste this link into your browser:</strong></p>
             <div class="link-text">{{ $resetLink }}</div>
+
+            <div class="info-box">
+                <p><strong>⏰ This link will expire in 1 hour</strong></p>
+                <p>Expires at: <strong>{{ $expiresAt->format('d M Y, H:i:s') }}</strong></p>
+            </div>
+
 
             <div class="warning-box">
                 <p><strong>⚠️ Security Notice:</strong></p>
