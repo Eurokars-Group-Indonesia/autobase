@@ -266,6 +266,10 @@
             padding: 1rem 1.5rem;
             font-weight: 600;
         }
+        .card-header h5 {
+            color: white !important;
+            margin: 0;
+        }
 
         [data-theme="dark"] .card-header {
             border-bottom: 1px solid var(--border-color);
@@ -667,9 +671,12 @@
                             {{ auth()->user()->name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            {{-- <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Profile</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear"></i> Settings</a></li> --}}
-                            {{-- <li><hr class="dropdown-divider"></li> --}}
+                            <li>
+                                <a class="dropdown-item" href="{{ route('profile.change-password') }}">
+                                    <i class="bi bi-key"></i> Change Password
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
                             <li>
                                 <form action="{{ route('logout') }}" method="POST">
                                     @csrf

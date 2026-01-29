@@ -243,6 +243,11 @@
                     <div class="credential-label">Email Address</div>
                     <div class="credential-value">{{ $user->email }}</div>
                 </div>
+
+                <div class="credential-row">
+                    <div class="credential-label">Password</div>
+                    <div class="credential-value">{{ $password }}</div>
+                </div>
             </div>
 
             <!-- Login Button -->
@@ -268,8 +273,8 @@
             <div class="notice-box">
                 <div class="notice-title">Important Security Notice</div>
                 <p class="notice-text">
-                    For security purposes, we strongly recommend that you change your temporary password immediately 
-                    upon your first login. Please ensure that your new password is strong and unique.
+                    For security purposes, we strongly recommend that you change your password immediately 
+                    upon your first login in Change Password menu. Please ensure that your new password is strong and unique.
                 </p>
                 <p class="notice-text">
                     Please keep your login credentials confidential and do not share them with unauthorized individuals. 
