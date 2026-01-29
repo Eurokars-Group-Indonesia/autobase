@@ -56,30 +56,17 @@ class PasswordResetController extends Controller
             'created_at' => Carbon::now(),
         ]);
 
-        // Send email
+        // Send email using Mailable
         $resetLink = route('password.reset', ['token' => $token]);
 
         try {
-            // Log before sending
             \Log::info('Attempting to send password reset email', [
                 'to' => $user->email,
                 'reset_link' => $resetLink,
             ]);
 
-            // Render HTML from view
-            $emailHtml = view('emails.reset-password', [
-                'user' => $user,
-                'resetLink' => $resetLink,
-                'expiresAt' => $expiresAt,
-            ])->render();
-
-            // Send email with HTML content
-            Mail::send([], [], function ($message) use ($user, $emailHtml) {
-                $message->to($user->email)
-                    ->subject('Reset Password - AutoBase')
-                    ->html($emailHtml)
-                    ->from(config('mail.from.address'), config('mail.from.name'));
-            });
+            // Send email using Mailable class
+            Mail::to($user->email)->send(new \App\Mail\ResetPasswordMail($user, $resetLink, $expiresAt));
 
             \Log::info('Password reset email sent successfully', [
                 'to' => $user->email,
