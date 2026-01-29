@@ -24,11 +24,15 @@
                     <!-- Header Row -->
                     <tr class="header-row">
                         <td>
-                            @if(isset($transaction->bodies) && count($transaction->bodies) > 0)
-                            <span class="badge bg-success">{{ count($transaction->bodies) }} items</span>
-                            @else
-                            <span class="badge bg-secondary">No items</span>
-                            @endif
+                            <button class="btn btn-sm btn-info view-details-inline" 
+                                    data-wipno="{{ $transaction->wip_no }}" 
+                                    data-invno="{{ $transaction->invoice_no }}" 
+                                    data-brandcode="{{ $transaction->brand_code }}"
+                                    data-magicid="{{ $transaction->magic_id }}"
+                                    data-headerid="{{ $transaction->header_id }}"
+                                    title="View Details">
+                                <i class="bi bi-chevron-down"></i>
+                            </button>
                         </td>
                         <td>{{ $transaction->invoice_no }}</td>
                         <td>{{ $transaction->wip_no }}</td>
@@ -47,66 +51,19 @@
                         <td class="text-end">{{ $transaction->currency_code }} {{ number_format($transaction->net_value, 2) }}</td>
                     </tr>
                     
-                    <!-- Body Details Row -->
-                    @if(isset($transaction->bodies) && count($transaction->bodies) > 0)
-                    <tr class="body-details-row">
+                    <!-- Body Details Row (will be loaded via AJAX) -->
+                    <tr class="body-details-row" id="details-{{ $transaction->header_id }}" style="display: none;">
                         <td colspan="12" class="p-3">
-                            <h6 class="mb-3 text-primary">
-                            </h6>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-bordered mb-0">
-                                    <thead class="table-secondary">
-                                        <tr>
-                                            <th class="text-center" style="width: 50px;">No</th>
-                                            <th class="text-center">Part No</th>
-                                            <th class="text-center">Description</th>
-                                            <th class="text-center">Date Decard</th>
-                                            <th class="text-center">Qty</th>
-                                            <th class="text-center">Selling Price</th>
-                                            <th class="text-center">Discount %</th>
-                                            <th class="text-center">Extended Price</th>
-                                            <th class="text-center">Part/Labour</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @php $totalExtPrice = 0; @endphp
-                                        @foreach($transaction->bodies as $index => $body)
-                                            @php $totalExtPrice += $body->extended_price; @endphp
-                                            <tr>
-                                                <td class="text-center">{{ $index + 1 }}</td>
-                                                <td>{{ $body->part_no }}</td>
-                                                <td>{{ $body->description ?? '-' }}</td>
-                                                <td class="text-center">
-                                                    @if($body->date_decard)
-                                                        {{ \Carbon\Carbon::parse($body->date_decard)->format('d M Y') }}
-                                                    @else
-                                                        -
-                                                    @endif
-                                                </td>
-                                                <td class="text-end">{{ number_format($body->qty, 2) }}</td>
-                                                <td class="text-end">{{ number_format($body->selling_price, 2) }}</td>
-                                                <td class="text-end">{{ number_format($body->discount, 2) }}%</td>
-                                                <td class="text-end">{{ number_format($body->extended_price, 2) }}</td>
-                                                <td class="text-center">
-                                                    <span class="badge bg-{{ $body->part_or_labour === 'P' ? 'primary' : 'success' }}">
-                                                        {{ $body->part_or_labour === 'P' ? 'Part' : 'Labour' }}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot class="table-secondary">
-                                        <tr>
-                                            <th colspan="7" class="text-end">Total:</th>
-                                            <th class="text-end">{{ number_format($totalExtPrice, 2) }}</th>
-                                            <th></th>
-                                        </tr>
-                                    </tfoot>
-                                </table>
+                            <div class="body-details-content">
+                                <div class="text-center py-3">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 mb-0">Loading details...</p>
+                                </div>
                             </div>
                         </td>
                     </tr>
-                    @endif
                 </tbody>
             </table>
         </div>
