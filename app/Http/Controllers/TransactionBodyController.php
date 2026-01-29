@@ -120,7 +120,119 @@ class TransactionBodyController extends Controller
             );
         }
         
-        return view('transaction-body.index', compact('transactions', 'brands'));
+        // Return view without transactions data - will be loaded via AJAX
+        return view('transaction-body.index', compact('brands'));
+    }
+
+    public function search(Request $request)
+    {
+        // Start timing
+        $startTime = microtime(true);
+        
+        // Get user's brand IDs (realtime query)
+        $userBrandIds = auth()->user()->getBrandIds();
+        
+        $query = TransactionBody::with('brand')
+            ->where('tx_body.is_active', '1')
+            ->orderBy('tx_body.created_date', 'desc');
+        
+        // Check if there's any search/filter parameter
+        $hasSearch = $request->has('search') && $request->search != '';
+        $hasDateFrom = $request->has('date_from') && $request->date_from != '';
+        $hasDateTo = $request->has('date_to') && $request->date_to != '';
+        $hasBrandFilter = $request->has('brand_id') && $request->brand_id != '';
+        $hasFilter = $hasSearch || $hasDateFrom || $hasDateTo;
+        
+        // Get brand_code if brand_id is selected
+        $brandCode = null;
+        if ($hasBrandFilter) {
+            $selectedBrand = \App\Models\Brand::where('brand_id', $request->brand_id)->first();
+            $brandCode = $selectedBrand ? $selectedBrand->brand_code : null;
+        }
+        
+        // Filter by user's brands or specific brand if selected
+        if ($hasBrandFilter && $brandCode) {
+            $query->where('tx_body.brand_code', $brandCode);
+        } elseif (!empty($userBrandIds)) {
+            // Get brand codes for user's brands
+            $userBrandCodes = \App\Models\Brand::whereIn('brand_id', $userBrandIds)
+                ->pluck('brand_code')
+                ->toArray();
+            $query->whereIn('tx_body.brand_code', $userBrandCodes);
+        }
+        
+        // Only use cache when there's search/filter (including brand filter for query optimization)
+        $shouldUseCache = $hasFilter || $hasBrandFilter;
+        
+        if ($shouldUseCache) {
+            // Generate cache key based on user and search parameters
+            $userId = auth()->id();
+            $search = $request->get('search', '');
+            $dateFrom = $request->get('date_from', '');
+            $dateTo = $request->get('date_to', '');
+            $brandId = $request->get('brand_id', '');
+            $perPage = $request->get('per_page', 10);
+            $page = $request->get('page', 1);
+            
+            $cacheKey = "body:{$userId}:{$search}:{$dateFrom}:{$dateTo}:{$brandId}:{$perPage}:{$page}";
+            
+            // Try to get from cache (1 hour)
+            $transactions = cache()->remember($cacheKey, now()->addHour(), function () use ($request, $query) {
+                // Search by text
+                if ($request->has('search') && $request->search != '') {
+                    $search = $request->search;
+                    $query->where(function($q) use ($search) {
+                        $q->where('part_no', 'like', $search . '%')
+                          ->orWhere('invoice_no', 'like', $search . '%')
+                          ->orWhere('wip_no', 'like', $search . '%');
+                    });
+                }
+                
+                // Filter by date range
+                if ($request->has('date_from') && $request->date_from != '') {
+                    $query->whereDate('date_decard', '>=', $request->date_from);
+                }
+                
+                if ($request->has('date_to') && $request->date_to != '') {
+                    $query->whereDate('date_decard', '<=', $request->date_to);
+                }
+                
+                // Pagination
+                $perPage = $request->get('per_page', 10);
+                $perPageValue = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
+                
+                return $query->paginate($perPageValue)->withQueryString();
+            });
+        } else {
+            // No search/filter - execute query directly without cache
+            $perPage = $request->get('per_page', 10);
+            $perPageValue = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
+            $transactions = $query->paginate($perPageValue)->withQueryString();
+        }
+        
+        // Calculate execution time
+        $endTime = microtime(true);
+        $executionTime = ($endTime - $startTime) * 1000;
+        
+        // Log search history asynchronously only if there's a search query or date filter
+        if ($hasFilter) {
+            LogSearchHistory::dispatch(
+                auth()->id(),
+                $request->get('search'),
+                $request->get('date_from'),
+                $request->get('date_to'),
+                $executionTime,
+                'B'
+            );
+        }
+        
+        // Return JSON response for AJAX
+        return response()->json([
+            'success' => true,
+            'hasFilter' => $hasFilter,
+            'html' => view('transaction-body.partials.table', compact('transactions'))->render(),
+            'pagination' => view('transaction-body.partials.pagination', compact('transactions'))->render()
+        ]);
     }
 
     public function showImport()

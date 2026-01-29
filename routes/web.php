@@ -158,6 +158,7 @@ Route::middleware('auth')->group(function () {
     // Transaction Body
     Route::middleware('permission:transaction-body.view')->group(function () {
         Route::get('/transaction-body', [TransactionBodyController::class, 'index'])->name('transaction-body.index');
+        Route::get('/transaction-body/search', [TransactionBodyController::class, 'search'])->name('transaction-body.search');
         Route::get('/transaction-body/export', [TransactionBodyController::class, 'export'])->name('transaction-body.export');
     });
     Route::middleware('permission:transaction-body.import')->group(function () {

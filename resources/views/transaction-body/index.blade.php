@@ -73,6 +73,11 @@
             width: calc(100% + 20px);
         }
     }
+    
+    /* Hide clear button by default */
+    #clearBtn {
+        display: none;
+    }
 </style>
 @endpush
 
@@ -83,11 +88,6 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-list-ul"></i> Transaction Body</span>
                 <div>
-                    @if(request('search') || request('date_from') || request('date_to'))
-                    <a href="{{ route('transaction-body.export', request()->all()) }}" class="btn btn-success btn-sm me-2">
-                        <i class="bi bi-file-earmark-excel"></i> Export Excel
-                    </a>
-                    @endif
                     @if(auth()->user()->hasPermission('transaction-body.import'))
                     <a href="{{ route('transaction-body.import') }}" class="btn btn-light btn-sm">
                         <i class="bi bi-upload"></i> Import Excel
@@ -96,11 +96,11 @@
                 </div>
             </div>
             <div class="card-body">
-                <form action="{{ route('transaction-body.index') }}" method="GET" id="searchForm">
+                <form method="GET" id="searchForm">
                     <div class="row mb-3">
                         <div class="col-md-1">
                             <label class="form-label">Per Page</label>
-                            <select class="form-select form-select-sm" name="per_page" onchange="this.form.submit()">
+                            <select class="form-select form-select-sm" name="per_page" id="per_page">
                                 <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
                                 <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
                                 <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
@@ -109,7 +109,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Brand</label>
-                            <select class="form-select form-select-sm" name="brand_id">
+                            <select class="form-select form-select-sm" name="brand_id" id="brand_id">
                                 <option value="">All Brands</option>
                                 @foreach($brands as $brand)
                                     <option value="{{ $brand->brand_id }}" {{ request('brand_id') == $brand->brand_id ? 'selected' : '' }}>
@@ -120,7 +120,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Search</label>
-                            <input type="text" class="form-control form-control-sm" name="search" 
+                            <input type="text" class="form-control form-control-sm" name="search" id="search"
                                    placeholder="Part No, Invoice No, WIP No..." 
                                    value="{{ request('search') }}">
                         </div>
@@ -137,78 +137,28 @@
                             <input type="hidden" name="date_to" id="date_to" value="{{ request('date_to') }}">
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-primary btn-sm me-2" type="submit">
+                            <button class="btn btn-primary btn-sm me-2" type="submit" id="searchBtn">
                                 <i class="bi bi-search"></i> Search
                             </button>
-                            @if(request('search') || request('date_from') || request('date_to') || request('brand_id'))
-                                <a href="{{ route('transaction-body.index') }}" class="btn btn-secondary btn-sm">
-                                    <i class="bi bi-x-circle"></i> Clear
-                                </a>
-                            @endif
+                            <button class="btn btn-secondary btn-sm" type="button" id="clearBtn">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </button>
                         </div>
                     </div>
                 </form>
 
-
-                <div class="table-responsive">
-                    <table class="table table-hover table-sm table-nowrap">
-                        <thead>
-                            <tr>
-                                <th style="min-width: 120px;">Part No</th>
-                                <th style="min-width: 120px;">Invoice No</th>
-                                <th style="min-width: 150px;">Brand</th>
-                                <th style="min-width: 120px;">WIP No</th>
-                                <th style="min-width: 250px;">Description</th>
-                                <th style="min-width: 100px;">Date Decard</th>
-                                <th style="min-width: 80px;">Qty</th>
-                                <th style="min-width: 80px;">Unit</th>
-                                <th style="min-width: 120px;">Selling Price</th>
-                                <th style="min-width: 100px;">Discount</th>
-                                <th style="min-width: 130px;">Extended Price</th>
-                                <th style="min-width: 100px;">Part/Labour</th>
-                                <th style="min-width: 100px;">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($transactions as $transaction)
-                                <tr>
-                                    <td>{{ $transaction->part_no }}</td>
-                                    <td>{{ $transaction->invoice_no }}</td>
-                                    <td>{{ $transaction->brand->brand_name ?? '-' }}</td>
-                                    <td>{{ $transaction->wip_no }}</td>
-                                    <td>{{ $transaction->description ?? '-' }}</td>
-                                    <td>{{ $transaction->date_decard ? $transaction->date_decard->format('d M Y') : '-' }}</td>
-                                    <td class="text-end">{{ number_format($transaction->qty, 2) }}</td>
-                                    <td>{{ $transaction->unit }}</td>
-                                    <td class="text-end">{{ number_format($transaction->selling_price, 2) }}</td>
-                                    <td class="text-end">{{ number_format($transaction->discount, 2) }}%</td>
-                                    <td class="text-end">{{ number_format($transaction->extended_price, 2) }}</td>
-                                    <td>
-                                        <span class="badge bg-{{ $transaction->part_or_labour === 'P' ? 'primary' : 'success' }}">
-                                            {{ $transaction->getPartOrLabourLabel() }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-{{ $transaction->invoice_status === 'X' ? 'danger' : 'success' }}">
-                                            {{ $transaction->getInvoiceStatusLabel() }}
-                                        </span>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="13" class="text-center">No transaction body found</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div id="loadingIndicator" style="display: none;" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Searching transactions...</p>
                 </div>
-                <div class="mt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-                    <div class="text-center text-md-start">
-                        Showing {{ $transactions->firstItem() ?? 0 }} to {{ $transactions->lastItem() ?? 0 }} of {{ $transactions->total() }} entries
-                    </div>
-                    <div>
-                        {{ $transactions->links('vendor.pagination.custom') }}
-                    </div>
+
+                <div id="tableContainer">
+                    <!-- Content will be loaded via AJAX -->
+                </div>
+                <div id="paginationContainer">
+                    <!-- Pagination will be loaded via AJAX -->
                 </div>
             </div>
         </div>
@@ -283,6 +233,143 @@
                     document.getElementById('date_to').value = '';
                 }
             }
+        });
+
+        // AJAX Search Function
+        function performSearch(page = 1, updateUrl = true, showClearButton = false) {
+            const formData = {
+                search: $('#search').val(),
+                date_from: $('#date_from').val(),
+                date_to: $('#date_to').val(),
+                brand_id: $('#brand_id').val(),
+                per_page: $('#per_page').val(),
+                page: page
+            };
+
+            // Show loading indicator
+            $('#loadingIndicator').show();
+            $('#tableContainer').hide();
+            $('#paginationContainer').hide();
+
+            $.ajax({
+                url: '{{ route("transaction-body.search") }}',
+                method: 'GET',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        // Update table content
+                        $('#tableContainer').html(response.html);
+                        
+                        // Update pagination
+                        $('#paginationContainer').html(response.pagination);
+                        
+                        // Show content
+                        $('#tableContainer').show();
+                        $('#paginationContainer').show();
+                        $('#loadingIndicator').hide();
+                        
+                        // Update URL without page reload only if updateUrl is true
+                        if (updateUrl) {
+                            const url = new URL(window.location);
+                            Object.keys(formData).forEach(key => {
+                                if (formData[key] && formData[key] !== '10' && key !== 'per_page') {
+                                    url.searchParams.set(key, formData[key]);
+                                } else if (key === 'per_page' && formData[key] !== '10') {
+                                    url.searchParams.set(key, formData[key]);
+                                } else {
+                                    url.searchParams.delete(key);
+                                }
+                            });
+                            
+                            // Only update URL if there are actual filters
+                            if (hasActiveFilters() || formData.per_page !== '10' || formData.page > 1) {
+                                window.history.pushState({}, '', url);
+                            } else {
+                                // Clear URL if no filters
+                                window.history.pushState({}, '', '{{ route("transaction-body.index") }}');
+                            }
+                        }
+                        
+                        // Show clear button if requested
+                        if (showClearButton) {
+                            $('#clearBtn').show();
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    $('#loadingIndicator').hide();
+                    $('#tableContainer').show();
+                    $('#paginationContainer').show();
+                    console.error('Search error:', xhr);
+                    alert('Failed to search transactions. Please try again.');
+                }
+            });
+        }
+
+        // Function to check if there are active filters
+        function hasActiveFilters() {
+            return $('#search').val() !== '' || 
+                   $('#date_from').val() !== '' || 
+                   $('#date_to').val() !== '';
+        }
+
+        // Load initial data on page load
+        $(document).ready(function() {
+            // Check if there are URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasUrlParams = urlParams.has('search') || urlParams.has('date_from') || 
+                                 urlParams.has('date_to') || urlParams.has('brand_id') || 
+                                 urlParams.has('page');
+            
+            // Show clear button if there are URL parameters (coming from previous search)
+            if (hasUrlParams && hasActiveFilters()) {
+                $('#clearBtn').show();
+            }
+            
+            // Load data without updating URL if no params, otherwise with URL update
+            performSearch({{ request('page', 1) }}, hasUrlParams, false);
+        });
+
+        // Handle search form submit
+        $('#searchForm').on('submit', function(e) {
+            e.preventDefault();
+            performSearch(1, true, true); // Show clear button after search
+        });
+
+        // Handle clear button
+        $('#clearBtn').on('click', function() {
+            $('#search').val('');
+            $('#date_from').val('');
+            $('#date_to').val('');
+            $('#date_from_display').val('');
+            $('#date_to_display').val('');
+            $('#brand_id').val('');
+            $('#per_page').val('10');
+            dateFromPicker.clear();
+            dateToPicker.clear();
+            
+            // Hide clear button
+            $('#clearBtn').hide();
+            
+            // Perform search with cleared filters to show default 10 data
+            performSearch(1, false, false);
+        });
+
+        // Handle per_page change
+        $('#per_page').on('change', function() {
+            // Keep clear button state when changing per_page
+            const isClearButtonVisible = $('#clearBtn').is(':visible');
+            performSearch(1, true, isClearButtonVisible);
+        });
+
+        // Handle pagination clicks
+        $(document).on('click', '.pagination a', function(e) {
+            e.preventDefault();
+            const url = new URL($(this).attr('href'));
+            const page = url.searchParams.get('page') || 1;
+            // Keep clear button state when paginating
+            const isClearButtonVisible = $('#clearBtn').is(':visible');
+            performSearch(page, true, isClearButtonVisible);
         });
     });
 </script>
