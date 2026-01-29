@@ -27,7 +27,7 @@ return new class extends Migration
                 DECLARE v_exists_user INT DEFAULT 0;
                 DECLARE v_exists_brand INT DEFAULT 0;
                 DECLARE v_exists_created_by INT DEFAULT 0;
-                DECLARE v_screen_id VARCHAR(25) DEFAULT 'UBD01';
+                DECLARE v_screen_id VARCHAR(25) DEFAULT 'MUB01';
 
                 proc_label: BEGIN
                     -- =====================

@@ -8,12 +8,12 @@ return new class extends Migration
     public function up(): void
     {
         DB::unprepared("
-            DROP PROCEDURE IF EXISTS sp_add_ms_user_role;
+            DROP PROCEDURE IF EXISTS sp_add_ms_permission;
 
-            CREATE PROCEDURE sp_add_ms_user_role(
+            CREATE PROCEDURE sp_add_ms_permission(
                 IN p_user_id VARCHAR(50),
-                IN p_role_id VARCHAR(50),
-                IN p_created_by VARCHAR(50),
+                IN p_permission_code VARCHAR(100),
+                IN p_permission_name VARCHAR(150),
                 IN p_unique_id VARCHAR(50)
             )
             BEGIN
@@ -25,31 +25,9 @@ return new class extends Migration
                 DECLARE v_return_code INT DEFAULT 200;
                 DECLARE v_return_message VARCHAR(255) DEFAULT 'Success';
                 DECLARE v_exists_user INT DEFAULT 0;
-                DECLARE v_exists_role INT DEFAULT 0;
-                DECLARE v_exists_created_by INT DEFAULT 0;
-                DECLARE v_screen_id VARCHAR(25) DEFAULT 'MUR01';
+                DECLARE v_screen_id VARCHAR(25) DEFAULT 'MPE01';
 
                 proc_label: BEGIN
-                    -- =====================
-                    -- Check created_by user exists
-                    -- =====================
-                    SELECT COUNT(user_id)
-                    INTO v_exists_created_by
-                    FROM ms_users
-                    WHERE user_id = p_created_by
-                    AND is_active = '1';
-
-                    IF v_exists_created_by = 0 THEN
-                        SET v_return_code = 404;
-                        SET v_return_message = 'Created by user not found';
-
-                        SELECT 
-                            v_return_code AS return_code,
-                            v_return_message AS return_message,
-                            NULL AS data;
-                        LEAVE proc_label;
-                    END IF;
-
                     -- =====================
                     -- Check user exists
                     -- =====================
@@ -71,38 +49,18 @@ return new class extends Migration
                     END IF;
 
                     -- =====================
-                    -- Check role exists
+                    -- Check duplicate permission
                     -- =====================
-                    SELECT COUNT(role_id)
-                    INTO v_exists_role
-                    FROM ms_role
-                    WHERE role_id = p_role_id
-                    AND is_active = '1';
-
-                    IF v_exists_role = 0 THEN
-                        SET v_return_code = 404;
-                        SET v_return_message = 'Role not found';
-
-                        SELECT 
-                            v_return_code AS return_code,
-                            v_return_message AS return_message,
-                            NULL AS data;
-                        LEAVE proc_label;
-                    END IF;
-
-                    -- =====================
-                    -- Check duplicate user role
-                    -- =====================
-                    SELECT COUNT(user_role_id)
+                    SELECT COUNT(permission_id)
                     INTO v_duplicate_count
-                    FROM ms_user_roles
-                    WHERE user_id = p_user_id
-                    AND role_id = p_role_id
+                    FROM ms_permissions
+                    WHERE (permission_code = p_permission_code
+                        OR permission_name = p_permission_name)
                     AND is_active = '1';
 
                     IF v_duplicate_count > 0 THEN
                         SET v_return_code = 409;
-                        SET v_return_message = 'User role already assigned';
+                        SET v_return_message = 'Permission already created';
 
                         SELECT 
                             v_return_code AS return_code,
@@ -120,24 +78,20 @@ return new class extends Migration
                     -- =====================
                     -- Insert data
                     -- =====================
-                    INSERT INTO ms_user_roles (
-                        user_role_id,
-                        user_id,
-                        role_id,
-                        assigned_date,
+                    INSERT INTO ms_permissions (
+                        permission_id,
+                        permission_code,
+                        permission_name,
                         created_by,
                         created_date,
-                        unique_id,
-                        is_active
+                        unique_id
                     ) VALUES (
                         v_generated_id,
+                        p_permission_code,
+                        p_permission_name,
                         p_user_id,
-                        p_role_id,
                         NOW(),
-                        p_created_by,
-                        NOW(),
-                        p_unique_id,
-                        '1'
+                        p_unique_id
                     );
 
                     -- =====================
@@ -146,16 +100,14 @@ return new class extends Migration
                     SELECT 
                         v_return_code AS return_code,
                         v_return_message AS return_message,
-                        user_role_id,
-                        user_id,
-                        role_id,
-                        assigned_date,
+                        permission_id,
+                        permission_code,
+                        permission_name,
                         created_by,
                         created_date,
-                        unique_id,
-                        is_active
-                    FROM ms_user_roles
-                    WHERE user_role_id = v_generated_id
+                        unique_id
+                    FROM ms_permissions
+                    WHERE permission_id = v_generated_id
                     AND is_active = '1'
                     LIMIT 1;
                 END;
@@ -165,6 +117,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::unprepared("DROP PROCEDURE IF EXISTS sp_add_ms_user_role");
+        DB::unprepared("DROP PROCEDURE IF EXISTS sp_add_ms_permission");
     }
 };
