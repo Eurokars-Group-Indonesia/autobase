@@ -713,7 +713,39 @@ class TransactionHeaderController extends Controller
                 return $query->paginate($perPageValue)->withQueryString();
             });
             
-            // Don't load bodies here - will be loaded via AJAX when user clicks to view details
+            // Manually load bodies for each transaction using optimized batch query
+            if ($transactions->count() > 0) {
+                // Build WHERE IN conditions for better performance than CONCAT
+                $wipNos = $transactions->pluck('wip_no')->unique()->toArray();
+                $invoiceNos = $transactions->pluck('invoice_no')->unique()->toArray();
+                $brandCodes = $transactions->pluck('brand_code')->unique()->toArray();
+                $magicIds = $transactions->pluck('magic_id')->unique()->toArray();
+                
+                // Fetch all bodies at once with optimized query
+                $allBodies = \DB::table('tx_body')
+                    ->select('brand_code', 'wip_no', 'invoice_no', 'magic_2', 'line', 'part_no', 'description', 
+                             'qty', 'selling_price', 'discount', 'extended_price', 'date_decard', 'body_id',
+                             'account_code', 'department', 'invoice_status', 'unit', 'part_or_labour')
+                    ->where('is_active', '1')
+                    ->whereIn('wip_no', $wipNos)
+                    ->whereIn('invoice_no', $invoiceNos)
+                    ->whereIn('brand_code', $brandCodes)
+                    ->whereIn('magic_2', $magicIds)
+                    ->orderBy('line')
+                    ->get()
+                    ->groupBy(function($body) {
+                        return $body->brand_code . '|' . $body->wip_no . '|' . $body->invoice_no . '|' . $body->magic_2;
+                    });
+                
+                // Assign bodies to each transaction
+                foreach ($transactions as $transaction) {
+                    $key = $transaction->brand_code . '|' . $transaction->wip_no . '|' . $transaction->invoice_no . '|' . $transaction->magic_id;
+                    $bodies = $allBodies->get($key, collect());
+                    
+                    // Direct assignment without model conversion for better performance
+                    $transaction->bodies = $bodies;
+                }
+            }
         } else {
             // No search/filter - execute query directly without cache
             $perPage = $request->get('per_page', 10);
