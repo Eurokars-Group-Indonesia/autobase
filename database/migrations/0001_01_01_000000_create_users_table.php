@@ -12,26 +12,24 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('ms_users', function (Blueprint $table) {
-            $table->id('user_id');
-            $table->unsignedBigInteger('dealer_id')->nullable();
-            $table->unsignedBigInteger('brand_id')->nullable();
+            $table->string('user_id', 50)->primary();
+            $table->string('dealer_id', 50)->nullable();
             $table->string('name', 150);
             $table->string('email', 150)->unique()->nullable(false);
             $table->string('full_name', 150);
             $table->string('password', 255);
             $table->string('phone', 20)->nullable();
             $table->string('remember_token', 100)->nullable();
-            $table->unsignedBigInteger('created_by')->nullable();
-            $table->timestamp('created_date')->nullable();
-            $table->unsignedBigInteger('updated_by')->nullable();
-            $table->timestamp('updated_date')->nullable();
+            $table->string('created_by', 50)->nullable()->comment('User yang Create Data');
+            $table->dateTime('created_date')->nullable()->useCurrent()->comment('Kapan data nya di Create');
+            $table->string('updated_by', 50)->nullable()->comment('User yang Update Data');
+            $table->dateTime('updated_date')->nullable()->comment('Kapan data nya di Update');
             $table->dateTime('last_login')->nullable();
             $table->char('unique_id', 36)->unique();
             $table->enum('is_active', ['0', '1'])->default('1')->nullable();
 
             // Indexes
             $table->index('dealer_id');
-            $table->index('brand_id');
             $table->index('created_by');
             $table->index('updated_by');
 
@@ -50,7 +48,7 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->string('user_id', 50)->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');

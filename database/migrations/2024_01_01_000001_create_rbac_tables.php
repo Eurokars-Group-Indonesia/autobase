@@ -10,17 +10,18 @@ return new class extends Migration
     {
         // Table ms_permissions
         Schema::create('ms_permissions', function (Blueprint $table) {
-            $table->id('permission_id');
-            $table->string('permission_code', 100)->unique();
+            $table->string('permission_id', 50)->primary();
+            $table->string('permission_code', 100);
             $table->string('permission_name', 150);
-            $table->unsignedBigInteger('created_by');
-            $table->dateTime('created_date')->nullable()->useCurrent();
-            $table->unsignedBigInteger('updated_by')->nullable();
-            $table->dateTime('updated_date')->nullable();
-            $table->char('unique_id', 36)->unique();
-            $table->enum('is_active', ['0', '1'])->default('1')->nullable();
+            $table->string('created_by', 50)->comment('User yang Create Data');
+            $table->dateTime('created_date')->nullable()->useCurrent()->comment('Kapan data nya di Create');
+            $table->string('updated_by', 50)->nullable()->comment('User yang Update Data');
+            $table->dateTime('updated_date')->nullable()->comment('Kapan data nya di Update');
+            $table->char('unique_id', 36)->unique()->comment('UUIDV4, di gunakan untuk Get Data dari URL');
+            $table->enum('is_active', ['0', '1'])->default('1')->nullable()->comment('1 = Active, 0 = Inactive');
 
             // Indexes
+            $table->index('permission_name');
             $table->index('created_by');
             $table->index('updated_by');
             $table->index('is_active');
@@ -28,18 +29,19 @@ return new class extends Migration
 
         // Table ms_role
         Schema::create('ms_role', function (Blueprint $table) {
-            $table->id('role_id');
-            $table->string('role_code', 10)->unique();
+            $table->string('role_id', 50)->primary();
+            $table->string('role_code', 10);
             $table->string('role_name', 50);
             $table->string('role_description', 200);
-            $table->unsignedBigInteger('created_by');
-            $table->dateTime('created_date')->nullable()->useCurrent();
-            $table->unsignedBigInteger('updated_by')->nullable();
-            $table->dateTime('updated_date')->nullable();
-            $table->char('unique_id', 36)->unique();
-            $table->enum('is_active', ['0', '1'])->default('1')->nullable();
+            $table->string('created_by', 50)->comment('User yang Create Data');
+            $table->dateTime('created_date')->nullable()->useCurrent()->comment('Kapan data nya di Create');
+            $table->string('updated_by', 50)->nullable()->comment('User yang Update Data');
+            $table->dateTime('updated_date')->nullable()->comment('Kapan data nya di Update');
+            $table->char('unique_id', 36)->unique()->comment('UUIDV4, di gunakan untuk Get Data dari URL');
+            $table->enum('is_active', ['0', '1'])->default('1')->nullable()->comment('1 = Active, 0 = Inactive');
 
             // Indexes
+            $table->index('role_name');
             $table->index('created_by');
             $table->index('updated_by');
             $table->index('is_active');
@@ -47,15 +49,15 @@ return new class extends Migration
 
         // Table ms_role_permissions
         Schema::create('ms_role_permissions', function (Blueprint $table) {
-            $table->id('role_permission_id');
-            $table->unsignedBigInteger('role_id');
-            $table->unsignedBigInteger('permission_id');
-            $table->unsignedBigInteger('created_by');
-            $table->dateTime('created_date')->nullable()->useCurrent();
-            $table->unsignedBigInteger('updated_by')->nullable();
-            $table->dateTime('updated_date')->nullable();
-            $table->char('unique_id', 36)->unique();
-            $table->enum('is_active', ['0', '1'])->default('1')->nullable();
+            $table->string('role_permission_id', 50)->primary();
+            $table->string('role_id', 50);
+            $table->string('permission_id', 50);
+            $table->string('created_by', 50)->comment('User yang Create Data');
+            $table->dateTime('created_date')->nullable()->useCurrent()->comment('Kapan data nya di Create');
+            $table->string('updated_by', 50)->nullable()->comment('User yang Update Data');
+            $table->dateTime('updated_date')->nullable()->comment('Kapan data nya di Update');
+            $table->char('unique_id', 36)->unique()->comment('UUIDV4, di gunakan untuk Get Data dari URL');
+            $table->enum('is_active', ['0', '1'])->default('1')->nullable()->comment('1 = Active, 0 = Inactive');
 
             // Indexes
             $table->index('role_id');
@@ -73,16 +75,16 @@ return new class extends Migration
 
         // Table ms_user_roles
         Schema::create('ms_user_roles', function (Blueprint $table) {
-            $table->id('user_role_id');
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('role_id');
+            $table->string('user_role_id', 50)->primary();
+            $table->string('user_id', 50);
+            $table->string('role_id', 50);
             $table->timestamp('assigned_date')->nullable();
-            $table->unsignedBigInteger('created_by');
-            $table->dateTime('created_date')->nullable()->useCurrent();
-            $table->unsignedBigInteger('updated_by')->nullable();
-            $table->dateTime('updated_date')->nullable();
-            $table->char('unique_id', 36)->unique();
-            $table->enum('is_active', ['0', '1'])->default('1')->nullable();
+            $table->string('created_by', 50)->comment('User yang Create Data');
+            $table->dateTime('created_date')->nullable()->useCurrent()->comment('Kapan data nya di Create');
+            $table->string('updated_by', 50)->nullable()->comment('User yang Update Data');
+            $table->dateTime('updated_date')->nullable()->comment('Kapan data nya di Update');
+            $table->char('unique_id', 36)->unique()->comment('UUIDV4, di gunakan untuk Get Data dari URL');
+            $table->enum('is_active', ['0', '1'])->default('1')->nullable()->comment('1 = Active, 0 = Inactive');
 
             // Indexes
             $table->index('user_id');

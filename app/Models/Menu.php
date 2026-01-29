@@ -9,10 +9,14 @@ class Menu extends Model
 {
     protected $table = 'ms_menus';
     protected $primaryKey = 'menu_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    
     const CREATED_AT = 'created_date';
     const UPDATED_AT = 'updated_date';
 
     protected $fillable = [
+        'menu_id',
         'menu_code',
         'menu_name',
         'menu_url',
@@ -35,6 +39,11 @@ class Menu extends Model
     {
         parent::boot();
         static::creating(function ($model) {
+            if (empty($model->menu_id)) {
+                $lastMenu = static::orderBy('menu_id', 'desc')->first();
+                $nextNumber = $lastMenu ? (int)substr($lastMenu->menu_id, 3) + 1 : 1;
+                $model->setAttribute('menu_id', 'MNU' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT));
+            }
             if (empty($model->unique_id)) {
                 $model->unique_id = (string) Str::uuid();
             }

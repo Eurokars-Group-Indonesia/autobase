@@ -34,12 +34,15 @@ class UpdateMenuStructureSeeder extends Seeder
         ];
 
         $createdPermissions = [];
+        $permissionCounter = DB::table('ms_permissions')->count() + 1;
         foreach ($newPermissions as $permData) {
             // Check if permission already exists
             $existing = Permission::where('permission_code', $permData['permission_code'])->first();
             
             if (!$existing) {
+                $permissionId = 'PRM' . str_pad($permissionCounter++, 5, '0', STR_PAD_LEFT);
                 $permission = Permission::create([
+                    'permission_id' => $permissionId,
                     'permission_code' => $permData['permission_code'],
                     'permission_name' => $permData['permission_name'],
                     'unique_id' => (string) Str::uuid(),
@@ -77,7 +80,9 @@ class UpdateMenuStructureSeeder extends Seeder
         // ========================================
         $masterMenu = Menu::where('menu_code', 'master')->first();
         if (!$masterMenu) {
+            $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
             $masterMenu = Menu::create([
+                'menu_id' => $menuId,
                 'menu_code' => 'master',
                 'menu_name' => 'Master',
                 'menu_url' => null,
@@ -107,7 +112,9 @@ class UpdateMenuStructureSeeder extends Seeder
             ]);
             echo "✅ Updated menu: Brands (moved under Master)\n";
         } else {
+            $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
             Menu::create([
+                'menu_id' => $menuId,
                 'menu_code' => 'brands',
                 'menu_name' => 'Brands',
                 'menu_url' => '/brands',
@@ -131,7 +138,9 @@ class UpdateMenuStructureSeeder extends Seeder
             ]);
             echo "✅ Updated menu: Dealers (moved under Master)\n";
         } else {
+            $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
             Menu::create([
+                'menu_id' => $menuId,
                 'menu_code' => 'dealers',
                 'menu_name' => 'Dealers',
                 'menu_url' => '/dealers',
@@ -150,7 +159,9 @@ class UpdateMenuStructureSeeder extends Seeder
         // ========================================
         $transactionsMenu = Menu::where('menu_code', 'transactions')->first();
         if (!$transactionsMenu) {
+            $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
             $transactionsMenu = Menu::create([
+                'menu_id' => $menuId,
                 'menu_code' => 'transactions',
                 'menu_name' => 'Transactions',
                 'menu_url' => null,
@@ -174,7 +185,9 @@ class UpdateMenuStructureSeeder extends Seeder
         // 3.1 Master Transaction (Transaction Header)
         $masterTransactionMenu = Menu::where('menu_code', 'master-transaction')->first();
         if (!$masterTransactionMenu) {
+            $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
             Menu::create([
+                'menu_id' => $menuId,
                 'menu_code' => 'master-transaction',
                 'menu_name' => 'Master Transaction',
                 'menu_url' => '/transactions',
@@ -193,7 +206,9 @@ class UpdateMenuStructureSeeder extends Seeder
         // 3.2 Detail Transaction (Transaction Body)
         $detailTransactionMenu = Menu::where('menu_code', 'detail-transaction')->first();
         if (!$detailTransactionMenu) {
+            $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
             Menu::create([
+                'menu_id' => $menuId,
                 'menu_code' => 'detail-transaction',
                 'menu_name' => 'Detail Transaction',
                 'menu_url' => '/transaction-body',
@@ -214,7 +229,9 @@ class UpdateMenuStructureSeeder extends Seeder
         // ========================================
         $historyMenu = Menu::where('menu_code', 'history')->first();
         if (!$historyMenu) {
+            $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
             $historyMenu = Menu::create([
+                'menu_id' => $menuId,
                 'menu_code' => 'history',
                 'menu_name' => 'History',
                 'menu_url' => null,
@@ -240,7 +257,9 @@ class UpdateMenuStructureSeeder extends Seeder
             ]);
             echo "✅ Updated menu: Search History (moved under History)\n";
         } else {
+            $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
             Menu::create([
+                'menu_id' => $menuId,
                 'menu_code' => 'search-history',
                 'menu_name' => 'Search History',
                 'menu_url' => '/search-history',
@@ -264,7 +283,9 @@ class UpdateMenuStructureSeeder extends Seeder
             ]);
             echo "✅ Updated menu: Import History (moved under History)\n";
         } else {
+            $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
             Menu::create([
+                'menu_id' => $menuId,
                 'menu_code' => 'import-history',
                 'menu_name' => 'Import History',
                 'menu_url' => '/import-history',
@@ -286,6 +307,7 @@ class UpdateMenuStructureSeeder extends Seeder
         
         if ($adminRole) {
             // Assign new permissions to admin role
+            $rolePermissionCounter = DB::table('ms_role_permissions')->count() + 1;
             foreach ($createdPermissions as $permission) {
                 $exists = DB::table('ms_role_permissions')
                     ->where('role_id', $adminRole->role_id)
@@ -294,6 +316,7 @@ class UpdateMenuStructureSeeder extends Seeder
                 
                 if (!$exists) {
                     DB::table('ms_role_permissions')->insert([
+                        'role_permission_id' => 'RPM' . str_pad($rolePermissionCounter++, 5, '0', STR_PAD_LEFT),
                         'role_id' => $adminRole->role_id,
                         'permission_id' => $permission->permission_id,
                         'unique_id' => (string) Str::uuid(),
@@ -310,6 +333,7 @@ class UpdateMenuStructureSeeder extends Seeder
                 'master', 'history', 'master-transaction', 'detail-transaction'
             ])->get();
 
+            $roleMenuCounter = DB::table('ms_role_menus')->count() + 1;
             foreach ($newMenus as $menu) {
                 $exists = DB::table('ms_role_menus')
                     ->where('role_id', $adminRole->role_id)
@@ -318,6 +342,7 @@ class UpdateMenuStructureSeeder extends Seeder
                 
                 if (!$exists) {
                     DB::table('ms_role_menus')->insert([
+                        'role_menu_id' => 'RMN' . str_pad($roleMenuCounter++, 5, '0', STR_PAD_LEFT),
                         'role_id' => $adminRole->role_id,
                         'menu_id' => $menu->menu_id,
                         'unique_id' => (string) Str::uuid(),

@@ -9,6 +9,9 @@ class Permission extends Model
 {
     protected $table = 'ms_permissions';
     protected $primaryKey = 'permission_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    
     const CREATED_AT = 'created_date';
     const UPDATED_AT = 'updated_date';
 

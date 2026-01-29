@@ -11,6 +11,8 @@ class UserBrand extends Model
 
     protected $table = 'ms_user_brand';
     protected $primaryKey = 'user_brand_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
     const CREATED_AT = 'created_date';
     const UPDATED_AT = 'updated_date';

@@ -31,9 +31,14 @@ class AddRollsRoyceBrandSeeder extends Seeder
             $brandId = $existingBrand->brand_id;
         } else {
             // Insert Rolls-Royce brand
-            $brandId = DB::table('ms_brand')->insertGetId([
+            $brandId = 'BRD' . str_pad((DB::table('ms_brand')->count() + 1), 5, '0', STR_PAD_LEFT);
+            
+            DB::table('ms_brand')->insert([
+                'brand_id' => $brandId,
                 'brand_code' => 'RR',
                 'brand_name' => 'Rolls-Royce',
+                'brand_group' => 'Volkswagen',
+                'country_origin' => 'Germany',
                 'created_by' => $adminUserId,
                 'created_date' => now(),
                 'unique_id' => (string) Str::uuid(),
@@ -51,6 +56,7 @@ class AddRollsRoyceBrandSeeder extends Seeder
 
         if (!$existingUserBrand) {
             DB::table('ms_user_brand')->insert([
+                'user_brand_id' => 'UBD' . str_pad((DB::table('ms_user_brand')->count() + 1), 5, '0', STR_PAD_LEFT),
                 'user_id' => $adminUserId,
                 'brand_id' => $brandId,
                 'created_by' => $adminUserId,

@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('hs_import', function (Blueprint $table) {
             $table->bigIncrements('import_id');
-            $table->unsignedBigInteger('user_id')->comment('User yang melakukan import');
+            $table->string('user_id', 50)->comment('User yang melakukan import');
             $table->unsignedInteger('total_row')->comment('Total Row pada Excel Import');
             $table->unsignedInteger('success_row')->comment('Total Row yang sukses Import');
             $table->unsignedInteger('error_row')->comment('Total Row yang gagal Import');
@@ -19,11 +19,11 @@ return new class extends Migration
             $table->decimal('execution_time', 10, 2)->comment('Total waktu eksekusi dalam milliseconds');
             
             // Indexes
-            $table->index('user_id', 'idx_user_id');
-            $table->index('executed_date', 'idx_executed_date');
+            $table->index('user_id');
+            $table->index('executed_date');
             
             // Foreign key
-            $table->foreign('user_id', 'fk_hs_import_user')
+            $table->foreign('user_id')
                   ->references('user_id')
                   ->on('ms_users')
                   ->onDelete('cascade');
