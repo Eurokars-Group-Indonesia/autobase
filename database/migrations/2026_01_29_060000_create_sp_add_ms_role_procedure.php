@@ -8,16 +8,13 @@ return new class extends Migration
     public function up(): void
     {
         DB::unprepared("
-            DROP PROCEDURE IF EXISTS sp_add_ms_user;
+            DROP PROCEDURE IF EXISTS sp_add_ms_role;
 
-            CREATE PROCEDURE sp_add_ms_user(
-                IN p_created_by VARCHAR(50),
-                IN p_dealer_id VARCHAR(50),
-                IN p_name VARCHAR(150),
-                IN p_email VARCHAR(150),
-                IN p_full_name VARCHAR(150),
-                IN p_password VARCHAR(255),
-                IN p_phone VARCHAR(20),
+            CREATE PROCEDURE sp_add_ms_role(
+                IN p_role_code VARCHAR(10),
+                IN p_role_name VARCHAR(50),
+                IN p_role_description VARCHAR(200),
+                IN p_user_id VARCHAR(50),
                 IN p_unique_id VARCHAR(50)
             )
             BEGIN
@@ -29,22 +26,21 @@ return new class extends Migration
                 DECLARE v_return_code INT DEFAULT 200;
                 DECLARE v_return_message VARCHAR(255) DEFAULT 'Success';
                 DECLARE v_exists_user INT DEFAULT 0;
-                DECLARE v_exists_dealer INT DEFAULT 0;
-                DECLARE v_screen_id VARCHAR(25) DEFAULT 'MUS01';
+                DECLARE v_screen_id VARCHAR(25) DEFAULT 'MRL01';
 
                 proc_label: BEGIN
                     -- =====================
-                    -- Check created_by user exists
+                    -- Check user exists
                     -- =====================
                     SELECT COUNT(user_id)
                     INTO v_exists_user
                     FROM ms_users
-                    WHERE user_id = p_created_by
+                    WHERE user_id = p_user_id
                     AND is_active = '1';
 
                     IF v_exists_user = 0 THEN
                         SET v_return_code = 404;
-                        SET v_return_message = 'Creator user not found';
+                        SET v_return_message = 'User not found';
 
                         SELECT 
                             v_return_code AS return_code,
@@ -54,38 +50,18 @@ return new class extends Migration
                     END IF;
 
                     -- =====================
-                    -- Check dealer exists (if provided)
+                    -- Check duplicate role
                     -- =====================
-                    IF p_dealer_id IS NOT NULL THEN
-                        SELECT COUNT(dealer_id)
-                        INTO v_exists_dealer
-                        FROM ms_dealers
-                        WHERE dealer_id = p_dealer_id
-                        AND is_active = '1';
-
-                        IF v_exists_dealer = 0 THEN
-                            SET v_return_code = 404;
-                            SET v_return_message = 'Dealer not found';
-
-                            SELECT 
-                                v_return_code AS return_code,
-                                v_return_message AS return_message,
-                                NULL AS data;
-                            LEAVE proc_label;
-                        END IF;
-                    END IF;
-
-                    -- =====================
-                    -- Check duplicate user by email
-                    -- =====================
-                    SELECT COUNT(user_id)
+                    SELECT COUNT(role_id)
                     INTO v_duplicate_count
-                    FROM ms_users
-                    WHERE email = p_email;
+                    FROM ms_role
+                    WHERE (role_code = p_role_code
+                        OR role_name = p_role_name)
+                    AND is_active = '1';
 
                     IF v_duplicate_count > 0 THEN
                         SET v_return_code = 409;
-                        SET v_return_message = 'User with this email already exists';
+                        SET v_return_message = 'Role already created';
 
                         SELECT 
                             v_return_code AS return_code,
@@ -103,30 +79,22 @@ return new class extends Migration
                     -- =====================
                     -- Insert data
                     -- =====================
-                    INSERT INTO ms_users (
-                        user_id,
-                        dealer_id,
-                        name,
-                        email,
-                        full_name,
-                        password,
-                        phone,
+                    INSERT INTO ms_role (
+                        role_id,
+                        role_code,
+                        role_name,
+                        role_description,
                         created_by,
                         created_date,
-                        unique_id,
-                        is_active
+                        unique_id
                     ) VALUES (
                         v_generated_id,
-                        p_dealer_id,
-                        p_name,
-                        p_email,
-                        p_full_name,
-                        p_password,
-                        p_phone,
-                        p_created_by,
+                        p_role_code,
+                        p_role_name,
+                        p_role_description,
+                        p_user_id,
                         NOW(),
-                        p_unique_id,
-                        '1'
+                        p_unique_id
                     );
 
                     -- =====================
@@ -135,17 +103,15 @@ return new class extends Migration
                     SELECT 
                         v_return_code AS return_code,
                         v_return_message AS return_message,
-                        user_id,
-                        dealer_id,
-                        name,
-                        email,
-                        full_name,
-                        phone,
+                        role_id,
+                        role_code,
+                        role_name,
+                        role_description,
                         created_by,
                         created_date,
                         unique_id
-                    FROM ms_users
-                    WHERE user_id = v_generated_id
+                    FROM ms_role
+                    WHERE role_id = v_generated_id
                     AND is_active = '1'
                     LIMIT 1;
                 END;
@@ -155,6 +121,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        DB::unprepared("DROP PROCEDURE IF EXISTS sp_add_ms_user");
+        DB::unprepared("DROP PROCEDURE IF EXISTS sp_add_ms_role");
     }
 };

@@ -101,8 +101,7 @@ return new class extends Migration
                 SELECT COUNT(user_id) INTO v_duplicate_count
                 FROM ms_users
                 WHERE email = p_email
-                AND unique_id <> p_unique_id
-                AND is_active = '1';
+                AND unique_id <> p_unique_id;
                 
                 IF v_duplicate_count >= 1 THEN
                     SET v_return_code = 409;

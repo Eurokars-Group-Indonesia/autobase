@@ -53,64 +53,62 @@ class RoleController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
-        $data = $request->validated();
-        $uniqueId = (string) Str::uuid();
-        $userId = auth()->id();        
+        try {
+            $data = $request->validated();
+            $uniqueId = (string) Str::uuid();
+            $userId = auth()->id();
 
-        // Call stored procedure sp_add_ms_role
-        $result = \DB::select('CALL sp_add_ms_role(?, ?, ?, ?, ?)', [
-            $data['role_code'],
-            $data['role_name'],
-            $data['role_description'],
-            $userId,
-            $uniqueId
-        ]);
+            // Call stored procedure sp_add_ms_role
+            $result = \DB::select('CALL sp_add_ms_role(?, ?, ?, ?, ?)', [
+                $data['role_code'],
+                $data['role_name'],
+                $data['role_description'],
+                $userId,
+                $uniqueId
+            ]);
 
+            // Check result from stored procedure
+            if (empty($result)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Failed to create role. No response from database.');
+            }
+            
+            $response = $result[0];
 
-        // Check result from stored procedure
-        if (empty($result)) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Failed to create role. No response from database.');
-        }
-        
-        $response = $result[0];
+            // Handle response based on return_code
+            if ($response->return_code == 200) {
+                // Get the created role by unique_id
+                $role = Role::where('unique_id', $uniqueId)->first();
 
-        // Handle response based on return_code
-        if ($response->return_code == 200) 
-        {
-            // Get the created user by unique_id
-            $role = Role::where('unique_id', $uniqueId)->first();
-
-            if ($role) {
-
-                // Attach permissions
-                if ($request->has('permissions')) {
-
-                    foreach ($request->permissions as $permissionId) {
-                        \DB::select('CALL sp_add_ms_role_permission(?, ?, ?, ?)', [
-                            $role->role_id,
-                            $permissionId,
-                            $userId,
-                            (string) Str::uuid(),
-                        ]);
+                if ($role) {
+                    // Attach permissions
+                    if ($request->has('permissions')) {
+                        foreach ($request->permissions as $permissionId) {
+                            \DB::select('CALL sp_add_ms_role_permission(?, ?, ?, ?)', [
+                                $role->role_id,
+                                $permissionId,
+                                $userId,
+                                (string) Str::uuid(),
+                            ]);
+                        }
                     }
-                }
 
-                // Attach menus
-                if ($request->has('menus')) {
-                    foreach ($request->menus as $menuId) {
-                        \DB::select('CALL sp_add_ms_role_menu(?, ?, ?, ?)', [
-                            $role->role_id,
-                            $menuId,
-                            $userId,
-                            (string) Str::uuid(),
-                        ]);
+                    // Attach menus
+                    if ($request->has('menus')) {
+                        foreach ($request->menus as $menuId) {
+                            \DB::select('CALL sp_add_ms_role_menu(?, ?, ?, ?)', [
+                                $role->role_id,
+                                $menuId,
+                                $userId,
+                                (string) Str::uuid(),
+                            ]);
+                        }
                     }
-                }
 
-                return redirect()->route('roles.index')
-                    ->with('success', 'Role Menu created successfully.');
+                    return redirect()->route('roles.index')
+                        ->with('success', 'Role created successfully.');
+                }
             } elseif ($response->return_code == 404) {
                 return redirect()->back()
                     ->withInput()
@@ -118,12 +116,23 @@ class RoleController extends Controller
             } elseif ($response->return_code == 409) {
                 return redirect()->back()
                     ->withInput()
-                    ->withErrors(['email' => $response->return_message]);
+                    ->withErrors(['role_name' => $response->return_message]);
             } else {
                 return redirect()->back()
                     ->withInput()
-                    ->with('error', $response->return_message ?? 'An error occurred while creating role menu.');
+                    ->with('error', $response->return_message ?? 'An error occurred while creating role.');
             }
+            
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database error in RoleController@store: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Database error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error in RoleController@store: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred. Please try again.');
         }
     }
 
@@ -156,111 +165,153 @@ class RoleController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
-        $data = $request->validated();
-        $data['updated_by'] = auth()->id();
-        $role->update($data);
-
-        // Sync permissions (soft delete approach)
-        $requestedPermissions = $request->has('permissions') ? $request->permissions : [];
-        
-        // Get existing permissions
-        $existingPermissions = \DB::table('ms_role_permissions')
-            ->where('role_id', $role->role_id)
-            ->get();
-        
-        // Deactivate unchecked permissions
-        foreach ($existingPermissions as $existing) {
-            if (!in_array($existing->permission_id, $requestedPermissions)) {
-                \DB::table('ms_role_permissions')
-                    ->where('role_permission_id', $existing->role_permission_id)
-                    ->update([
-                        'is_active' => '0',
-                        'updated_by' => auth()->id(),
-                        'updated_date' => now()
-                    ]);
-            }
-        }
-        
-        // Activate or insert checked permissions
-        foreach ($requestedPermissions as $permissionId) {
-            $existing = \DB::table('ms_role_permissions')
-                ->where('role_id', $role->role_id)
-                ->where('permission_id', $permissionId)
-                ->first();
+        try {
+            $data = $request->validated();
+            $userId = auth()->id();
             
-            if ($existing) {
-                // Reactivate if exists
-                \DB::table('ms_role_permissions')
-                    ->where('role_permission_id', $existing->role_permission_id)
-                    ->update([
-                        'is_active' => '1',
-                        'updated_by' => auth()->id(),
-                        'updated_date' => now()
-                    ]);
-            } else {
-                // Insert new
-                \DB::table('ms_role_permissions')->insert([
-                    'role_id' => $role->role_id,
-                    'permission_id' => $permissionId,
-                    'unique_id' => (string) Str::uuid(),
-                    'created_by' => auth()->id(),
-                    'created_date' => now(),
-                    'is_active' => '1',
-                ]);
-            }
-        }
-
-        // Sync menus (soft delete approach)
-        $requestedMenus = $request->has('menus') ? $request->menus : [];
-        
-        // Get existing menus
-        $existingMenus = \DB::table('ms_role_menus')
-            ->where('role_id', $role->role_id)
-            ->get();
-        
-        // Deactivate unchecked menus
-        foreach ($existingMenus as $existing) {
-            if (!in_array($existing->menu_id, $requestedMenus)) {
-                \DB::table('ms_role_menus')
-                    ->where('role_menu_id', $existing->role_menu_id)
-                    ->update([
-                        'is_active' => '0',
-                        'updated_by' => auth()->id(),
-                        'updated_date' => now()
-                    ]);
-            }
-        }
-        
-        // Activate or insert checked menus
-        foreach ($requestedMenus as $menuId) {
-            $existing = \DB::table('ms_role_menus')
-                ->where('role_id', $role->role_id)
-                ->where('menu_id', $menuId)
-                ->first();
+            // Call stored procedure sp_update_ms_role
+            $result = \DB::select('CALL sp_update_ms_role(?, ?, ?, ?, ?)', [
+                $data['role_code'],
+                $data['role_name'],
+                $data['role_description'],
+                $userId,
+                $role->unique_id
+            ]);
             
-            if ($existing) {
-                // Reactivate if exists
-                \DB::table('ms_role_menus')
-                    ->where('role_menu_id', $existing->role_menu_id)
-                    ->update([
-                        'is_active' => '1',
-                        'updated_by' => auth()->id(),
-                        'updated_date' => now()
-                    ]);
-            } else {
-                // Insert new
-                \DB::table('ms_role_menus')->insert([
-                    'role_id' => $role->role_id,
-                    'menu_id' => $menuId,
-                    'unique_id' => (string) Str::uuid(),
-                    'created_by' => auth()->id(),
-                    'created_date' => now(),
-                    'is_active' => '1',
-                ]);
+            // Check result from stored procedure
+            if (empty($result)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Failed to update role. No response from database.');
             }
-        }
+            
+            $response = $result[0];
+            
+            // Handle response based on return_code
+            if ($response->return_code == 200) {
+                // Sync permissions (soft delete approach)
+                $requestedPermissions = $request->has('permissions') ? $request->permissions : [];
+                
+                // Get existing permissions
+                $existingPermissions = \DB::table('ms_role_permissions')
+                    ->where('role_id', $role->role_id)
+                    ->get();
+                
+                // Deactivate unchecked permissions
+                foreach ($existingPermissions as $existing) {
+                    if (!in_array($existing->permission_id, $requestedPermissions)) {
+                        \DB::select('CALL sp_update_ms_role_permission(?, ?, ?, ?, ?)', [
+                            $role->role_id,
+                            $existing->permission_id,
+                            '0',
+                            $userId,
+                            $existing->unique_id
+                        ]);
+                    }
+                }
+                
+                // Activate or insert checked permissions
+                foreach ($requestedPermissions as $permissionId) {
+                    $existing = \DB::table('ms_role_permissions')
+                        ->where('role_id', $role->role_id)
+                        ->where('permission_id', $permissionId)
+                        ->first();
+                    
+                    if ($existing) {
+                        // Reactivate if exists
+                        \DB::select('CALL sp_update_ms_role_permission(?, ?, ?, ?, ?)', [
+                            $role->role_id,
+                            $permissionId,
+                            '1',
+                            $userId,
+                            $existing->unique_id
+                        ]);
+                    } else {
+                        // Insert new
+                        \DB::select('CALL sp_add_ms_role_permission(?, ?, ?, ?)', [
+                            $role->role_id,
+                            $permissionId,
+                            $userId,
+                            (string) Str::uuid()
+                        ]);
+                    }
+                }
 
-        return redirect()->route('roles.index')->with('success', 'Role updated successfully.');
+                // Sync menus (soft delete approach)
+                $requestedMenus = $request->has('menus') ? $request->menus : [];
+                
+                // Get existing menus
+                $existingMenus = \DB::table('ms_role_menus')
+                    ->where('role_id', $role->role_id)
+                    ->get();
+                
+                // Deactivate unchecked menus
+                foreach ($existingMenus as $existing) {
+                    if (!in_array($existing->menu_id, $requestedMenus)) {
+                        \DB::select('CALL sp_update_ms_role_menu(?, ?, ?, ?, ?)', [
+                            $role->role_id,
+                            $existing->menu_id,
+                            '0',
+                            $userId,
+                            $existing->unique_id
+                        ]);
+                    }
+                }
+                
+                // Activate or insert checked menus
+                foreach ($requestedMenus as $menuId) {
+                    $existing = \DB::table('ms_role_menus')
+                        ->where('role_id', $role->role_id)
+                        ->where('menu_id', $menuId)
+                        ->first();
+                    
+                    if ($existing) {
+                        // Reactivate if exists
+                        \DB::select('CALL sp_update_ms_role_menu(?, ?, ?, ?, ?)', [
+                            $role->role_id,
+                            $menuId,
+                            '1',
+                            $userId,
+                            $existing->unique_id
+                        ]);
+                    } else {
+                        // Insert new
+                        \DB::select('CALL sp_add_ms_role_menu(?, ?, ?, ?)', [
+                            $role->role_id,
+                            $menuId,
+                            $userId,
+                            (string) Str::uuid()
+                        ]);
+                    }
+                }
+
+                return redirect()->route('roles.index')
+                    ->with('success', 'Role updated successfully.');
+            } elseif ($response->return_code == 404) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message);
+            } elseif ($response->return_code == 409) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['role_name' => $response->return_message]);
+            } else {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message ?? 'An error occurred while updating role.');
+            }
+            
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database error in RoleController@update: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Database error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error in RoleController@update: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred. Please try again.');
+        }
     }
 
     public function destroy(Role $role)

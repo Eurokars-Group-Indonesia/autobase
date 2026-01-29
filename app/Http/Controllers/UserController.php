@@ -54,6 +54,7 @@ class UserController extends Controller
             $data = $request->validated();
             $uniqueId = (string) Str::uuid();
             $userId = auth()->id();
+            $plainPassword = $data['password']; // Store plain password for email
             $hashedPassword = Hash::make($data['password']);
 
             // Call stored procedure sp_add_ms_user
@@ -106,12 +107,21 @@ class UserController extends Controller
                             ]);
                         }
                     }
+
+                    // Send welcome email
+                    try {
+                        \Mail::to($user->email)->send(new \App\Mail\WelcomeUserMail($user, $plainPassword));
+                        \Log::info("Welcome email sent to user: {$user->email}");
+                    } catch (\Exception $e) {
+                        \Log::error("Failed to send welcome email to {$user->email}: " . $e->getMessage());
+                        // Don't fail the user creation if email fails
+                    }
                 }
 
                 // Flush cache
                 Cache::flush();
 
-                return redirect()->route('users.index')->with('success', 'User created successfully.');
+                return redirect()->route('users.index')->with('success', 'User created successfully. Welcome email has been sent.');
             } elseif ($response->return_code == 404) {
                 return redirect()->back()
                     ->withInput()
@@ -169,7 +179,7 @@ class UserController extends Controller
             if ($request->filled('password')) {
                 $hashedPassword = Hash::make($data['password']);
             } else {
-                $hashedPassword = $user->password; // Keep existing password
+                $hashedPassword = ''; // Keep existing password
             }
 
             // Call stored procedure sp_update_ms_user
