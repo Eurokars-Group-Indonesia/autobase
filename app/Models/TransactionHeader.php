@@ -15,7 +15,7 @@ class TransactionHeader extends Model
     const UPDATED_AT = 'updated_date';
 
     protected $fillable = [
-        'brand_id',
+        'brand_code',
         'invoice_no',
         'wip_no',
         'account_code',

@@ -17,7 +17,7 @@ class TransactionBody extends Model
     protected $fillable = [
         'part_no',
         'invoice_no',
-        'brand_id',
+        'brand_code',
         'description',
         'qty',
         'selling_price',

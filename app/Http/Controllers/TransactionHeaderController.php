@@ -194,7 +194,8 @@ class TransactionHeaderController extends Controller
             );
         }
         
-        return view('transactions.index', compact('transactions', 'hasFilter', 'brands'));
+        // Return view without transactions data - will be loaded via AJAX
+        return view('transactions.index', compact('brands'));
     }
 
     public function showImport()
@@ -592,6 +593,188 @@ class TransactionHeaderController extends Controller
         return response()->stream($callback, 200, [
             'Content-Type' => 'text/csv',
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+        ]);
+    }
+
+    public function search(Request $request)
+    {
+        // Start timing
+        $startTime = microtime(true);
+        
+        // Get user's brand IDs (realtime query)
+        $userBrandIds = auth()->user()->getBrandIds();
+        
+        // Check if there's any search/filter parameter
+        $hasSearch = $request->has('search') && $request->search != '';
+        $hasDateFrom = $request->has('date_from') && $request->date_from != '';
+        $hasDateTo = $request->has('date_to') && $request->date_to != '';
+        $hasBrandFilter = $request->has('brand_id') && $request->brand_id != '';
+        $hasFilter = $hasSearch || $hasDateFrom || $hasDateTo;
+        
+        // Get brand_code if brand_id is selected
+        $brandCode = null;
+        if ($hasBrandFilter) {
+            $selectedBrand = Brand::where('brand_id', $request->brand_id)->first();
+            $brandCode = $selectedBrand ? $selectedBrand->brand_code : null;
+        }
+        
+        // Base query with brand filter
+        $query = TransactionHeader::with('brand')
+            ->where('tx_header.is_active', '1')
+            ->orderBy('tx_header.invoice_date', 'desc');
+        
+        // Filter by user's brands or specific brand if selected
+        if ($hasBrandFilter && $brandCode) {
+            $query->where('tx_header.brand_code', $brandCode);
+        } else {
+            // Get brand codes for user's brands
+            $userBrandCodes = Brand::whereIn('brand_id', $userBrandIds)
+                ->pluck('brand_code')
+                ->toArray();
+            $query->whereIn('tx_header.brand_code', $userBrandCodes);
+        }
+        
+        // Only use cache when there's search/filter (including brand filter for query optimization)
+        $shouldUseCache = $hasFilter || $hasBrandFilter;
+        
+        if ($shouldUseCache) {
+            // Generate cache key based on user and search parameters
+            $userId = auth()->id();
+            $search = $request->get('search', '');
+            $dateFrom = $request->get('date_from', '');
+            $dateTo = $request->get('date_to', '');
+            $brandId = $request->get('brand_id', '');
+            $perPage = $request->get('per_page', 10);
+            $page = $request->get('page', 1);
+            
+            $cacheKey = "header:{$userId}:{$search}:{$dateFrom}:{$dateTo}:{$brandId}:{$perPage}:{$page}";
+            
+            // Try to get from cache (1 hour)
+            $transactions = cache()->remember($cacheKey, now()->addHour(), function () use ($request, $query, $userBrandIds) {
+                // Search by text - search in header and body
+                if ($request->has('search') && $request->search != '') {
+                    $search = $request->search;
+                    
+                    // Check if search is a date format
+                    $isDate = preg_match('/^\d{4}-\d{2}-\d{2}$/', $search);
+                    
+                    $query->where(function($q) use ($search, $userBrandIds, $isDate) {
+                        // Search in header fields - already filtered by brand in base query
+                        $q->where(function($searchWhere) use ($search, $isDate) {
+                            // Use FULLTEXT search for customer_name and registration_no
+                            $searchWhere->whereRaw('MATCH(tx_header.customer_name) AGAINST(? IN BOOLEAN MODE)', [$search . '*'])
+                                        ->orWhereRaw('MATCH(tx_header.registration_no) AGAINST(? IN BOOLEAN MODE)', [$search . '*'])
+                                        ->orWhere('tx_header.chassis', 'like', $search . '%')
+                                        ->orWhere('tx_header.invoice_no', 'like', $search . '%')
+                                        ->orWhere('tx_header.wip_no', 'like', $search . '%');
+                            
+                            // Only add date search if format matches
+                            if ($isDate) {
+                                $searchWhere->orWhere('tx_header.invoice_date', '=', $search);
+                            }
+                        })
+                        // Search in body fields using whereExists - optimized with limit
+                        ->orWhereExists(function($existsQuery) use ($search, $isDate) {
+                            $existsQuery->select(\DB::raw(1))
+                                        ->from('tx_body')
+                                        ->whereColumn('tx_body.wip_no', 'tx_header.wip_no')
+                                        ->whereColumn('tx_body.invoice_no', 'tx_header.invoice_no')
+                                        ->whereColumn('tx_body.magic_2', 'tx_header.magic_id')
+                                        ->whereColumn('tx_body.brand_code', 'tx_header.brand_code')
+                                        ->where('tx_body.is_active', '1')
+                                        ->where(function($bodyWhere) use ($search, $isDate) {
+                                            $bodyWhere->where('tx_body.part_no', 'like', $search . '%')
+                                                      ->orWhere('tx_body.wip_no', 'like', $search . '%')
+                                                      ->orWhere('tx_body.invoice_no', 'like', $search . '%');
+                                            
+                                            // Only add date search if format matches
+                                            if ($isDate) {
+                                                $bodyWhere->orWhere('tx_body.date_decard', '=', $search);
+                                            }
+                                        })
+                                        ->limit(1); // Stop at first match for EXISTS
+                        });
+                    });
+                }
+                
+                // Filter by date range - use direct comparison instead of whereDate for better index usage
+                if ($request->has('date_from') && $request->date_from != '') {
+                    $query->where('tx_header.invoice_date', '>=', $request->date_from);
+                }
+                
+                if ($request->has('date_to') && $request->date_to != '') {
+                    $query->where('tx_header.invoice_date', '<=', $request->date_to);
+                }
+                
+                // Pagination
+                $perPage = $request->get('per_page', 10);
+                $perPageValue = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
+                
+                return $query->paginate($perPageValue)->withQueryString();
+            });
+            
+            // Manually load bodies for each transaction using optimized batch query
+            if ($transactions->count() > 0) {
+                // Build WHERE IN conditions for better performance than CONCAT
+                $wipNos = $transactions->pluck('wip_no')->unique()->toArray();
+                $invoiceNos = $transactions->pluck('invoice_no')->unique()->toArray();
+                $brandCodes = $transactions->pluck('brand_code')->unique()->toArray();
+                $magicIds = $transactions->pluck('magic_id')->unique()->toArray();
+                
+                // Fetch all bodies at once with optimized query
+                $allBodies = \DB::table('tx_body')
+                    ->select('brand_code', 'wip_no', 'invoice_no', 'magic_2', 'line', 'part_no', 'description', 
+                             'qty', 'selling_price', 'discount', 'extended_price', 'date_decard', 'body_id',
+                             'account_code', 'department', 'invoice_status', 'unit', 'part_or_labour')
+                    ->where('is_active', '1')
+                    ->whereIn('wip_no', $wipNos)
+                    ->whereIn('invoice_no', $invoiceNos)
+                    ->whereIn('brand_code', $brandCodes)
+                    ->whereIn('magic_2', $magicIds)
+                    ->orderBy('line')
+                    ->get()
+                    ->groupBy(function($body) {
+                        return $body->brand_code . '|' . $body->wip_no . '|' . $body->invoice_no . '|' . $body->magic_2;
+                    });
+                
+                // Assign bodies to each transaction
+                foreach ($transactions as $transaction) {
+                    $key = $transaction->brand_code . '|' . $transaction->wip_no . '|' . $transaction->invoice_no . '|' . $transaction->magic_id;
+                    $bodies = $allBodies->get($key, collect());
+                    
+                    // Direct assignment without model conversion for better performance
+                    $transaction->bodies = $bodies;
+                }
+            }
+        } else {
+            // No search/filter - execute query directly without cache
+            $perPage = $request->get('per_page', 10);
+            $perPageValue = in_array($perPage, [10, 25, 50, 100]) ? $perPage : 10;
+            $transactions = $query->paginate($perPageValue)->withQueryString();
+        }
+        
+        // Calculate execution time
+        $endTime = microtime(true);
+        $executionTime = ($endTime - $startTime) * 1000;
+        
+        // Log search history asynchronously only if there's a search query or date filter
+        if ($hasFilter) {
+            LogSearchHistory::dispatch(
+                auth()->id(),
+                $request->get('search'),
+                $request->get('date_from'),
+                $request->get('date_to'),
+                $executionTime,
+                'H'
+            );
+        }
+        
+        // Return JSON response for AJAX
+        return response()->json([
+            'success' => true,
+            'hasFilter' => $hasFilter,
+            'html' => view('transactions.partials.table', compact('transactions', 'hasFilter'))->render(),
+            'pagination' => view('transactions.partials.pagination', compact('transactions'))->render()
         ]);
     }
 

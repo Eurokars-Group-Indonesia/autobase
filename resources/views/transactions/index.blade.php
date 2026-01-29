@@ -97,6 +97,11 @@
             width: calc(100% + 20px);
         }
     }
+    
+    /* Hide clear button by default */
+    #clearBtn {
+        display: none;
+    }
 </style>
 @endpush
 
@@ -120,11 +125,11 @@
                 </div>
             </div>
             <div class="card-body">
-                <form action="{{ route('transactions.index') }}" method="GET" id="searchForm">
+                <form id="searchForm" method="GET">
                     <div class="row mb-3">
                         <div class="col-md-1">
                             <label class="form-label">Per Page</label>
-                            <select class="form-select form-select-sm" name="per_page" onchange="this.form.submit()">
+                            <select class="form-select form-select-sm" name="per_page" id="per_page">
                                 <option value="10" {{ request('per_page', 10) == 10 ? 'selected' : '' }}>10</option>
                                 <option value="25" {{ request('per_page') == 25 ? 'selected' : '' }}>25</option>
                                 <option value="50" {{ request('per_page') == 50 ? 'selected' : '' }}>50</option>
@@ -133,7 +138,7 @@
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Brand</label>
-                            <select class="form-select form-select-sm" name="brand_id">
+                            <select class="form-select form-select-sm" name="brand_id" id="brand_id">
                                 <option value="">All Brands</option>
                                 @foreach($brands as $brand)
                                     <option value="{{ $brand->brand_id }}" {{ request('brand_id') == $brand->brand_id ? 'selected' : '' }}>
@@ -144,7 +149,7 @@
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Search</label>
-                            <input type="text" class="form-control form-control-sm" name="search" 
+                            <input type="text" class="form-control form-control-sm" name="search" id="search"
                                    placeholder="Customer, Chassis, Invoice No, WIP No, Reg No, Date..." 
                                    value="{{ request('search') }}">
                         </div>
@@ -161,217 +166,28 @@
                             <input type="hidden" name="date_to" id="date_to" value="{{ request('date_to') }}">
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-primary btn-sm me-2" type="submit">
+                            <button class="btn btn-primary btn-sm me-2" type="submit" id="searchBtn">
                                 <i class="bi bi-search"></i> Search
                             </button>
-                            @if(request('search') || request('date_from') || request('date_to') || request('brand_id'))
-                                <a href="{{ route('transactions.index') }}" class="btn btn-secondary btn-sm">
-                                    <i class="bi bi-x-circle"></i> Clear
-                                </a>
-                            @endif
+                            <button class="btn btn-secondary btn-sm" type="button" id="clearBtn">
+                                <i class="bi bi-x-circle"></i> Clear
+                            </button>
                         </div>
                     </div>
                 </form>
 
-
-                <div class="table-responsive">
-                    @if($hasFilter)
-                        {{-- When filtering, show header labels first --}}
-                        <!-- <div class="table-header-labels mb-2 p-2 bg-primary text-white rounded">
-                            <div class="row g-0">
-                                <div class="col" style="min-width: 80px;">Actions</div>
-                                <div class="col" style="min-width: 120px;">Invoice No</div>
-                                <div class="col" style="min-width: 120px;">WIP No</div>
-                                <div class="col" style="min-width: 120px;">Invoice Date</div>
-                                <div class="col" style="min-width: 150px;">Account</div>
-                                <div class="col" style="min-width: 200px;">Customer Name</div>
-                                <div class="col" style="min-width: 150px;">Registration No</div>
-                                <div class="col" style="min-width: 180px;">Chassis</div>
-                                <div class="col" style="min-width: 120px;">Document Type</div>
-                                <div class="col" style="min-width: 120px;">Brand</div>
-                                <div class="col text-end" style="min-width: 130px;">Gross Value</div>
-                                <div class="col text-end" style="min-width: 130px;">Net Value</div>
-                            </div>
-                        </div> -->
-                        
-                        @forelse($transactions as $transaction)
-                            <div class="transaction-group">
-                                <table class="table table-hover table-sm table-nowrap mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th style="min-width: 80px;">Actions</th>
-                                            <th style="min-width: 120px;">Invoice No</th>
-                                            <th style="min-width: 120px;">WIP No</th>
-                                            <th style="min-width: 120px;">Invoice Date</th>
-                                            <th style="min-width: 150px;">Account</th>
-                                            <th style="min-width: 200px;">Customer Name</th>
-                                            <th style="min-width: 150px;">Registration No</th>
-                                            <th style="min-width: 180px;">Chassis</th>
-                                            <th style="min-width: 120px;">Document Type</th>
-                                            <th style="min-width: 120px;">Brand</th>
-                                            <th style="min-width: 130px;">Gross Value</th>
-                                            <th style="min-width: 130px;">Net Value</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <!-- Header Row -->
-                                        <tr class="header-row">
-                                            <td>
-                                                @if(isset($transaction->bodies) && count($transaction->bodies) > 0)
-                                                <span class="badge bg-success">{{ count($transaction->bodies) }} items</span>
-                                                @else
-                                                <span class="badge bg-secondary">No items</span>
-                                                @endif
-                                            </td>
-                                            <td>{{ $transaction->invoice_no }}</td>
-                                            <td>{{ $transaction->wip_no }}</td>
-                                            <td>{{ $transaction->invoice_date ? $transaction->invoice_date->format('d M Y') : '-' }}</td>
-                                            <td>{{ $transaction->account_code ?? '-' }}</td>
-                                            <td>{{ $transaction->customer_name ?? '-' }}</td>
-                                            <td>{{ $transaction->registration_no ?? '-' }}</td>
-                                            <td>{{ $transaction->chassis ?? '-' }}</td>
-                                            <td>
-                                                <span class="badge bg-{{ $transaction->document_type === 'I' ? 'primary' : 'warning' }}">
-                                                    {{ $transaction->getDocumentTypeLabel() }}
-                                                </span>
-                                            </td>
-                                            <td>{{ $transaction->brand->brand_name ?? '-' }}</td>
-                                            <td class="text-end">{{ $transaction->currency_code }} {{ number_format($transaction->gross_value, 2) }}</td>
-                                            <td class="text-end">{{ $transaction->currency_code }} {{ number_format($transaction->net_value, 2) }}</td>
-                                        </tr>
-                                        
-                                        <!-- Body Details Row -->
-                                        @if(isset($transaction->bodies) && count($transaction->bodies) > 0)
-                                        <tr class="body-details-row">
-                                            <td colspan="12" class="p-3">
-                                                <h6 class="mb-3 text-primary">
-                                                    <!-- <i class="bi bi-list-ul"></i> Transaction Body Details  -->
-                                                    <!-- <small class="text-muted">({{ count($transaction->bodies) }} items)</small> -->
-                                                </h6>
-                                                <div class="table-responsive">
-                                                    <table class="table table-sm table-bordered mb-0">
-                                                        <thead class="table-secondary">
-                                                            <tr>
-                                                                <th class="text-center" style="width: 50px;">No</th>
-                                                                <th class="text-center">Part No</th>
-                                                                <th class="text-center">Description</th>
-                                                                <th class="text-center">Date Decard</th>
-                                                                <th class="text-center">Qty</th>
-                                                                <th class="text-center">Selling Price</th>
-                                                                <th class="text-center">Discount %</th>
-                                                                <th class="text-center">Extended Price</th>
-                                                                <th class="text-center">Part/Labour</th>
-                                                            </tr>
-                                                        </thead>
-                                                        <tbody>
-                                                            @php $totalExtPrice = 0; @endphp
-                                                            @foreach($transaction->bodies as $index => $body)
-                                                                @php $totalExtPrice += $body->extended_price; @endphp
-                                                                <tr>
-                                                                    <td class="text-center">{{ $index + 1 }}</td>
-                                                                    <td>{{ $body->part_no }}</td>
-                                                                    <td>{{ $body->description ?? '-' }}</td>
-                                                                    <td class="text-center">
-                                                                        @if($body->date_decard)
-                                                                            {{ \Carbon\Carbon::parse($body->date_decard)->format('d M Y') }}
-                                                                        @else
-                                                                            -
-                                                                        @endif
-                                                                    </td>
-                                                                    <td class="text-end">{{ number_format($body->qty, 2) }}</td>
-                                                                    <td class="text-end">{{ number_format($body->selling_price, 2) }}</td>
-                                                                    <td class="text-end">{{ number_format($body->discount, 2) }}%</td>
-                                                                    <td class="text-end">{{ number_format($body->extended_price, 2) }}</td>
-                                                                    <td class="text-center">
-                                                                        <span class="badge bg-{{ $body->part_or_labour === 'P' ? 'primary' : 'success' }}">
-                                                                            {{ $body->part_or_labour === 'P' ? 'Part' : 'Labour' }}
-                                                                        </span>
-                                                                    </td>
-                                                                </tr>
-                                                            @endforeach
-                                                        </tbody>
-                                                        <tfoot class="table-secondary">
-                                                            <tr>
-                                                                <th colspan="7" class="text-end">Total:</th>
-                                                                <th class="text-end">{{ number_format($totalExtPrice, 2) }}</th>
-                                                                <th></th>
-                                                            </tr>
-                                                        </tfoot>
-                                                    </table>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        @endif
-                                    </tbody>
-                                </table>
-                            </div>
-                        @empty
-                            <div class="text-center py-4">No transactions found</div>
-                        @endforelse
-                    @else
-                        {{-- When not filtering, show normal table --}}
-                        <table class="table table-hover table-sm table-nowrap">
-                            <thead>
-                                <tr>
-                                    <th style="min-width: 80px;">Actions</th>
-                                    <th style="min-width: 120px;">Invoice No</th>
-                                    <th style="min-width: 120px;">WIP No</th>
-                                    <th style="min-width: 120px;">Invoice Date</th>
-                                    <th style="min-width: 150px;">Account</th>
-                                    <th style="min-width: 200px;">Customer Name</th>
-                                    <th style="min-width: 150px;">Registration No</th>
-                                    <th style="min-width: 180px;">Chassis</th>
-                                    <th style="min-width: 120px;">Document Type</th>
-                                    <th style="min-width: 120px;">Brand</th>
-                                    <th style="min-width: 130px;">Gross Value</th>
-                                    <th style="min-width: 130px;">Net Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($transactions as $transaction)
-                                    <tr>
-                                        <td>
-                                            <button class="btn btn-sm btn-info view-details" 
-                                                    data-wipno="{{ $transaction->wip_no }}" 
-                                                    data-invno="{{ $transaction->invoice_no }}" 
-                                                    data-brandcode="{{ $transaction->brand_code }}"
-                                                    data-magicid="{{ $transaction->magic_id }}"
-                                                    title="View Details">
-                                                <i class="bi bi-eye"></i>
-                                            </button>
-                                        </td>
-                                        <td>{{ $transaction->invoice_no }}</td>
-                                        <td>{{ $transaction->wip_no }}</td>
-                                        <td>{{ $transaction->invoice_date ? $transaction->invoice_date->format('d M Y') : '-' }}</td>
-                                        <td>{{ $transaction->account_code ?? '-' }}</td>
-                                        <td>{{ $transaction->customer_name ?? '-' }}</td>
-                                        <td>{{ $transaction->registration_no ?? '-' }}</td>
-                                        <td>{{ $transaction->chassis ?? '-' }}</td>
-                                        <td>
-                                            <span class="badge bg-{{ $transaction->document_type === 'I' ? 'primary' : 'warning' }}">
-                                                {{ $transaction->getDocumentTypeLabel() }}
-                                            </span>
-                                        </td>
-                                        <td>{{ $transaction->brand->brand_name ?? '-' }}</td>
-                                        <td class="text-end">{{ $transaction->currency_code }} {{ number_format($transaction->gross_value, 2) }}</td>
-                                        <td class="text-end">{{ $transaction->currency_code }} {{ number_format($transaction->net_value, 2) }}</td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="12" class="text-center">No transactions found</td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    @endif
+                <div id="loadingIndicator" style="display: none;" class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Searching transactions...</p>
                 </div>
-                <div class="mt-3 d-flex flex-column flex-md-row justify-content-between align-items-center gap-2">
-                    <div class="text-center text-md-start">
-                        Showing {{ $transactions->firstItem() ?? 0 }} to {{ $transactions->lastItem() ?? 0 }} of {{ $transactions->total() }} entries
-                    </div>
-                    <div>
-                        {{ $transactions->links('vendor.pagination.custom') }}
-                    </div>
+
+                <div id="tableContainer">
+                    <!-- Content will be loaded via AJAX -->
+                </div>
+                <div id="paginationContainer">
+                    <!-- Pagination will be loaded via AJAX -->
                 </div>
             </div>
         </div>
@@ -511,6 +327,149 @@
                     document.getElementById('date_to').value = '';
                 }
             }
+        });
+
+        // AJAX Search Function
+        function performSearch(page = 1, updateUrl = true, showClearButton = false) {
+            const formData = {
+                search: $('#search').val(),
+                date_from: $('#date_from').val(),
+                date_to: $('#date_to').val(),
+                brand_id: $('#brand_id').val(),
+                per_page: $('#per_page').val(),
+                page: page
+            };
+
+            // Show loading indicator
+            $('#loadingIndicator').show();
+            $('#tableContainer').hide();
+            $('#paginationContainer').hide();
+
+            $.ajax({
+                url: '{{ route("transactions.search") }}',
+                method: 'GET',
+                data: formData,
+                success: function(response) {
+                    if (response.success) {
+                        // Update table content
+                        $('#tableContainer').html(response.html);
+                        
+                        // Update pagination
+                        $('#paginationContainer').html(response.pagination);
+                        
+                        // Show content
+                        $('#tableContainer').show();
+                        $('#paginationContainer').show();
+                        $('#loadingIndicator').hide();
+                        
+                        // Update URL without page reload only if updateUrl is true
+                        if (updateUrl) {
+                            const url = new URL(window.location);
+                            Object.keys(formData).forEach(key => {
+                                if (formData[key] && formData[key] !== '10' && key !== 'per_page') {
+                                    url.searchParams.set(key, formData[key]);
+                                } else if (key === 'per_page' && formData[key] !== '10') {
+                                    url.searchParams.set(key, formData[key]);
+                                } else {
+                                    url.searchParams.delete(key);
+                                }
+                            });
+                            
+                            // Only update URL if there are actual filters
+                            if (hasActiveFilters() || formData.per_page !== '10' || formData.page > 1) {
+                                window.history.pushState({}, '', url);
+                            } else {
+                                // Clear URL if no filters
+                                window.history.pushState({}, '', '{{ route("transactions.index") }}');
+                            }
+                        }
+                        
+                        // Show clear button if requested
+                        if (showClearButton) {
+                            $('#clearBtn').show();
+                        }
+                    }
+                },
+                error: function(xhr) {
+                    $('#loadingIndicator').hide();
+                    $('#tableContainer').show();
+                    $('#paginationContainer').show();
+                    console.error('Search error:', xhr);
+                    alert('Failed to search transactions. Please try again.');
+                }
+            });
+        }
+
+        // Function to check if there are active filters
+        function hasActiveFilters() {
+            return $('#search').val() !== '' || 
+                   $('#date_from').val() !== '' || 
+                   $('#date_to').val() !== '';
+        }
+
+        // Load initial data on page load
+        $(document).ready(function() {
+            // Check if there are URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const hasUrlParams = urlParams.has('search') || urlParams.has('date_from') || 
+                                 urlParams.has('date_to') || urlParams.has('brand_id') || 
+                                 urlParams.has('page');
+            
+            // Show clear button if there are URL parameters (coming from previous search)
+            if (hasUrlParams && hasActiveFilters()) {
+                $('#clearBtn').show();
+            }
+            
+            // Load data without updating URL if no params, otherwise with URL update
+            performSearch({{ request('page', 1) }}, hasUrlParams, false);
+        });
+
+        // Handle search form submit
+        $('#searchForm').on('submit', function(e) {
+            e.preventDefault();
+            performSearch(1, true, true); // Show clear button after search
+        });
+
+        // Handle clear button
+        $('#clearBtn').on('click', function() {
+            $('#search').val('');
+            $('#date_from').val('');
+            $('#date_to').val('');
+            $('#date_from_display').val('');
+            $('#date_to_display').val('');
+            $('#brand_id').val('');
+            $('#per_page').val('10');
+            dateFromPicker.clear();
+            dateToPicker.clear();
+            
+            // Hide clear button
+            $('#clearBtn').hide();
+            
+            // Perform search with cleared filters to show default 10 data
+            performSearch(1, false, false);
+        });
+
+        // Handle per_page change
+        $('#per_page').on('change', function() {
+            // Keep clear button state when changing per_page
+            const isClearButtonVisible = $('#clearBtn').is(':visible');
+            performSearch(1, true, isClearButtonVisible);
+        });
+
+        // Remove brand filter auto-search - wait for submit button
+        // $('#brand_id').on('change', function() {
+        //     const isClearButtonVisible = $('#clearBtn').is(':visible');
+        //     performSearch(1, true, isClearButtonVisible);
+        // });
+
+        // Handle pagination clicks
+        $(document).on('click', '.pagination a', function(e) {
+            e.preventDefault();
+            const url = new URL($(this).attr('href'));
+            const page = url.searchParams.get('page') || 1;
+            // Keep clear button state when paginating
+            const isClearButtonVisible = $('#clearBtn').is(':visible');
+            performSearch(page, true, isClearButtonVisible);
         });
 
         // Handle toggle details button click (when filtering) - Using vanilla JS
