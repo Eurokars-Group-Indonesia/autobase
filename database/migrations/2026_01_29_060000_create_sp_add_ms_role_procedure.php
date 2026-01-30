@@ -26,7 +26,7 @@ return new class extends Migration
                 DECLARE v_return_code INT DEFAULT 200;
                 DECLARE v_return_message VARCHAR(255) DEFAULT 'Success';
                 DECLARE v_exists_user INT DEFAULT 0;
-                DECLARE v_screen_id VARCHAR(25) DEFAULT 'MRL01';
+                DECLARE v_screen_id VARCHAR(25) DEFAULT 'MRO01';
 
                 proc_label: BEGIN
                     -- =====================
