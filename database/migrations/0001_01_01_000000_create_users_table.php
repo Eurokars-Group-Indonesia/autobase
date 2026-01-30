@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('user_id', 50)->primary();
             $table->string('dealer_id', 50)->nullable();
             $table->string('name', 150);
-            $table->string('email', 150)->unique()->nullable(false);
+            $table->string('email', 150)->nullable(false);
             $table->string('full_name', 150);
             $table->string('password', 255);
             $table->string('phone', 20)->nullable();
