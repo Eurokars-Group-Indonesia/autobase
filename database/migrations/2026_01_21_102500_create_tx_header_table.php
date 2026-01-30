@@ -36,10 +36,10 @@ return new class extends Migration
             $table->date('registration_date')->nullable();
             $table->string('description', 250)->nullable();
             $table->string('engine_no', 20)->nullable();
-            $table->unsignedBigInteger('created_by');
-            $table->dateTime('created_date')->nullable()->useCurrent();
-            $table->unsignedBigInteger('updated_by')->nullable();
-            $table->dateTime('updated_date')->nullable();
+            $table->string('created_by', 50)->comment('User yang Create Data');
+            $table->dateTime('created_date')->nullable()->useCurrent()->comment('Kapan data nya di Create');
+            $table->string('updated_by', 50)->nullable()->comment('User yang Update Data');
+            $table->dateTime('updated_date')->nullable()->comment('Kapan data nya di Update');
             $table->char('unique_id', 36)->unique()->comment('UUIDV4, di gunakan untuk Get Data dari URL');
             $table->enum('is_active', ['0', '1'])->nullable()->default('1');
             

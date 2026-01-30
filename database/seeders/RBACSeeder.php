@@ -14,8 +14,10 @@ class RBACSeeder extends Seeder
 {
     public function run(): void
     {
-        // Create Admin User first (without created_by)
+        // Create Admin User first (without created_by) with generated ID
+        $adminUserId = 'USR00001';
         $adminUser = User::create([
+            'user_id' => $adminUserId,
             'name' => 'admin',
             'email' => 'admin@example.com',
             'full_name' => 'System Administrator',
@@ -45,18 +47,25 @@ class RBACSeeder extends Seeder
         ];
 
         $createdPermissions = [];
+        $permissionCounter = 1;
         foreach ($permissions as $permission) {
+            $permissionId = 'PRM' . str_pad($permissionCounter, 5, '0', STR_PAD_LEFT);
             $createdPermissions[] = Permission::create([
+                'permission_id' => $permissionId,
                 'permission_code' => $permission['permission_code'],
                 'permission_name' => $permission['permission_name'],
                 'unique_id' => (string) Str::uuid(),
                 'created_by' => $adminUser->user_id,
                 'is_active' => '1',
             ]);
+            $permissionCounter++;
         }
 
         // Create Menus
+        $menuCounter = 1;
+        $userManagementId = 'MNU' . str_pad($menuCounter++, 5, '0', STR_PAD_LEFT);
         $userManagement = Menu::create([
+            'menu_id' => $userManagementId,
             'menu_code' => 'user_management',
             'menu_name' => 'User Management',
             'menu_url' => null,
@@ -69,6 +78,7 @@ class RBACSeeder extends Seeder
         ]);
 
         Menu::create([
+            'menu_id' => 'MNU' . str_pad($menuCounter++, 5, '0', STR_PAD_LEFT),
             'menu_code' => 'users',
             'menu_name' => 'Users',
             'menu_url' => '/users',
@@ -81,6 +91,7 @@ class RBACSeeder extends Seeder
         ]);
 
         Menu::create([
+            'menu_id' => 'MNU' . str_pad($menuCounter++, 5, '0', STR_PAD_LEFT),
             'menu_code' => 'roles',
             'menu_name' => 'Roles',
             'menu_url' => '/roles',
@@ -93,6 +104,7 @@ class RBACSeeder extends Seeder
         ]);
 
         Menu::create([
+            'menu_id' => 'MNU' . str_pad($menuCounter++, 5, '0', STR_PAD_LEFT),
             'menu_code' => 'permissions',
             'menu_name' => 'Permissions',
             'menu_url' => '/permissions',
@@ -105,6 +117,7 @@ class RBACSeeder extends Seeder
         ]);
 
         Menu::create([
+            'menu_id' => 'MNU' . str_pad($menuCounter++, 5, '0', STR_PAD_LEFT),
             'menu_code' => 'menus',
             'menu_name' => 'Menus',
             'menu_url' => '/menus',
@@ -117,7 +130,9 @@ class RBACSeeder extends Seeder
         ]);
 
         // Create Admin Role
+        $adminRoleId = 'ROL00001';
         $adminRole = Role::create([
+            'role_id' => $adminRoleId,
             'role_code' => 'ADMIN',
             'role_name' => 'Administrator',
             'role_description' => 'Full system access',
@@ -127,8 +142,10 @@ class RBACSeeder extends Seeder
         ]);
 
         // Attach all permissions to admin role
+        $rolePermissionCounter = 1;
         foreach ($createdPermissions as $permission) {
             $adminRole->permissions()->attach($permission->permission_id, [
+                'role_permission_id' => 'RPM' . str_pad($rolePermissionCounter++, 5, '0', STR_PAD_LEFT),
                 'unique_id' => (string) Str::uuid(),
                 'created_by' => $adminUser->user_id,
                 'created_date' => now(),
@@ -138,8 +155,10 @@ class RBACSeeder extends Seeder
 
         // Attach all menus to admin role
         $allMenus = Menu::all();
+        $roleMenuCounter = 1;
         foreach ($allMenus as $menu) {
             $adminRole->menus()->attach($menu->menu_id, [
+                'role_menu_id' => 'RMN' . str_pad($roleMenuCounter++, 5, '0', STR_PAD_LEFT),
                 'unique_id' => (string) Str::uuid(),
                 'created_by' => $adminUser->user_id,
                 'created_date' => now(),
@@ -149,6 +168,7 @@ class RBACSeeder extends Seeder
 
         // Assign admin role to admin user
         $adminUser->roles()->attach($adminRole->role_id, [
+            'user_role_id' => 'URO00001',
             'unique_id' => (string) Str::uuid(),
             'assigned_date' => now(),
             'created_by' => $adminUser->user_id,

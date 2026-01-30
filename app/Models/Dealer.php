@@ -9,6 +9,9 @@ class Dealer extends Model
 {
     protected $table = 'ms_dealers';
     protected $primaryKey = 'dealer_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    
     const CREATED_AT = 'created_date';
     const UPDATED_AT = 'updated_date';
 

@@ -9,6 +9,9 @@ class Brand extends Model
 {
     protected $table = 'ms_brand';
     protected $primaryKey = 'brand_id';
+    public $incrementing = false;
+    protected $keyType = 'string';
+    
     const CREATED_AT = 'created_date';
     const UPDATED_AT = 'updated_date';
 

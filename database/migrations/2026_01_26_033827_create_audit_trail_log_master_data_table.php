@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::create('ad_trail_log_master_data', function (Blueprint $table) {
             $table->id('audit_trail_log_master_data_id');
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('screen_id');
+            $table->string('user_id', 50);
+            $table->string('screen_id', 50);
             $table->longText('old_response')->nullable()->comment('Perubahan Sebelum');
             $table->longText('new_response')->nullable()->comment('Perubahan Setelah');
             $table->enum('execution_type', ['INSERT', 'UPDATE', 'DELETE'])->nullable();

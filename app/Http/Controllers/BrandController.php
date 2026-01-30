@@ -44,14 +44,59 @@ class BrandController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
-        $data = $request->validated();
-        $data['unique_id'] = (string) Str::uuid();
-        $data['created_by'] = auth()->id();
-        $data['is_active'] = '1'; // Default active
-
-        Brand::create($data);
-
-        return redirect()->route('brands.index')->with('success', 'Brand created successfully.');
+        try {
+            $data = $request->validated();
+            $uniqueId = (string) Str::uuid();
+            $userId = auth()->id();
+            
+            // Call stored procedure sp_add_ms_brand
+            $result = \DB::select('CALL sp_add_ms_brand(?, ?, ?, ?, ?, ?)', [
+                $userId,
+                $data['brand_name'],
+                $data['brand_code'],
+                $data['brand_group'] ?? null,
+                $data['country_origin'] ?? null,
+                $uniqueId
+            ]);
+            
+            // Check result from stored procedure
+            if (empty($result)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Failed to create brand. No response from database.');
+            }
+            
+            $response = $result[0];
+            
+            // Handle response based on return_code
+            if ($response->return_code == 200) {
+                return redirect()->route('brands.index')
+                    ->with('success', 'Brand created successfully.');
+            } elseif ($response->return_code == 404) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message);
+            } elseif ($response->return_code == 409) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['brand_name' => $response->return_message]);
+            } else {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message ?? 'An error occurred while creating brand.');
+            }
+            
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database error in BrandController@store: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Database error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error in BrandController@store: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred. Please try again.');
+        }
     }
 
     public function edit(Brand $brand)
@@ -71,11 +116,58 @@ class BrandController extends Controller
             abort(403, 'Unauthorized action.');
         }
         
-        $data = $request->validated();
-        $data['updated_by'] = auth()->id();
-        $brand->update($data);
-
-        return redirect()->route('brands.index')->with('success', 'Brand updated successfully.');
+        try {
+            $data = $request->validated();
+            $userId = auth()->id();
+            
+            // Call stored procedure sp_update_ms_brand
+            $result = \DB::select('CALL sp_update_ms_brand(?, ?, ?, ?, ?, ?)', [
+                $userId,
+                $data['brand_name'],
+                $data['brand_code'],
+                $data['brand_group'] ?? null,
+                $data['country_origin'] ?? null,
+                $brand->unique_id
+            ]);
+            
+            // Check result from stored procedure
+            if (empty($result)) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', 'Failed to update brand. No response from database.');
+            }
+            
+            $response = $result[0];
+            
+            // Handle response based on return_code
+            if ($response->return_code == 200) {
+                return redirect()->route('brands.index')
+                    ->with('success', 'Brand updated successfully.');
+            } elseif ($response->return_code == 404) {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message);
+            } elseif ($response->return_code == 409) {
+                return redirect()->back()
+                    ->withInput()
+                    ->withErrors(['brand_name' => $response->return_message]);
+            } else {
+                return redirect()->back()
+                    ->withInput()
+                    ->with('error', $response->return_message ?? 'An error occurred while updating brand.');
+            }
+            
+        } catch (\Illuminate\Database\QueryException $e) {
+            \Log::error('Database error in BrandController@update: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'Database error: ' . $e->getMessage());
+        } catch (\Exception $e) {
+            \Log::error('Error in BrandController@update: ' . $e->getMessage());
+            return redirect()->back()
+                ->withInput()
+                ->with('error', 'An unexpected error occurred. Please try again.');
+        }
     }
 
     public function destroy(Brand $brand)

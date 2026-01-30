@@ -32,12 +32,16 @@ class DealerSeeder extends Seeder
                 ->first();
 
             if (!$existingPermission) {
-                $permissionId = DB::table('ms_permissions')->insertGetId([
+                $permissionUniqueId = (string) Str::uuid();
+                $permissionId = 'PRM' . str_pad((DB::table('ms_permissions')->count() + 1), 5, '0', STR_PAD_LEFT);
+                
+                DB::table('ms_permissions')->insert([
+                    'permission_id' => $permissionId,
                     'permission_code' => $permission['permission_code'],
                     'permission_name' => $permission['permission_name'],
                     'created_by' => $adminUserId,
                     'created_date' => now(),
-                    'unique_id' => (string) Str::uuid(),
+                    'unique_id' => $permissionUniqueId,
                     'is_active' => '1',
                 ]);
                 $permissionIds[] = $permissionId;
@@ -52,7 +56,10 @@ class DealerSeeder extends Seeder
         $existingMenu = DB::table('ms_menus')->where('menu_code', 'dealers')->first();
         
         if (!$existingMenu) {
-            $menuId = DB::table('ms_menus')->insertGetId([
+            $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
+            
+            DB::table('ms_menus')->insert([
+                'menu_id' => $menuId,
                 'menu_code' => 'dealers',
                 'menu_name' => 'Dealers',
                 'menu_url' => '/dealers',
@@ -82,6 +89,7 @@ class DealerSeeder extends Seeder
 
                 if (!$existingRolePermission) {
                     DB::table('ms_role_permissions')->insert([
+                        'role_permission_id' => 'RPM' . str_pad((DB::table('ms_role_permissions')->count() + 1), 5, '0', STR_PAD_LEFT),
                         'role_id' => $adminRoleId,
                         'permission_id' => $permissionId,
                         'created_by' => $adminUserId,
@@ -101,6 +109,7 @@ class DealerSeeder extends Seeder
 
             if (!$existingRoleMenu) {
                 DB::table('ms_role_menus')->insert([
+                    'role_menu_id' => 'RMN' . str_pad((DB::table('ms_role_menus')->count() + 1), 5, '0', STR_PAD_LEFT),
                     'role_id' => $adminRoleId,
                     'menu_id' => $menuId,
                     'created_by' => $adminUserId,

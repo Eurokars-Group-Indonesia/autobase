@@ -10,8 +10,14 @@ class SearchHistoryMenuSeeder extends Seeder
 {
     public function run(): void
     {
+        $adminUserId = DB::table('ms_users')->where('email', 'admin@example.com')->value('user_id');
+
+        // Generate menu ID
+        $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
+
         // Insert menu for Search History
         DB::table('ms_menus')->insert([
+            'menu_id' => $menuId,
             'menu_code' => 'search-history',
             'menu_name' => 'Search History',
             'menu_url' => '/search-history',
@@ -19,7 +25,7 @@ class SearchHistoryMenuSeeder extends Seeder
             'parent_id' => null,
             'menu_order' => 100,
             'is_active' => '1',
-            'created_by' => 1,
+            'created_by' => $adminUserId,
             'created_date' => now(),
             'unique_id' => (string) Str::uuid(),
         ]);
@@ -28,7 +34,7 @@ class SearchHistoryMenuSeeder extends Seeder
         
         // Get the menu ID
         $menu = DB::table('ms_menus')
-            ->where('menu_url', '/search-history')
+            ->where('menu_id', $menuId)
             ->first();
 
         if (!$menu) {
@@ -36,13 +42,15 @@ class SearchHistoryMenuSeeder extends Seeder
             return;
         }
 
-        // Assign menu to Administrator role (role_id = 1)
+        // Assign menu to Administrator role
         DB::table('ms_role_menus')->insert([
-            'role_id' => 1,
+            'role_menu_id' => 'RMN' . str_pad((DB::table('ms_role_menus')->count() + 1), 5, '0', STR_PAD_LEFT),
+            'role_id' => 'ROL00001',
             'menu_id' => $menu->menu_id,
-            'created_by' => 1,
+            'created_by' => $adminUserId,
             'created_date' => now(),
             'unique_id' => (string) Str::uuid(),
+            'is_active' => '1',
         ]);
 
         echo "Menu assigned to Administrator role successfully!\n";

@@ -36,6 +36,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/chart-data', [DashboardController::class, 'getChartData'])->name('dashboard.chart-data');
     
+    // Profile Routes
+    Route::get('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'showChangePasswordForm'])->name('profile.change-password');
+    Route::post('/profile/change-password', [\App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.update-password');
+    
     // User Management
     Route::middleware('permission:users.view')->group(function () {
         Route::get('/users', [UserController::class, 'index'])->name('users.index');
@@ -141,6 +145,7 @@ Route::middleware('auth')->group(function () {
     // Transaction Headers
     Route::middleware('permission:transactions.view')->group(function () {
         Route::get('/transactions', [TransactionHeaderController::class, 'index'])->name('transactions.index');
+        Route::get('/transactions/search', [TransactionHeaderController::class, 'search'])->name('transactions.search');
         Route::get('/transactions/body-details', [TransactionHeaderController::class, 'getBodyDetails'])->name('transactions.body.details');
         Route::get('/transactions/export', [TransactionHeaderController::class, 'export'])->name('transactions.export');
     });
@@ -153,6 +158,7 @@ Route::middleware('auth')->group(function () {
     // Transaction Body
     Route::middleware('permission:transaction-body.view')->group(function () {
         Route::get('/transaction-body', [TransactionBodyController::class, 'index'])->name('transaction-body.index');
+        Route::get('/transaction-body/search', [TransactionBodyController::class, 'search'])->name('transaction-body.search');
         Route::get('/transaction-body/export', [TransactionBodyController::class, 'export'])->name('transaction-body.export');
     });
     Route::middleware('permission:transaction-body.import')->group(function () {

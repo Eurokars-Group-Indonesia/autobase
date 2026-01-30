@@ -23,13 +23,16 @@ class TransactionHeaderSeeder extends Seeder
         ];
 
         $permissionIds = [];
+        $permissionCounter = DB::table('ms_permissions')->count() + 1;
         foreach ($permissions as $permission) {
             $existingPermission = DB::table('ms_permissions')
                 ->where('permission_code', $permission['permission_code'])
                 ->first();
 
             if (!$existingPermission) {
-                $permissionId = DB::table('ms_permissions')->insertGetId([
+                $permissionId = 'PRM' . str_pad($permissionCounter++, 5, '0', STR_PAD_LEFT);
+                DB::table('ms_permissions')->insert([
+                    'permission_id' => $permissionId,
                     'permission_code' => $permission['permission_code'],
                     'permission_name' => $permission['permission_name'],
                     'created_by' => $adminUserId,
@@ -49,7 +52,9 @@ class TransactionHeaderSeeder extends Seeder
         $existingMenu = DB::table('ms_menus')->where('menu_code', 'transactions')->first();
         
         if (!$existingMenu) {
-            $menuId = DB::table('ms_menus')->insertGetId([
+            $menuId = 'MNU' . str_pad((DB::table('ms_menus')->count() + 1), 5, '0', STR_PAD_LEFT);
+            DB::table('ms_menus')->insert([
+                'menu_id' => $menuId,
                 'menu_code' => 'transactions',
                 'menu_name' => 'Transactions',
                 'menu_url' => '/transactions',
@@ -71,6 +76,7 @@ class TransactionHeaderSeeder extends Seeder
         $adminRoleId = DB::table('ms_role')->where('role_code', 'ADMIN')->value('role_id');
         
         if ($adminRoleId) {
+            $rolePermissionCounter = DB::table('ms_role_permissions')->count() + 1;
             foreach ($permissionIds as $permissionId) {
                 $existingRolePermission = DB::table('ms_role_permissions')
                     ->where('role_id', $adminRoleId)
@@ -79,6 +85,7 @@ class TransactionHeaderSeeder extends Seeder
 
                 if (!$existingRolePermission) {
                     DB::table('ms_role_permissions')->insert([
+                        'role_permission_id' => 'RPM' . str_pad($rolePermissionCounter++, 5, '0', STR_PAD_LEFT),
                         'role_id' => $adminRoleId,
                         'permission_id' => $permissionId,
                         'created_by' => $adminUserId,
@@ -98,6 +105,7 @@ class TransactionHeaderSeeder extends Seeder
 
             if (!$existingRoleMenu) {
                 DB::table('ms_role_menus')->insert([
+                    'role_menu_id' => 'RMN' . str_pad((DB::table('ms_role_menus')->count() + 1), 5, '0', STR_PAD_LEFT),
                     'role_id' => $adminRoleId,
                     'menu_id' => $menuId,
                     'created_by' => $adminUserId,
