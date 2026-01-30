@@ -39,6 +39,7 @@ class AuthController extends Controller
         }
 
         $credentials = $request->only('email', 'password');
+        $credentials['is_active'] = '1'; // Only allow active users to login
         $remember = $request->has('remember');
 
         if (Auth::attempt($credentials, $remember)) {
@@ -68,6 +69,20 @@ class AuthController extends Controller
         // Increment failed attempts
         $attempts = Cache::get($key, 0) + 1;
         Cache::put($key, $attempts, now()->addMinute());
+        
+        // Check if user exists but is inactive
+        $user = \App\Models\User::where('email', $request->email)->first();
+        if ($user && $user->is_active === '0') {
+            Log::warning('Login attempt with inactive account', [
+                'email' => $request->email,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+            
+            return back()->withErrors([
+                'email' => 'Your account has been deactivated. Please contact administrator.',
+            ])->onlyInput('email');
+        }
         
         // Log failed attempt
         Log::warning('Failed login attempt', [
