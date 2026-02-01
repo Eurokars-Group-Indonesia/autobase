@@ -87,7 +87,10 @@
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <span><i class="bi bi-list-ul"></i> Transaction Body</span>
-                <div>
+                <div id="headerButtons">
+                    <a href="#" id="exportBtn" class="btn btn-success btn-sm me-2" style="display: none;">
+                        <i class="bi bi-file-earmark-excel"></i> Export Excel
+                    </a>
                     @if(auth()->user()->hasPermission('transaction-body.import'))
                     <a href="{{ route('transaction-body.import') }}" class="btn btn-light btn-sm">
                         <i class="bi bi-upload"></i> Import Excel
@@ -294,6 +297,9 @@
                         if (showClearButton) {
                             $('#clearBtn').show();
                         }
+                        
+                        // Update export button
+                        updateExportButton();
                     }
                 },
                 error: function(xhr) {
@@ -313,6 +319,33 @@
                    $('#date_to').val() !== '';
         }
 
+        // Function to update export button
+        function updateExportButton() {
+            @if(auth()->user()->hasPermission('transaction-body.view'))
+            if (hasActiveFilters()) {
+                const params = new URLSearchParams({
+                    search: $('#search').val(),
+                    date_from: $('#date_from').val(),
+                    date_to: $('#date_to').val(),
+                    brand_id: $('#brand_id').val(),
+                    per_page: $('#per_page').val()
+                });
+                
+                // Remove empty params
+                for (let [key, value] of [...params.entries()]) {
+                    if (!value) {
+                        params.delete(key);
+                    }
+                }
+                
+                const exportUrl = '{{ route("transaction-body.export") }}?' + params.toString();
+                $('#exportBtn').attr('href', exportUrl).show();
+            } else {
+                $('#exportBtn').hide();
+            }
+            @endif
+        }
+
         // Load initial data on page load
         $(document).ready(function() {
             // Check if there are URL parameters
@@ -325,6 +358,9 @@
             if (hasUrlParams && hasActiveFilters()) {
                 $('#clearBtn').show();
             }
+            
+            // Update export button on initial load
+            updateExportButton();
             
             // Load data without updating URL if no params, otherwise with URL update
             performSearch({{ request('page', 1) }}, hasUrlParams, false);
@@ -350,6 +386,9 @@
             
             // Hide clear button
             $('#clearBtn').hide();
+            
+            // Hide export button
+            $('#exportBtn').hide();
             
             // Perform search with cleared filters to show default 10 data
             performSearch(1, false, false);
