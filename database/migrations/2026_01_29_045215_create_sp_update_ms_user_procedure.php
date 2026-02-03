@@ -83,7 +83,7 @@ return new class extends Migration
                 -- Check if dealer exists (if provided)
                 IF p_dealer_id IS NOT NULL THEN
                     SELECT COUNT(dealer_id) INTO v_exists_dealer
-                    FROM ms_dealer
+                    FROM ms_dealers
                     WHERE dealer_id = p_dealer_id
                     AND is_active = '1';
                     
